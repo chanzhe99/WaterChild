@@ -6,9 +6,6 @@
 #include "GameFramework/Character.h"
 #include "Spirit.generated.h"
 
-class USpringArmComponent;
-class UCameraComponent;
-class UStaticMeshComponent;
 
 UCLASS()
 class WATERCHILD_API ASpirit : public ACharacter
@@ -19,23 +16,14 @@ public:
 	// Sets default values for this character's properties
 	ASpirit();
 
-	//UENUM()
-	enum ESpiritState
-	{
-		Default,
-		Water,
-		Ice,
-		Jumping,
-		Bashing
-	};
-
-	ESpiritState SpiritState;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collision");
+	class USphereComponent* SphereComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera");
-	USpringArmComponent* SpringArmComponent;
+	class USpringArmComponent* SpringArmComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera");
-	UCameraComponent* CameraComponent;
+	class UCameraComponent* CameraComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh");
 	UStaticMeshComponent* DefaultMesh;
@@ -46,7 +34,52 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh");
 	UStaticMeshComponent* IceMesh;
 
+	enum ESpiritForm
+	{
+		Default,
+		Water,
+		Ice
+	};
+
+	enum ESpiritState
+	{
+		Idle,
+		Walking,
+		Jumping,
+		Bashing,
+		Interacting
+	};
+
+	bool bWithinReviveRadius = false;
+	bool bIsCrackEntrance = false;
+
 protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera");
+	float BaseTurnRate;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera");
+	float BaseLookUpAtRate;
+
+	ESpiritForm SpiritForm;
+	ESpiritState SpiritState;
+	FHitResult HitResult;
+	AActor* ActivatedPlate = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "LineTrace Settings")
+		float TraceForwardLength = 40.f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "LineTrace Settings")
+		float TraceBelowLength = 65.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bash Settings")
+		float BashDistance = 2000.f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bash Settings")
+		float BashDuration = 0.15f;
+	float BashTime = 0.f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bash Settings")
+		float BashCooldown = 1.0f;
+	float BashCooldownDuration = BashCooldown;
+
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
 	void MoveForward(float Value);
 	void MoveRight(float Value);
 	void TurnAtRate(float Value);
@@ -54,17 +87,29 @@ protected:
 	void Revive();
 	void Jump();
 	void Bash();
-	void Morph(ESpiritState CurrentState);
+	void Action();
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera");
-	float BaseTurnRate;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera");
-	float BaseLookUpAtRate;
+	UFUNCTION(BlueprintNativeEvent)
+		void TraceForward();
+	void TraceForward_Implementation();
+
+	UFUNCTION(BlueprintNativeEvent)
+		void TraceBelow();
+	void TraceBelow_Implementation();
+
+	void CallTraverseFromCrack();
+	UFUNCTION()
+		void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void DeactivatePlate();
 
 public:
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-private:
-
+	DECLARE_DELEGATE_OneParam(SetFormDelegate, ESpiritForm);
+	void SetForm(ESpiritForm CurrentForm);
+	void SetState(ESpiritState CurrentState);
 };
