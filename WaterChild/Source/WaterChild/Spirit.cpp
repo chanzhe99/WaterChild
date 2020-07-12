@@ -59,6 +59,7 @@ ASpirit::ASpirit()
 
 	BaseTurnRate = 45.f;
 	BaseLookUpAtRate = 45.f;
+
 }
 
 // Called every frame
@@ -127,6 +128,9 @@ void ASpirit::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("TurnRate", this, &ASpirit::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &ASpirit::LookUpAtRate);
+
+	// Binds the reset buttons
+	PlayerInputComponent->BindAction("ResetLocationButton", IE_Pressed, this, &ASpirit::ResetLocation);
 }
 
 void ASpirit::SetForm(ESpiritForm CurrentForm)
@@ -164,6 +168,7 @@ void ASpirit::BeginPlay()
 	SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &ASpirit::OnOverlapBegin);
 	SphereComponent->SetCollisionResponseToChannel(ECC_Destructible, ECR_Block);
 
+	InitialLocation = GetActorLocation();
 }
 
 void ASpirit::MoveForward(float Value)
@@ -363,4 +368,14 @@ void ASpirit::DeactivatePlate()
 			Interface->Execute_OnInteractEnd(ActivatedPlate, this);
 	}
 	ActivatedPlate = nullptr;
+}
+
+void ASpirit::ResetMap()
+{
+
+}
+
+void ASpirit::ResetLocation()
+{
+	SetActorLocation(InitialLocation);
 }
