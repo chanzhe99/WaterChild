@@ -4,31 +4,39 @@
 
 #include "CoreMinimal.h"
 #include "Interactable.h"
-#include "InteractablePlate.generated.h"
+#include "InteractablePlant.generated.h"
 
 
 UCLASS()
-class WATERCHILD_API AInteractablePlate : public AInteractable
+class WATERCHILD_API AInteractablePlant : public AInteractable
 {
 	GENERATED_BODY()
-
+	
 public:
-	AInteractablePlate();
+	AInteractablePlant();
+
+	USceneComponent* SceneComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh");
-	UStaticMeshComponent* FrameMesh;
+	UStaticMeshComponent* StemMesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh");
-	UStaticMeshComponent* PlateMesh;
+	UStaticMeshComponent* PetalMesh;
+
+	UPROPERTY(EditAnywhere)
+	bool bPlantIsGrown = false;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	bool bIsSpiritOnPlate = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings");
+	float GrowthHeight = 300.f;
 
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	virtual void OnInteract_Implementation(ASpirit* Caller) override;
 	virtual void OnInteractEnd_Implementation(ASpirit* Caller) override;
+
 };
