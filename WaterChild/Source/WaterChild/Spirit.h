@@ -46,12 +46,13 @@ public:
 		Idle,
 		Walking,
 		Jumping,
-		Bashing,
-		Interacting
+		Interacting,
+		Squeezing,
+		Bashing
 	};
 
-	bool bWithinReviveRadius = false;
 	bool bIsCrackEntrance = false;
+	bool bReviveButtonPressed = false;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera");
@@ -65,7 +66,7 @@ protected:
 	AActor* ActivatedPlate = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "LineTrace Settings")
-		float TraceForwardLength = 40.f;
+		float TraceForwardLength = 60.f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "LineTrace Settings")
 		float TraceBelowLength = 65.f;
 
@@ -78,6 +79,8 @@ protected:
 		float BashCooldown = 1.0f;
 	float BashCooldownDuration = BashCooldown;
 
+	FVector InitialLocation = FVector::ZeroVector;
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	void MoveForward(float Value);
@@ -88,19 +91,23 @@ protected:
 	void Jump();
 	void Bash();
 	void Action();
+	void ReleaseReviveButton();
 
 	UFUNCTION(BlueprintNativeEvent)
-		void TraceForward();
+	void TraceForward();
 	void TraceForward_Implementation();
 
 	UFUNCTION(BlueprintNativeEvent)
-		void TraceBelow();
+	void TraceBelow();
 	void TraceBelow_Implementation();
 
 	void CallTraverseFromCrack();
 	UFUNCTION()
-		void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	void DeactivatePlate();
+
+	void ResetMap();
+	void ResetLocation();
 
 public:
 	// Called every frame

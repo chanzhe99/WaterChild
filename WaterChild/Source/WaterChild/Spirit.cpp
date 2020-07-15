@@ -8,7 +8,9 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "InteractableClasses/InteractableInterface.h"
+#include "InteractableClasses/InteractablePlant.h"
 #include "InteractableClasses/InteractableCrack.h"
+#include "InteractableClasses/InteractableDebris.h"
 #include "InteractableClasses/InteractablePlate.h"
 #include "DrawDebugHelpers.h"
 
@@ -59,6 +61,7 @@ ASpirit::ASpirit()
 
 	BaseTurnRate = 45.f;
 	BaseLookUpAtRate = 45.f;
+
 }
 
 // Called every frame
@@ -71,40 +74,37 @@ void ASpirit::Tick(float DeltaTime)
 
 	if (SpiritForm == Ice)
 		TraceBelow();
-	else
+	else if(ActivatedPlate)
 		DeactivatePlate();
 
 	switch (SpiritState)
 	{
 	case Idle:
 		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::White, TEXT("Idle"));
+		TraceForward();
 		break;
 	case Walking:
-		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, TEXT("Walking"));
-
+		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Yellow, TEXT("Walking"));
 		if (GetInputAxisValue("MoveForward") == 0 && GetInputAxisValue("MoveRight") == 0)
 			SetState(Idle);
-
-		if (SpiritForm == Water)
-			TraceForward();
-
+		TraceForward();
 		break;
 	case Jumping:
-		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Yellow, TEXT("Jumping"));
-
+		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Cyan, TEXT("Jumping"));
+		break;
+	case Interacting:
+		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, TEXT("Interacting"));
+		Revive();
+		break;
+	case Squeezing:
+		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, TEXT("Squeezing"));
+		CallTraverseFromCrack();
 		break;
 	case Bashing:
 		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Orange, TEXT("Bashing"));
 		Bash();
-
-		break;
-	case Interacting:
-		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, TEXT("Interacting"));
-		CallTraverseFromCrack();
-
 		break;
 	}
-
 }
 
 // Called to bind functionality to input
@@ -117,6 +117,7 @@ void ASpirit::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction<SetFormDelegate>("WaterFormButton", IE_Pressed, this, &ASpirit::SetForm, Water);
 	PlayerInputComponent->BindAction<SetFormDelegate>("IceFormButton", IE_Pressed, this, &ASpirit::SetForm, Ice);
 	PlayerInputComponent->BindAction("ActionButton", IE_Pressed, this, &ASpirit::Action);
+	PlayerInputComponent->BindAction("ActionButton", IE_Released, this, &ASpirit::ReleaseReviveButton);
 
 	// Binds the movement axes
 	PlayerInputComponent->BindAxis("MoveForward", this, &ASpirit::MoveForward);
@@ -127,6 +128,9 @@ void ASpirit::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("TurnRate", this, &ASpirit::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &ASpirit::LookUpAtRate);
+
+	// Binds the reset buttons
+	PlayerInputComponent->BindAction("ResetLocationButton", IE_Pressed, this, &ASpirit::ResetLocation);
 }
 
 void ASpirit::SetForm(ESpiritForm CurrentForm)
@@ -164,6 +168,7 @@ void ASpirit::BeginPlay()
 	SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &ASpirit::OnOverlapBegin);
 	SphereComponent->SetCollisionResponseToChannel(ECC_Destructible, ECR_Block);
 
+	InitialLocation = GetActorLocation();
 }
 
 void ASpirit::MoveForward(float Value)
@@ -204,17 +209,30 @@ void ASpirit::LookUpAtRate(float Value)
 
 void ASpirit::Revive()
 {
-	/*if (SpiritForm != Default)
-		SetForm(Default);*/
-
+	AActor* InteractableActor = HitResult.GetActor();
+	if (InteractableActor)
+	{
+		AInteractablePlant* InteractablePlant = Cast<AInteractablePlant>(InteractableActor);
+		UE_LOG(LogTemp, Warning, TEXT("Plant is grown: %s"), InteractablePlant->bPlantIsGrown ? TEXT("True") : TEXT("False"));
+		if (!InteractablePlant->bPlantIsGrown)
+		{
+			IInteractableInterface* Interface = Cast<IInteractableInterface>(InteractableActor);
+			if (Interface)
+				Interface->Execute_OnInteract(InteractableActor, this);
+		}
+		else
+		{
+			IInteractableInterface* Interface = Cast<IInteractableInterface>(InteractableActor);
+			if (Interface)
+				Interface->Execute_OnInteractEnd(InteractableActor, this);
+		}
+	}
+	SpiritState = Idle;
 	UE_LOG(LogTemp, Warning, TEXT("Revived"));
 }
 
 void ASpirit::Jump()
 {
-	/*if (SpiritForm != Water)
-		SetForm(Water);*/
-
 	ACharacter::Jump();
 }
 
@@ -241,7 +259,7 @@ void ASpirit::Action()
 	switch (SpiritForm)
 	{
 	case Default:
-		Revive();
+		bReviveButtonPressed = true;
 		break;
 	case Water:
 		Jump();
@@ -255,11 +273,18 @@ void ASpirit::Action()
 	}
 }
 
+void ASpirit::ReleaseReviveButton()
+{
+	if (bReviveButtonPressed)
+		bReviveButtonPressed = false;
+}
+
 void ASpirit::TraceForward_Implementation()
 {
 	FRotator SpiritRotation = GetCapsuleComponent()->GetComponentRotation();
 
 	FVector LineStart = GetActorLocation();
+	LineStart.Z -= GetCapsuleComponent()->GetScaledCapsuleHalfHeight()/4;
 	FVector LineEnd = LineStart + (SpiritRotation.Vector() * TraceForwardLength);
 
 	FCollisionQueryParams TraceParameters(FName(TEXT("")), false, GetOwner());
@@ -267,17 +292,46 @@ void ASpirit::TraceForward_Implementation()
 
 	DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Red, false, 0.f, 0.f, 2.f);
 
-	if (bHit && HitResult.Actor->IsA<AInteractableCrack>())
+	if (bHit)
 	{
+		DrawDebugBox(GetWorld(), HitResult.ImpactPoint, FVector(5, 5, 5), FColor::Emerald, false, 0.f, 0.f, 10.f);
+		switch (SpiritForm)
+		{
+		case Default:
+			if (HitResult.Actor->IsA<AInteractablePlant>() && bReviveButtonPressed)
+			{
+				//Revive();
+				SpiritState = Interacting;
+			}
+			break;
+		case Water:
+			if (HitResult.Actor->IsA<AInteractableCrack>())
+			{
+				if (HitResult.GetComponent()->GetRelativeLocation() == FVector::ZeroVector)
+					bIsCrackEntrance = true;
+				else
+					bIsCrackEntrance = false;
+				SpiritState = Squeezing;
+			}
+			break;
+		}
+	}
+
+	/*if (bHit && HitResult.Actor->IsA<AInteractableCrack>())
+	{
+		DrawDebugBox(GetWorld(), HitResult.ImpactPoint, FVector(5, 5, 5), FColor::Emerald, false, 0.f, 0.f, 10.f);
+
 		if (HitResult.GetComponent()->GetRelativeLocation() == FVector::ZeroVector)
 			bIsCrackEntrance = true;
 		else
 			bIsCrackEntrance = false;
+		SpiritState = Squeezing;
+	}*/
 
-		SpiritState = Interacting;
-
-		DrawDebugBox(GetWorld(), HitResult.ImpactPoint, FVector(5, 5, 5), FColor::Emerald, false, 0.f, 0.f, 10.f);
-	}
+	/*if (bHit && HitResult.Actor->IsA<AInteractablePlant>())
+	{
+		if(GetInputAxisKeyValue(""))
+	}*/
 
 	/*if (bHit)
 	{
@@ -347,20 +401,30 @@ void ASpirit::CallTraverseFromCrack()
 
 void ASpirit::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Overlap called"));
-	IInteractableInterface* Interface = Cast<IInteractableInterface>(OtherActor);
-	if (Interface)
-		Interface->Execute_OnInteract(OtherActor, this);
+	if (SpiritState == Bashing && OtherActor->IsA<AInteractableDebris>())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Overlap called"));
+		IInteractableInterface* Interface = Cast<IInteractableInterface>(OtherActor);
+		if (Interface)
+			Interface->Execute_OnInteract(OtherActor, this);
+	}
 
 }
 
 void ASpirit::DeactivatePlate()
 {
-	if (ActivatedPlate)
-	{
-		IInteractableInterface* Interface = Cast<IInteractableInterface>(ActivatedPlate);
-		if (Interface)
-			Interface->Execute_OnInteractEnd(ActivatedPlate, this);
-	}
+	IInteractableInterface* Interface = Cast<IInteractableInterface>(ActivatedPlate);
+	if (Interface)
+		Interface->Execute_OnInteractEnd(ActivatedPlate, this);
 	ActivatedPlate = nullptr;
+}
+
+void ASpirit::ResetMap()
+{
+
+}
+
+void ASpirit::ResetLocation()
+{
+	SetActorLocation(InitialLocation);
 }
