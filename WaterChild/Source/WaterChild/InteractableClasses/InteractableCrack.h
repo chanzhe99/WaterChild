@@ -1,4 +1,4 @@
-// Copyright SkyJus Works. All Rights Reserved.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -11,7 +11,7 @@ UCLASS()
 class WATERCHILD_API AInteractableCrack : public AInteractable
 {
 	GENERATED_BODY()
-	
+
 public:
 	// Sets default values for this actor's properties
 	AInteractableCrack();
@@ -25,6 +25,10 @@ public:
 	class UBoxComponent* CrackCollider1;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collision");
 	class UBoxComponent* CrackCollider2;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Exit");
+	USceneComponent* CrackExit1;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Exit");
+	USceneComponent* CrackExit2;
 
 	const FTransform* Crack1 = nullptr;
 	const FTransform* Crack2 = nullptr;

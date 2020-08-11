@@ -27,6 +27,12 @@ AInteractableCrack::AInteractableCrack()
 	CrackCollider2 = CreateDefaultSubobject<UBoxComponent>(TEXT("CrackCollider2"));
 	CrackCollider2->SetupAttachment(CrackMesh2);
 
+	CrackExit1 = CreateDefaultSubobject<USceneComponent>(TEXT("CrackExit1"));
+	CrackExit1->SetupAttachment(CrackMesh1);
+
+	CrackExit2 = CreateDefaultSubobject<USceneComponent>(TEXT("CrackExit2"));
+	CrackExit2->SetupAttachment(CrackMesh2);
+
 	CrackMesh2->SetRelativeLocation(FVector(0, -200, 0));
 	CrackMesh2->SetRelativeRotation(FRotator(0, 180, 0));
 
@@ -35,6 +41,9 @@ AInteractableCrack::AInteractableCrack()
 
 	CrackCollider1->SetRelativeScale3D(FVector(1.5, 0.25, 3));
 	CrackCollider2->SetRelativeScale3D(FVector(1.5, 0.25, 3));
+
+	CrackExit1->SetRelativeLocation(FVector(0, 50, 0));
+	CrackExit2->SetRelativeLocation(FVector(0, 50, 0));
 }
 
 // Called when the game starts or when spawned
@@ -60,13 +69,14 @@ void AInteractableCrack::TraverseCrack(ASpirit* Caller, const FTransform* Entran
 	}
 	else if (CurrentCallerScale.X <= InitialCallerScale.X / 2)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Exit Crack"));
 		// Sets position and rotation to the same as exit
 		Caller->GetCapsuleComponent()->SetWorldLocationAndRotation(Exit->GetLocation(), Exit->GetRotation());
 
 		// Adds offset rotation so that the player doesn't automatically trigger again
 		Caller->AddActorWorldRotation(FRotator(0, 90, 0).Quaternion());
 		Caller->SetActorScale3D(InitialCallerScale);
-		Caller->SetState(Caller->Walking);
+		Caller->SetState(Caller->ESpiritState::Walking);
 	}
 }
 
@@ -74,13 +84,16 @@ void AInteractableCrack::TraverseCrack(ASpirit* Caller, const FTransform* Entran
 void AInteractableCrack::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+
 }
 
 void AInteractableCrack::OnInteract_Implementation(ASpirit* Caller)
 {
-	if (Caller->bIsCrackEntrance)
-		TraverseCrack(Caller, Crack1, Crack2);
+	//UE_LOG(LogTemp, Warning, TEXT("CrackEntrance: %s"), Caller->GetCrackEntrance() ? TEXT("True") : TEXT("False"));
+	if (Caller->GetCrackEntrance())
+		TraverseCrack(Caller, Crack1, &CrackExit2->GetComponentTransform());
 	else
-		TraverseCrack(Caller, Crack2, Crack1);
+		TraverseCrack(Caller, Crack2, &CrackExit1->GetComponentTransform());
 
 }
