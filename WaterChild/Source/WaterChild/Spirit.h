@@ -6,6 +6,23 @@
 #include "GameFramework/Character.h"
 #include "Spirit.generated.h"
 
+UENUM(BlueprintType)
+enum class ESpiritState : uint8
+{
+	Idle		UMETA(DisplayName = "Idle"),
+	Walking		UMETA(DisplayName = "Walking"),
+	Falling		UMETA(DisplayName = "Falling"),
+	Squeezing	UMETA(DisplayName = "Squeezing"),
+	Bashing		UMETA(DisplayName = "Bashing"),
+};
+
+UENUM(BlueprintType)
+enum class ESpiritForm : uint8
+{
+	Default		UMETA(DisplayName = "Default Form"),
+	Water		UMETA(DisplayName = "Water Form"),
+	Ice			UMETA(DisplayName = "Ice Form")
+};
 
 UCLASS()
 class WATERCHILD_API ASpirit : public ACharacter
@@ -16,98 +33,9 @@ public:
 	// Sets default values for this character's properties
 	ASpirit();
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collision");
-	class USphereComponent* SphereComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera");
-	class USpringArmComponent* SpringArmComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera");
-	class UCameraComponent* CameraComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh");
-	UStaticMeshComponent* DefaultMesh;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh");
-	UStaticMeshComponent* WaterMesh;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh");
-	UStaticMeshComponent* IceMesh;
-
-	enum ESpiritForm
-	{
-		Default,
-		Water,
-		Ice
-	};
-
-	enum ESpiritState
-	{
-		Idle,
-		Walking,
-		Jumping,
-		Interacting,
-		Squeezing,
-		Bashing
-	};
-
-	bool bIsCrackEntrance = false;
-	bool bReviveButtonPressed = false;
-
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera");
-	float BaseTurnRate;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera");
-	float BaseLookUpAtRate;
-
-	ESpiritForm SpiritForm;
-	ESpiritState SpiritState;
-	FHitResult HitResult;
-	AActor* ActivatedPlate = nullptr;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "LineTrace Settings")
-		float TraceForwardLength = 60.f;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "LineTrace Settings")
-		float TraceBelowLength = 65.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bash Settings")
-		float BashDistance = 2000.f;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bash Settings")
-		float BashDuration = 0.15f;
-	float BashTime = 0.f;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bash Settings")
-		float BashCooldown = 1.0f;
-	float BashCooldownDuration = BashCooldown;
-
-	FVector InitialLocation = FVector::ZeroVector;
-
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	void MoveForward(float Value);
-	void MoveRight(float Value);
-	void TurnAtRate(float Value);
-	void LookUpAtRate(float Value);
-	void Revive();
-	void Jump();
-	void Bash();
-	void Action();
-	void ReleaseReviveButton();
-
-	UFUNCTION(BlueprintNativeEvent)
-	void TraceForward();
-	void TraceForward_Implementation();
-
-	UFUNCTION(BlueprintNativeEvent)
-	void TraceBelow();
-	void TraceBelow_Implementation();
-
-	void CallTraverseFromCrack();
-	UFUNCTION()
-	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-	void DeactivatePlate();
-
-	void ResetMap();
-	void ResetLocation();
 
 public:
 	// Called every frame
@@ -116,7 +44,62 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	// Changes the Spirit's state and form according to input parameter
+	UFUNCTION(BlueprintCallable)
+		void SetState(ESpiritState DesiredState) { SpiritState = DesiredState; }
+	void SetForm(ESpiritForm DesiredForm);
 	DECLARE_DELEGATE_OneParam(SetFormDelegate, ESpiritForm);
-	void SetForm(ESpiritForm CurrentForm);
-	void SetState(ESpiritState CurrentState);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+		void OnRevive(AActor* ActorHit);
+	void OnRevive_Implementation(AActor* ActorHit);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+		void OnJump();
+	void OnJump_Implementation() {}
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+		void OnBash();
+	void OnBash_Implementation();
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+		void OnSqueeze(AActor* ActorHit);
+	void OnSqueeze_Implementation(AActor* ActorHit);
+
+	bool GetCrackEntrance() { return bIsCrackEntrance; }
+
+private:
+	// Spirit water and ice mesh components
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
+		class USkeletalMeshComponent* SkeletalMeshWater;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
+		class UStaticMeshComponent* StaticMeshIce;
+
+	// Spirit spring arm and camera components
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+		class USpringArmComponent* SpringArm;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+		class UCameraComponent* Camera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		ESpiritState SpiritState = ESpiritState::Idle;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		ESpiritForm SpiritForm = ESpiritForm::Default;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"));
+	float BaseTurnRate;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"));
+	float BaseLookUpAtRate;
+
+	bool CanBash = true;
+	float BashDistance = 2000.f;
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		bool bIsCrackEntrance;
+
+	void MoveForward(float Value);
+	void MoveRight(float Value);
+	void TurnAtRate(float Value) { AddControllerYawInput(Value * BaseTurnRate * GetWorld()->GetDeltaSeconds()); }
+	void LookUpAtRate(float Value) { AddControllerPitchInput(Value * BaseLookUpAtRate * GetWorld()->GetDeltaSeconds()); }
+	void Action();
+	void TickBashCooldown(float DeltaTime);
+
+	UFUNCTION()
+		void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 };
