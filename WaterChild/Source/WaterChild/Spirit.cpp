@@ -8,6 +8,7 @@
 #include "Components/CapsuleComponent.h"
 #include "InteractableClasses/InteractableInterface.h"
 #include "InteractableClasses/InteractablePlant.h"
+#include "Niagara/Public/NiagaraComponent.h"
 
 // Sets default values
 ASpirit::ASpirit()
@@ -26,12 +27,16 @@ ASpirit::ASpirit()
 	StaticMeshIce = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshIce"));
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
+	NiagaraFootsteps = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraFootsteps"));
+	NiagaraRevive = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraRevive"));
 
 	// Setup attachments for components
 	SkeletalMeshWater->SetupAttachment(RootComponent);
 	StaticMeshIce->SetupAttachment(RootComponent);
 	SpringArm->SetupAttachment(RootComponent);
 	Camera->SetupAttachment(SpringArm);
+	NiagaraFootsteps->SetupAttachment(GetMesh());
+	NiagaraRevive->SetupAttachment(GetMesh());
 
 	// Set mesh position offsets
 	GetMesh()->SetRelativeLocation(FVector(0, 0, -27));
@@ -45,6 +50,12 @@ ASpirit::ASpirit()
 	// Set spring arm properties
 	SpringArm->TargetArmLength = 300.f;
 	SpringArm->bUsePawnControlRotation = true;
+
+	// Set Niagara system properties
+	NiagaraRevive->SetRelativeLocation(FVector(0, 0, 25));
+	NiagaraRevive->SetRelativeRotation(FRotator(0, 270, 0));
+	NiagaraFootsteps->SetAutoActivate(false);
+	NiagaraRevive->SetAutoActivate(false);
 
 	// Set capsule base height
 	GetCapsuleComponent()->SetCapsuleRadius(12.f);
