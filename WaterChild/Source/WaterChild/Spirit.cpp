@@ -5,10 +5,15 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Niagara/Public/NiagaraComponent.h"
+#include "Components/ArrowComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "InteractableClasses/InteractableInterface.h"
 #include "InteractableClasses/InteractablePlant.h"
-#include "Niagara/Public/NiagaraComponent.h"
+#include "InteractableClasses/InteractableCrack.h"
+#include "DrawDebugHelpers.h"
+
+#define OUT
 
 // Sets default values
 ASpirit::ASpirit()
@@ -29,6 +34,7 @@ ASpirit::ASpirit()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	NiagaraFootsteps = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraFootsteps"));
 	NiagaraRevive = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraRevive"));
+	ArrowLineTrace = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowLineTrace"));
 
 	// Setup attachments for components
 	SkeletalMeshWater->SetupAttachment(RootComponent);
@@ -37,6 +43,7 @@ ASpirit::ASpirit()
 	Camera->SetupAttachment(SpringArm);
 	NiagaraFootsteps->SetupAttachment(GetMesh());
 	NiagaraRevive->SetupAttachment(GetMesh());
+	ArrowLineTrace->SetupAttachment(RootComponent);
 
 	// Set mesh position offsets
 	GetMesh()->SetRelativeLocation(FVector(0, 0, -27));
@@ -74,13 +81,16 @@ void ASpirit::BeginPlay()
 	Super::BeginPlay();
 	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ASpirit::OnOverlapBegin);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Destructible, ECR_Block);
-
+	UE_LOG(LogTemp, Warning, TEXT("C++ Begin ran"));
 }
 
 // Called every frame
 void ASpirit::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	//if(TraceLine() != nullptr)
+		//UE_LOG(LogTemp, Warning, TEXT("Hit Name: %s"), *TraceLine()->GetName());
 
 	if (!CanBash) TickBashCooldown(DeltaTime);
 
@@ -95,13 +105,17 @@ void ASpirit::Tick(float DeltaTime)
 			SetState(ESpiritState::Idle);
 		if (GetCharacterMovement()->IsFalling())
 			SetState(ESpiritState::Falling);
+
+		if (SpiritForm == ESpiritForm::Water)
+			if (TraceLine() && TraceLine()->IsA(AInteractableCrack::StaticClass()))
+				SetState(ESpiritState::Squeezing);
 		break;
 	case ESpiritState::Falling:
 		if (!GetCharacterMovement()->IsFalling())
 			SetState(ESpiritState::Idle);
 		break;
 	case ESpiritState::Squeezing:
-		//OnSqueeze();
+		OnSqueeze(TraceLine());
 		break;
 	case ESpiritState::Bashing:
 		break;
@@ -118,6 +132,7 @@ void ASpirit::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction<SetFormDelegate>("WaterFormButton", IE_Pressed, this, &ASpirit::SetForm, ESpiritForm::Water);
 	PlayerInputComponent->BindAction<SetFormDelegate>("IceFormButton", IE_Pressed, this, &ASpirit::SetForm, ESpiritForm::Ice);
 	PlayerInputComponent->BindAction("ActionButton", IE_Pressed, this, &ASpirit::Action);
+	PlayerInputComponent->BindAction("ActionButton", IE_Released, this, &ASpirit::StopAction);
 
 	// Binds the movement axes
 	PlayerInputComponent->BindAxis("MoveForward", this, &ASpirit::MoveForward);
@@ -195,6 +210,27 @@ void ASpirit::Action()
 		switch (SpiritForm)
 		{
 		case ESpiritForm::Default:
+			NiagaraRevive->Activate();
+			//OnRevive();
+			break;
+		case ESpiritForm::Water:
+			OnJump();
+			break;
+		case ESpiritForm::Ice:
+			if (CanBash) OnBash();
+			break;
+		}
+	}
+}
+
+void ASpirit::StopAction()
+{
+	if (SpiritState != ESpiritState::Falling)
+	{
+		switch (SpiritForm)
+		{
+		case ESpiritForm::Default:
+			NiagaraRevive->Deactivate();
 			//OnRevive();
 			break;
 		case ESpiritForm::Water:
@@ -221,6 +257,36 @@ void ASpirit::TickBashCooldown(float DeltaTime)
 	}
 
 	return;
+}
+
+AActor* ASpirit::TraceLine()
+{
+	FHitResult Hit;
+	AActor* ActorHit = nullptr;
+
+	FRotator LineRotation = ArrowLineTrace->GetComponentRotation();
+	FVector LineStart = ArrowLineTrace->GetComponentLocation();
+	FVector LineEnd = LineStart + (LineRotation.Vector() * LineTraceLength);
+
+	FCollisionQueryParams TraceParams;
+	bool bHit = GetWorld()->LineTraceSingleByObjectType(Hit, LineStart, LineEnd, ECC_Destructible, TraceParams);
+	DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Green, false, 0, 0, 2);
+
+	if (bHit)
+	{
+		DrawDebugBox(GetWorld(), Hit.ImpactPoint, FVector(5, 5, 5), FColor::Orange, false, 2);
+		
+		//UE_LOG(LogTemp, Warning, TEXT("Crack Location: %f, %f"), Hit.GetComponent()->GetRelativeLocation().X, Hit.GetComponent()->GetRelativeLocation().Y);
+
+		if (Hit.GetComponent()->GetRelativeLocation() == FVector::ZeroVector)
+			bIsCrackEntrance = true;
+		else bIsCrackEntrance = false;
+
+		if (Hit.GetActor()->IsA(AInteractable::StaticClass()))
+			return ActorHit = Hit.GetActor();
+		else return ActorHit = nullptr;
+	}
+	else return ActorHit = nullptr;
 }
 
 void ASpirit::OnRevive_Implementation(AActor* ActorHit)
@@ -280,13 +346,13 @@ void ASpirit::OnBash_Implementation()
 	//}
 }
 
-void ASpirit::OnSqueeze_Implementation(AActor* ActorHit)
+void ASpirit::OnSqueeze_Implementation(AActor* CrackHit)
 {
-	if (ActorHit)
+	if (CrackHit)
 	{
-		IInteractableInterface* Interface = Cast<IInteractableInterface>(ActorHit);
+		IInteractableInterface* Interface = Cast<IInteractableInterface>(CrackHit);
 		if (Interface)
-			Interface->Execute_OnInteract(ActorHit, this);
+			Interface->Execute_OnInteract(CrackHit, this);
 	}
 }
 

@@ -21,11 +21,11 @@ AInteractableCrack::AInteractableCrack()
 	CrackMesh2 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CrackMesh2"));
 	CrackMesh2->SetupAttachment(SceneComponent);
 
-	CrackCollider1 = CreateDefaultSubobject<UBoxComponent>(TEXT("CrackCollider1"));
-	CrackCollider1->SetupAttachment(CrackMesh1);
-
-	CrackCollider2 = CreateDefaultSubobject<UBoxComponent>(TEXT("CrackCollider2"));
-	CrackCollider2->SetupAttachment(CrackMesh2);
+	//CrackCollider1 = CreateDefaultSubobject<UBoxComponent>(TEXT("CrackCollider1"));
+	//CrackCollider1->SetupAttachment(CrackMesh1);
+	//
+	//CrackCollider2 = CreateDefaultSubobject<UBoxComponent>(TEXT("CrackCollider2"));
+	//CrackCollider2->SetupAttachment(CrackMesh2);
 
 	CrackExit1 = CreateDefaultSubobject<USceneComponent>(TEXT("CrackExit1"));
 	CrackExit1->SetupAttachment(CrackMesh1);
@@ -36,11 +36,11 @@ AInteractableCrack::AInteractableCrack()
 	CrackMesh2->SetRelativeLocation(FVector(0, -200, 0));
 	CrackMesh2->SetRelativeRotation(FRotator(0, 180, 0));
 
-	CrackCollider1->SetRelativeLocation(FVector(0, 0, 100));
-	CrackCollider2->SetRelativeLocation(FVector(0, 0, 100));
-
-	CrackCollider1->SetRelativeScale3D(FVector(1.5, 0.25, 3));
-	CrackCollider2->SetRelativeScale3D(FVector(1.5, 0.25, 3));
+	//CrackCollider1->SetRelativeLocation(FVector(0, 0, 100));
+	//CrackCollider2->SetRelativeLocation(FVector(0, 0, 100));
+	//
+	//CrackCollider1->SetRelativeScale3D(FVector(1.5, 0.25, 3));
+	//CrackCollider2->SetRelativeScale3D(FVector(1.5, 0.25, 3));
 
 	CrackExit1->SetRelativeLocation(FVector(0, 50, 0));
 	CrackExit2->SetRelativeLocation(FVector(0, 50, 0));
