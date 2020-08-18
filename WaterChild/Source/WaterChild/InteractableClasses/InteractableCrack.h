@@ -21,10 +21,10 @@ public:
 	UStaticMeshComponent* CrackMesh1;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh");
 	UStaticMeshComponent* CrackMesh2;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collision");
-	class UBoxComponent* CrackCollider1;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collision");
-	class UBoxComponent* CrackCollider2;
+	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collision");
+	//class UBoxComponent* CrackCollider1;
+	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collision");
+	//class UBoxComponent* CrackCollider2;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Exit");
 	USceneComponent* CrackExit1;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Exit");

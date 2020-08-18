@@ -60,12 +60,13 @@ public:
 		void OnBash();
 	void OnBash_Implementation();
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
-		void OnSqueeze(AActor* ActorHit);
-	void OnSqueeze_Implementation(AActor* ActorHit);
+		void OnSqueeze(AActor* CrackHit);
+	void OnSqueeze_Implementation(AActor* CrackHit);
 
 	bool GetCrackEntrance() { return bIsCrackEntrance; }
 
 private:
+#pragma region Spirit components
 	// Spirit water and ice mesh components
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
 		class USkeletalMeshComponent* SkeletalMeshWater;
@@ -83,6 +84,10 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Particles", meta = (AllowPrivateAccess = "true"))
 		class UNiagaraComponent* NiagaraRevive;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"))
+		class UArrowComponent* ArrowLineTrace;
+#pragma endregion
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		ESpiritState SpiritState = ESpiritState::Idle;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -93,17 +98,26 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"));
 	float BaseLookUpAtRate;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"));
+	float LineTraceLength = 50;
 	bool CanBash = true;
-	float BashDistance = 2000.f;
+	float BashDistance = 2000;
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-		bool bIsCrackEntrance;
+	bool bIsCrackEntrance;
+
+	// Squeeze variables
+	//AActor* CrackHit = nullptr;
+
+
 
 	void MoveForward(float Value);
 	void MoveRight(float Value);
 	void TurnAtRate(float Value) { AddControllerYawInput(Value * BaseTurnRate * GetWorld()->GetDeltaSeconds()); }
 	void LookUpAtRate(float Value) { AddControllerPitchInput(Value * BaseLookUpAtRate * GetWorld()->GetDeltaSeconds()); }
 	void Action();
+	void StopAction();
 	void TickBashCooldown(float DeltaTime);
+	AActor* TraceLine();
 
 	UFUNCTION()
 		void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
