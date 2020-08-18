@@ -12,8 +12,9 @@ enum class ESpiritState : uint8
 	Idle		UMETA(DisplayName = "Idle"),
 	Walking		UMETA(DisplayName = "Walking"),
 	Falling		UMETA(DisplayName = "Falling"),
+	Reviving	UMETA(DisplayName = "Reviving"),
 	Squeezing	UMETA(DisplayName = "Squeezing"),
-	Bashing		UMETA(DisplayName = "Bashing"),
+	Bashing		UMETA(DisplayName = "Bashing")
 };
 
 UENUM(BlueprintType)
@@ -51,8 +52,9 @@ public:
 	DECLARE_DELEGATE_OneParam(SetFormDelegate, ESpiritForm);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
-		void OnRevive(AActor* ActorHit);
-	void OnRevive_Implementation(AActor* ActorHit);
+		void OnRevive(class AInteractablePlant* PlantHit);
+	void OnRevive_Implementation(class AInteractablePlant* PlantHit);
+	void EndRevive(AActor* SelectedActor);
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 		void OnJump();
 	void OnJump_Implementation() {}
@@ -99,14 +101,15 @@ private:
 	float BaseLookUpAtRate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"));
-	float LineTraceLength = 50;
+	float ReviveTraceLength = 200;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"));
+	float SqueezeTraceLength = 10;
 	bool CanBash = true;
-	float BashDistance = 2000;
+	float BashDistance = 1500;
+	float BashTime = 0;
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	bool bIsCrackEntrance;
-
-	// Squeeze variables
-	//AActor* CrackHit = nullptr;
+	class AInteractablePlant* SelectedPlant = nullptr;
 
 
 
@@ -117,7 +120,7 @@ private:
 	void Action();
 	void StopAction();
 	void TickBashCooldown(float DeltaTime);
-	AActor* TraceLine();
+	AActor* TraceLine(float TraceLength);
 
 	UFUNCTION()
 		void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

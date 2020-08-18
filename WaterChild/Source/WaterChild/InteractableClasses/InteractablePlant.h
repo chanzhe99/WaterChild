@@ -6,6 +6,13 @@
 #include "Interactable.h"
 #include "InteractablePlant.generated.h"
 
+UENUM(BlueprintType)
+enum class EPlantState : uint8
+{
+	Dead		UMETA(DisplayName = "Dead"),
+	Reviving	UMETA(DisplayName = "Reviving"),
+	Revived		UMETA(DisplayName = "Revived"),
+};
 
 UCLASS()
 class WATERCHILD_API AInteractablePlant : public AInteractable
@@ -18,13 +25,22 @@ public:
 	USceneComponent* SceneComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh");
+	class UStaticMeshComponent* FloorPlane;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh");
 	class USkeletalMeshComponent* StemMesh;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh");
 	class USkeletalMeshComponent* PetalMesh;
 
-	UPROPERTY(EditAnywhere)
-	bool bPlantIsGrown = false;
+	EPlantState PlantState = EPlantState::Dead;
+	EPlantState GetPlantState() { return PlantState; }
+	void SetPlantState(EPlantState DesiredState) { PlantState = DesiredState; }
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Revive Settings")
+	float DefaultPlantHeight = -372;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Revive Settings")
+	float RevivedPlantHeight = 0;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Revive Settings")
+	float ReviveSpeed = 100;
 
 protected:
 	// Called when the game starts or when spawned

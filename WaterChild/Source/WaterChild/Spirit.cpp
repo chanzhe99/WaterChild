@@ -11,6 +11,7 @@
 #include "InteractableClasses/InteractableInterface.h"
 #include "InteractableClasses/InteractablePlant.h"
 #include "InteractableClasses/InteractableCrack.h"
+#include "InteractableClasses/InteractableDebris.h"
 #include "DrawDebugHelpers.h"
 
 #define OUT
@@ -92,10 +93,6 @@ void ASpirit::Tick(float DeltaTime)
 	//if(TraceLine() != nullptr)
 		//UE_LOG(LogTemp, Warning, TEXT("Hit Name: %s"), *TraceLine()->GetName());
 
-	//FRotator SpiritRotation = GetCapsuleComponent()->GetComponentRotation();
-	//const FVector Direction = FRotationMatrix(SpiritRotation).GetUnitAxis(EAxis::X);
-	//SetActorLocation(FVector(Direction.X, Direction.Y, 0).GetSafeNormal() * BashDistance * GetWorld()->GetDeltaSeconds());
-
 	if (!CanBash) TickBashCooldown(DeltaTime);
 
 	switch (SpiritState)
@@ -111,17 +108,22 @@ void ASpirit::Tick(float DeltaTime)
 			SetState(ESpiritState::Falling);
 
 		if (SpiritForm == ESpiritForm::Water)
-			if (TraceLine() && TraceLine()->IsA(AInteractableCrack::StaticClass()))
+			if (TraceLine(SqueezeTraceLength) && TraceLine(SqueezeTraceLength)->IsA(AInteractableCrack::StaticClass()))
 				SetState(ESpiritState::Squeezing);
 		break;
 	case ESpiritState::Falling:
 		if (!GetCharacterMovement()->IsFalling())
 			SetState(ESpiritState::Idle);
 		break;
+	case ESpiritState::Reviving:
+		UE_LOG(LogTemp, Warning, TEXT("Reviving"));
+		OnRevive(Cast<AInteractablePlant>(TraceLine(ReviveTraceLength)));
+		break;
 	case ESpiritState::Squeezing:
-		OnSqueeze(TraceLine());
+		OnSqueeze(TraceLine(SqueezeTraceLength));
 		break;
 	case ESpiritState::Bashing:
+		OnBash();
 		break;
 	}
 }
@@ -161,24 +163,22 @@ void ASpirit::SetForm(ESpiritForm DesiredForm)
 		GetMesh()->SetVisibility(true);
 		SkeletalMeshWater->SetVisibility(false);
 		StaticMeshIce->SetVisibility(false);
-
-		//GetCapsuleComponent()->SetCapsuleRadius(12.f);
 		break;
 
 	case ESpiritForm::Water:
 		GetMesh()->SetVisibility(false);
 		SkeletalMeshWater->SetVisibility(true);
 		StaticMeshIce->SetVisibility(false);
-
-		//GetCapsuleComponent()->SetCapsuleRadius(12.f);
+		if (SpiritState == ESpiritState::Reviving) SetState(ESpiritState::Idle);
+		if (NiagaraRevive->IsActive()) NiagaraRevive->Deactivate();
 		break;
 
 	case ESpiritForm::Ice:
 		GetMesh()->SetVisibility(false);
 		SkeletalMeshWater->SetVisibility(false);
 		StaticMeshIce->SetVisibility(true);
-
-		//GetCapsuleComponent()->SetCapsuleRadius(15.f);
+		if (SpiritState == ESpiritState::Reviving) SetState(ESpiritState::Idle);
+		if (NiagaraRevive->IsActive()) NiagaraRevive->Deactivate();
 		break;
 	}
 }
@@ -214,14 +214,15 @@ void ASpirit::Action()
 		switch (SpiritForm)
 		{
 		case ESpiritForm::Default:
+			SetState(ESpiritState::Reviving);
 			NiagaraRevive->Activate();
-			//OnRevive();
 			break;
 		case ESpiritForm::Water:
 			OnJump();
 			break;
 		case ESpiritForm::Ice:
-			if (CanBash) OnBash();
+			if (CanBash) //OnBash();
+				SetState(ESpiritState::Bashing);
 			break;
 		}
 	}
@@ -234,8 +235,14 @@ void ASpirit::StopAction()
 		switch (SpiritForm)
 		{
 		case ESpiritForm::Default:
+			if (SelectedPlant)
+			{
+				IInteractableInterface* Interface = Cast<IInteractableInterface>(SelectedPlant);
+				if (Interface) Interface->Execute_OnInteractEnd(SelectedPlant, this);
+			}
+			SelectedPlant = nullptr;
+			SetState(ESpiritState::Idle);
 			NiagaraRevive->Deactivate();
-			//OnRevive();
 			break;
 		case ESpiritForm::Water:
 			break;
@@ -261,14 +268,14 @@ void ASpirit::TickBashCooldown(float DeltaTime)
 	return;
 }
 
-AActor* ASpirit::TraceLine()
+AActor* ASpirit::TraceLine(float TraceLength)
 {
 	FHitResult Hit;
 	AActor* ActorHit = nullptr;
 
 	FRotator LineRotation = ArrowLineTrace->GetComponentRotation();
 	FVector LineStart = ArrowLineTrace->GetComponentLocation();
-	FVector LineEnd = LineStart + (LineRotation.Vector() * LineTraceLength);
+	FVector LineEnd = LineStart + (LineRotation.Vector() * TraceLength);
 
 	FCollisionQueryParams TraceParams;
 	bool bHit = GetWorld()->LineTraceSingleByObjectType(Hit, LineStart, LineEnd, ECC_Destructible, TraceParams);
@@ -291,74 +298,55 @@ AActor* ASpirit::TraceLine()
 	else return ActorHit = nullptr;
 }
 
-void ASpirit::OnRevive_Implementation(AActor* ActorHit)
+void ASpirit::OnRevive_Implementation(AInteractablePlant* PlantHit)
 {
-	UE_LOG(LogTemp, Warning, TEXT("HELLO"));
-	if (ActorHit)
+	if (PlantHit)
 	{
-		AInteractablePlant* InteractablePlant = Cast<AInteractablePlant>(ActorHit);
-		//IInteractInterface* Interface = Cast<IInteractInterface>(ActorHit);
-		if (!InteractablePlant->bPlantIsGrown)
+		//UE_LOG(LogTemp, Warning, TEXT("Plant Hit"));
+		if (PlantHit != SelectedPlant)
 		{
-			IInteractableInterface* Interface = Cast<IInteractableInterface>(ActorHit);
-			if (Interface)
-				Interface->Execute_OnInteract(ActorHit, this);
+			if (SelectedPlant)
+			{
+				IInteractableInterface* Interface = Cast<IInteractableInterface>(SelectedPlant);
+				if (Interface) Interface->Execute_OnInteractEnd(SelectedPlant, this);
+			}
 		}
-		else
+		IInteractableInterface* Interface = Cast<IInteractableInterface>(PlantHit);
+		if (Interface) Interface->Execute_OnInteract(PlantHit, this);
+		SelectedPlant = PlantHit;
+	}
+	else
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("No Plant Hit"));
+		if (SelectedPlant)
 		{
-			IInteractableInterface* Interface = Cast<IInteractableInterface>(ActorHit);
-			if (Interface)
-				Interface->Execute_OnInteractEnd(ActorHit, this);
+			IInteractableInterface* Interface = Cast<IInteractableInterface>(SelectedPlant);
+			if (Interface) Interface->Execute_OnInteractEnd(SelectedPlant, this);
 		}
+		SelectedPlant = nullptr;
 	}
 }
 
 void ASpirit::OnBash_Implementation()
 {
 	float BashDuration = 0.15f;
-	static float BashTime;
 
 	CanBash = false;
-	GetCapsuleComponent()->SetCapsuleRadius(20.f);
-	//UE_LOG(LogTemp, Warning, TEXT("CapsuleRadius: %f"), GetCapsuleComponent()->GetScaledCapsuleRadius());
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Destructible, ECR_Overlap);
 	FRotator SpiritRotation = GetCapsuleComponent()->GetComponentRotation();
 	const FVector Direction = FRotationMatrix(SpiritRotation).GetUnitAxis(EAxis::X);
 
-	// TODO Character only breaks debris when bashing right next to it because the collision channel change is only activated
-	// at the moment the bash begins
-	// Only works because the collision size increases on launch then switches back after
-	//if (BashTime < BashDuration)
-	//{
-	//	UE_LOG(LogTemp, Warning, TEXT("BashTime: %f"), BashTime);
-	//	//AddActorWorldOffset(FVector(Direction.X, Direction.Y, 0).GetSafeNormal() * BashDistance * GetWorld()->GetDeltaSeconds());
-	//	//SetActorLocation(FVector(Direction.X, Direction.Y, 0).GetSafeNormal() * BashDistance * GetWorld()->GetDeltaSeconds());
-	//	BashTime += GetWorld()->GetDeltaSeconds();
-	//}
-	//else
-	//{
-	//	BashTime = 0;
-	//	CanBash = false;
-	//	SetState(ESpiritState::Idle);
-	//}
-	ACharacter::LaunchCharacter(FVector(Direction.X, Direction.Y, 0.f).GetSafeNormal() * BashDistance, true, true);
-	GetCapsuleComponent()->SetCapsuleRadius(12.f);
-	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Destructible, ECR_Block);
-
-	//if (BashTime < BashDuration)
-	//{
-	//	FRotator SpiritRotation = GetCapsuleComponent()->GetComponentRotation();
-	//	const FVector Direction = FRotationMatrix(SpiritRotation).GetUnitAxis(EAxis::X);
-	//	ACharacter::LaunchCharacter(FVector(Direction.X, Direction.Y, 0.f).GetSafeNormal() * BashDistance, true, true);
-	//	BashTime += GetWorld()->GetDeltaSeconds();
-	//}
-	//else
-	//{
-	//	BashTime = 0.f;
-	//	//CanBash = false;
-	//	//SphereComponent->SetCollisionResponseToChannel(ECC_Destructible, ECR_Block);
-	//	SetState(ESpiritState::Idle);
-	//}
+	if (BashTime < BashDuration)
+	{
+		AddActorWorldOffset(Direction * BashDistance * GetWorld()->GetDeltaSeconds());
+		BashTime += GetWorld()->GetDeltaSeconds();
+	}
+	else
+	{
+		BashTime = 0;
+		GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Destructible, ECR_Block);
+		SetState(ESpiritState::Idle);
+	}
 }
 
 void ASpirit::OnSqueeze_Implementation(AActor* CrackHit)
@@ -374,7 +362,9 @@ void ASpirit::OnSqueeze_Implementation(AActor* CrackHit)
 void ASpirit::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Overlap called"));
-	IInteractableInterface* Interface = Cast<IInteractableInterface>(OtherActor);
-	if (Interface)
-		Interface->Execute_OnInteract(OtherActor, this);
+	if (OtherActor->IsA(AInteractableDebris::StaticClass()))
+	{
+		IInteractableInterface* Interface = Cast<IInteractableInterface>(OtherActor);
+		if (Interface) Interface->Execute_OnInteract(OtherActor, this);
+	}
 }
