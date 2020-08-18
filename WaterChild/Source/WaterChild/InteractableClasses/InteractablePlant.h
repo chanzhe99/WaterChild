@@ -18,10 +18,10 @@ public:
 	USceneComponent* SceneComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh");
-	UStaticMeshComponent* StemMesh;
+	class USkeletalMeshComponent* StemMesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh");
-	UStaticMeshComponent* PetalMesh;
+	class USkeletalMeshComponent* PetalMesh;
 
 	UPROPERTY(EditAnywhere)
 	bool bPlantIsGrown = false;

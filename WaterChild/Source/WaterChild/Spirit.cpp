@@ -92,6 +92,10 @@ void ASpirit::Tick(float DeltaTime)
 	//if(TraceLine() != nullptr)
 		//UE_LOG(LogTemp, Warning, TEXT("Hit Name: %s"), *TraceLine()->GetName());
 
+	//FRotator SpiritRotation = GetCapsuleComponent()->GetComponentRotation();
+	//const FVector Direction = FRotationMatrix(SpiritRotation).GetUnitAxis(EAxis::X);
+	//SetActorLocation(FVector(Direction.X, Direction.Y, 0).GetSafeNormal() * BashDistance * GetWorld()->GetDeltaSeconds());
+
 	if (!CanBash) TickBashCooldown(DeltaTime);
 
 	switch (SpiritState)
@@ -234,10 +238,8 @@ void ASpirit::StopAction()
 			//OnRevive();
 			break;
 		case ESpiritForm::Water:
-			OnJump();
 			break;
 		case ESpiritForm::Ice:
-			if (CanBash) OnBash();
 			break;
 		}
 	}
@@ -318,7 +320,7 @@ void ASpirit::OnBash_Implementation()
 
 	CanBash = false;
 	GetCapsuleComponent()->SetCapsuleRadius(20.f);
-	UE_LOG(LogTemp, Warning, TEXT("CapsuleRadius: %f"), GetCapsuleComponent()->GetScaledCapsuleRadius());
+	//UE_LOG(LogTemp, Warning, TEXT("CapsuleRadius: %f"), GetCapsuleComponent()->GetScaledCapsuleRadius());
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Destructible, ECR_Overlap);
 	FRotator SpiritRotation = GetCapsuleComponent()->GetComponentRotation();
 	const FVector Direction = FRotationMatrix(SpiritRotation).GetUnitAxis(EAxis::X);
@@ -326,6 +328,19 @@ void ASpirit::OnBash_Implementation()
 	// TODO Character only breaks debris when bashing right next to it because the collision channel change is only activated
 	// at the moment the bash begins
 	// Only works because the collision size increases on launch then switches back after
+	//if (BashTime < BashDuration)
+	//{
+	//	UE_LOG(LogTemp, Warning, TEXT("BashTime: %f"), BashTime);
+	//	//AddActorWorldOffset(FVector(Direction.X, Direction.Y, 0).GetSafeNormal() * BashDistance * GetWorld()->GetDeltaSeconds());
+	//	//SetActorLocation(FVector(Direction.X, Direction.Y, 0).GetSafeNormal() * BashDistance * GetWorld()->GetDeltaSeconds());
+	//	BashTime += GetWorld()->GetDeltaSeconds();
+	//}
+	//else
+	//{
+	//	BashTime = 0;
+	//	CanBash = false;
+	//	SetState(ESpiritState::Idle);
+	//}
 	ACharacter::LaunchCharacter(FVector(Direction.X, Direction.Y, 0.f).GetSafeNormal() * BashDistance, true, true);
 	GetCapsuleComponent()->SetCapsuleRadius(12.f);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Destructible, ECR_Block);

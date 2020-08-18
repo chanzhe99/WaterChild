@@ -12,10 +12,10 @@ AInteractablePlant::AInteractablePlant()
 	SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
 	SceneComponent->SetupAttachment(RootComponent);
 
-	StemMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StemMesh"));
+	StemMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("StemMesh"));
 	StemMesh->SetupAttachment(SceneComponent);
 
-	PetalMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PetalMesh"));
+	PetalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("PetalMesh"));
 	PetalMesh->SetupAttachment(StemMesh);
 
 	StemMesh->SetRelativeLocation(FVector(0, 0, -300));
