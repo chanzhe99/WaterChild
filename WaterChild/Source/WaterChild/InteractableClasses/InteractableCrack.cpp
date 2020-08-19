@@ -71,10 +71,11 @@ void AInteractableCrack::TraverseCrack(ASpirit* Caller, const FTransform* Entran
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Exit Crack"));
 		// Sets position and rotation to the same as exit
-		Caller->GetCapsuleComponent()->SetWorldLocationAndRotation(Exit->GetLocation(), Exit->GetRotation());
+		Caller->SetActorLocation(Exit->GetLocation());
 
 		// Adds offset rotation so that the player doesn't automatically trigger again
-		Caller->AddActorWorldRotation(FRotator(0, 90, 0).Quaternion());
+		//Caller->SetActorRotation(FRotator(0, 0, 0));
+		//Caller->AddActorWorldRotation(FRotator(0, 180, 0).Quaternion());
 		Caller->SetActorScale3D(InitialCallerScale);
 		Caller->SetState(Caller->ESpiritState::Walking);
 	}
