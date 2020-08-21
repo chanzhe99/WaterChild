@@ -12,6 +12,10 @@ AInteractableDebris::AInteractableDebris()
 
 	DebrisMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DebrisMesh"));
 	DebrisMesh->SetupAttachment(RootComponent);
+
+	DebrisMesh->SetCollisionObjectType(ECC_Destructible);
+	DebrisMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+	DebrisMesh->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 }
 
 // Called when the game starts or when spawned

@@ -109,7 +109,10 @@ void ASpirit::Tick(float DeltaTime)
 
 		if (SpiritForm == ESpiritForm::Water)
 			if (TraceLine(SqueezeTraceLength) && TraceLine(SqueezeTraceLength)->IsA(AInteractableCrack::StaticClass()))
+			{
+				SelectedCrack = Cast<AInteractableCrack>(TraceLine(SqueezeTraceLength));
 				SetState(ESpiritState::Squeezing);
+			}
 		break;
 	case ESpiritState::Falling:
 		if (!GetCharacterMovement()->IsFalling())
@@ -120,7 +123,8 @@ void ASpirit::Tick(float DeltaTime)
 		OnRevive(Cast<AInteractablePlant>(TraceLine(ReviveTraceLength)));
 		break;
 	case ESpiritState::Squeezing:
-		OnSqueeze(TraceLine(SqueezeTraceLength));
+		if(SelectedCrack)
+			OnSqueeze(SelectedCrack);
 		break;
 	case ESpiritState::Bashing:
 		OnBash();
@@ -327,6 +331,15 @@ void ASpirit::OnRevive_Implementation(AInteractablePlant* PlantHit)
 	}
 }
 
+void ASpirit::OnSqueeze_Implementation(AInteractableCrack* CrackHit)
+{
+	if (CrackHit)
+	{
+		IInteractableInterface* Interface = Cast<IInteractableInterface>(SelectedCrack);
+		if (Interface) Interface->Execute_OnInteract(SelectedCrack, this);
+	}
+}
+
 void ASpirit::OnBash_Implementation()
 {
 	float BashDuration = 0.15f;
@@ -349,19 +362,9 @@ void ASpirit::OnBash_Implementation()
 	}
 }
 
-void ASpirit::OnSqueeze_Implementation(AActor* CrackHit)
-{
-	if (CrackHit)
-	{
-		IInteractableInterface* Interface = Cast<IInteractableInterface>(CrackHit);
-		if (Interface)
-			Interface->Execute_OnInteract(CrackHit, this);
-	}
-}
-
 void ASpirit::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Overlap called"));
+	UE_LOG(LogTemp, Warning, TEXT("Overlap test called"));
 	if (OtherActor->IsA(AInteractableDebris::StaticClass()))
 	{
 		IInteractableInterface* Interface = Cast<IInteractableInterface>(OtherActor);

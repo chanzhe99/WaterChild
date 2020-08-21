@@ -22,32 +22,9 @@ class WATERCHILD_API AInteractablePlant : public AInteractable
 public:
 	AInteractablePlant();
 
-	USceneComponent* SceneComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh");
-	class UStaticMeshComponent* FloorPlane;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh");
-	class USkeletalMeshComponent* StemMesh;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh");
-	class USkeletalMeshComponent* PetalMesh;
-
-	EPlantState PlantState = EPlantState::Dead;
-	EPlantState GetPlantState() { return PlantState; }
-	void SetPlantState(EPlantState DesiredState) { PlantState = DesiredState; }
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Revive Settings")
-	float DefaultPlantHeight = -372;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Revive Settings")
-	float RevivedPlantHeight = 0;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Revive Settings")
-	float ReviveSpeed = 100;
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings");
-	float GrowthHeight = 300.f;
 
 public:
 	// Called every frame
@@ -55,4 +32,24 @@ public:
 	virtual void OnInteract_Implementation(ASpirit* Caller) override;
 	virtual void OnInteractEnd_Implementation(ASpirit* Caller) override;
 
+private:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
+	class UStaticMeshComponent* FloorPlane;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
+	class USkeletalMeshComponent* StemMesh;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
+	class USkeletalMeshComponent* PetalMesh;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collider", meta = (AllowPrivateAccess = "true"))
+	class UBoxComponent* PetalCollider;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collider", meta = (AllowPrivateAccess = "true"))
+	class UBoxComponent* ReviveCollider;
+
+	EPlantState PlantState = EPlantState::Dead;
+	EPlantState GetPlantState() { return PlantState; }
+	void SetPlantState(EPlantState DesiredState) { PlantState = DesiredState; }
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Revive Settings", meta = (AllowPrivateAccess = "true"))
+	float ReviveSpeed = 100;
+	float DefaultPlantHeight = -372;
+	float RevivedPlantHeight = 0;
 };

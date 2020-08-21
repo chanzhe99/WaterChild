@@ -16,32 +16,30 @@ public:
 	// Sets default values for this actor's properties
 	AInteractableCrack();
 
-	USceneComponent* SceneComponent;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh");
-	UStaticMeshComponent* CrackMesh1;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh");
-	UStaticMeshComponent* CrackMesh2;
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collision");
-	//class UBoxComponent* CrackCollider1;
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collision");
-	//class UBoxComponent* CrackCollider2;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Exit");
-	USceneComponent* CrackExit1;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Exit");
-	USceneComponent* CrackExit2;
-
-	const FTransform* Crack1 = nullptr;
-	const FTransform* Crack2 = nullptr;
-	FVector Crack1Location = FVector::ZeroVector;
-	FVector Crack2Location = FVector::ZeroVector;
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	void TraverseCrack(ASpirit* Caller, const FTransform* EntranceLocation, const FTransform* ExitLocation);
 
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	virtual void OnInteract_Implementation(ASpirit* Caller) override;
+
+private:
+	USceneComponent* SceneComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"));
+	UStaticMeshComponent* CrackMesh1;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"));
+	UStaticMeshComponent* CrackMesh2;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Exit", meta = (AllowPrivateAccess = "true"));
+	USceneComponent* CrackExit1;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Exit", meta = (AllowPrivateAccess = "true"));
+	USceneComponent* CrackExit2;
+
+	const FTransform* Crack1 = nullptr;
+	const FTransform* Crack2 = nullptr;
+	float TraversalPercentage = 0;
+
+	void TraverseCrack(ASpirit* Caller, const FTransform* EntranceLocation, const FTransform* ExitLocation);
+
 };

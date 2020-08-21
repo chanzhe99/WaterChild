@@ -2,25 +2,35 @@
 
 
 #include "InteractablePlant.h"
-
+#include "Components/BoxComponent.h"
 
 // Sets default values
 AInteractablePlant::AInteractablePlant()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	//SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
-	//SceneComponent->SetupAttachment(RootComponent);
-
 	FloorPlane = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("FloorPlane"));
-	FloorPlane->SetupAttachment(RootComponent);
-
 	StemMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("StemMesh"));
-	StemMesh->SetupAttachment(FloorPlane);
-
 	PetalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("PetalMesh"));
-	PetalMesh->SetupAttachment(StemMesh);
+	PetalCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("PetalCollider"));
+	ReviveCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("ReviveCollider"));
 
+	FloorPlane->SetupAttachment(RootComponent);
+	StemMesh->SetupAttachment(FloorPlane);
+	PetalMesh->SetupAttachment(StemMesh);
+	PetalCollider->SetupAttachment(PetalMesh);
+	ReviveCollider->SetupAttachment(StemMesh);
+
+	StemMesh->SetRelativeLocation(FVector(0, 0, DefaultPlantHeight));
+	PetalCollider->SetRelativeLocation(FVector(0, 0, 382));
+	ReviveCollider->SetRelativeLocation(FVector(0, 0, 50));
+
+	PetalCollider->SetBoxExtent(FVector(50, 50, 0));
+	ReviveCollider->SetBoxExtent(FVector(50, 50, 50));
+
+	PetalCollider->SetCollisionProfileName(TEXT("NoCollision"));
+	ReviveCollider->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+	ReviveCollider->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 }
 
 // Called when the game starts or when spawned
@@ -38,6 +48,8 @@ void AInteractablePlant::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	//UE_LOG(LogTemp, Warning, TEXT("Plant Updating"))
+
 	switch (PlantState)
 	{
 	case EPlantState::Dead:
@@ -48,6 +60,13 @@ void AInteractablePlant::Tick(float DeltaTime)
 		if (StemMesh->GetRelativeLocation().Z < RevivedPlantHeight)
 			StemMesh->AddLocalOffset(FVector(0, 0, ReviveSpeed * GetWorld()->GetDeltaSeconds()));
 		else SetPlantState(EPlantState::Revived);
+		break;
+	case EPlantState::Revived:
+		PetalCollider->SetCollisionProfileName(TEXT("BlockAllDynamic"));
+		PetalCollider->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+		PetalCollider->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+		SetActorTickEnabled(false);
+		break;
 	}
 }
 

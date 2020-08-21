@@ -45,6 +45,8 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	class USpringArmComponent* GetSpringArm() const { return SpringArm; }
+
 	// Changes the Spirit's state and form according to input parameter
 	UFUNCTION(BlueprintCallable)
 		void SetState(ESpiritState DesiredState) { SpiritState = DesiredState; }
@@ -54,16 +56,15 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 		void OnRevive(class AInteractablePlant* PlantHit);
 	void OnRevive_Implementation(class AInteractablePlant* PlantHit);
-	void EndRevive(AActor* SelectedActor);
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 		void OnJump();
 	void OnJump_Implementation() {}
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+		void OnSqueeze(class AInteractableCrack* CrackHit);
+	void OnSqueeze_Implementation(class AInteractableCrack* CrackHit);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 		void OnBash();
 	void OnBash_Implementation();
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
-		void OnSqueeze(AActor* CrackHit);
-	void OnSqueeze_Implementation(AActor* CrackHit);
 
 	bool GetCrackEntrance() { return bIsCrackEntrance; }
 
@@ -110,7 +111,7 @@ private:
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	bool bIsCrackEntrance;
 	class AInteractablePlant* SelectedPlant = nullptr;
-
+	class AInteractableCrack* SelectedCrack = nullptr;
 
 
 	void MoveForward(float Value);

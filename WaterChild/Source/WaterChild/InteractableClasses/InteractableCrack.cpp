@@ -4,6 +4,7 @@
 #include "InteractableCrack.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/SpringArmComponent.h"
 
 
 // Sets default values
@@ -44,6 +45,14 @@ AInteractableCrack::AInteractableCrack()
 
 	CrackExit1->SetRelativeLocation(FVector(0, 50, 0));
 	CrackExit2->SetRelativeLocation(FVector(0, 50, 0));
+
+	CrackMesh1->SetCollisionObjectType(ECC_Destructible);
+	CrackMesh1->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+	CrackMesh1->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+
+	CrackMesh2->SetCollisionObjectType(ECC_Destructible);
+	CrackMesh2->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+	CrackMesh2->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 }
 
 // Called when the game starts or when spawned
@@ -53,31 +62,45 @@ void AInteractableCrack::BeginPlay()
 
 	Crack1 = &CrackMesh1->GetComponentTransform();
 	Crack2 = &CrackMesh2->GetComponentTransform();
-	Crack1Location = CrackMesh1->GetComponentTransform().GetLocation();
-	Crack2Location = CrackMesh2->GetComponentTransform().GetLocation();
 }
 
 void AInteractableCrack::TraverseCrack(ASpirit* Caller, const FTransform* Entrance, const FTransform* Exit)
 {
 	FVector InitialCallerScale = FVector(1, 1, 1);
 	FVector CurrentCallerScale = Caller->GetActorScale();
+	FVector CorrectedEntranceLocation = FVector(Entrance->GetLocation().X, Entrance->GetLocation().Y, Entrance->GetLocation().Z + Caller->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+	FVector CorrectedExitLocation = FVector(Exit->GetLocation().X, Exit->GetLocation().Y, Exit->GetLocation().Z + Caller->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
 
-	if (CurrentCallerScale.X > InitialCallerScale.X / 2)
+	if (!Caller->GetActorLocation().Equals(CorrectedExitLocation, 1))
 	{
-		Caller->SetActorLocation(FMath::Lerp(Caller->GetActorLocation(), Entrance->GetLocation(), 0.05f));
-		Caller->SetActorScale3D(FMath::Lerp(Caller->GetActorScale(), Caller->GetActorScale() / 2, 0.05f));
+		if (CurrentCallerScale.X > InitialCallerScale.X / 2)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Entering Crack"));
+			//Caller->SetActorLocationAndRotation(FMath::Lerp(Caller->GetActorLocation(), CorrectedEntranceLocation, 0.05f), FRotator(0, Exit->GetRotation().Rotator().Yaw, 0).Quaternion());
+			Caller->SetActorRotation(FRotator(0, Exit->GetRotation().Rotator().Yaw, 0).Quaternion());
+			Caller->AddActorWorldRotation(FRotator(0, 90, 0));
+			Caller->SetActorScale3D(FMath::Lerp(Caller->GetActorScale(), Caller->GetActorScale() / 2, 0.05f));
+		}
+		else if (CurrentCallerScale.X <= InitialCallerScale.X / 2)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Travelling through Crack"));
+			// Sets position and rotation to the same as exit
+			Caller->GetSpringArm()->bDoCollisionTest = false;
+			if (TraversalPercentage >= 1) TraversalPercentage = 1;
+			else TraversalPercentage += GetWorld()->GetDeltaSeconds();
+			Caller->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			Caller->SetActorLocation(FMath::Lerp(CorrectedEntranceLocation, CorrectedExitLocation, TraversalPercentage));
+		}
 	}
-	else if (CurrentCallerScale.X <= InitialCallerScale.X / 2)
+	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Exit Crack"));
-		// Sets position and rotation to the same as exit
-		Caller->SetActorLocation(Exit->GetLocation());
-
-		// Adds offset rotation so that the player doesn't automatically trigger again
-		//Caller->SetActorRotation(FRotator(0, 0, 0));
-		//Caller->AddActorWorldRotation(FRotator(0, 180, 0).Quaternion());
+		UE_LOG(LogTemp, Warning, TEXT("Actor reached exit"));
+		TraversalPercentage = 0;
+		Caller->GetSpringArm()->bDoCollisionTest = true;
+		Caller->SetActorLocation(CorrectedExitLocation);
 		Caller->SetActorScale3D(InitialCallerScale);
-		Caller->SetState(Caller->ESpiritState::Walking);
+		Caller->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		Caller->SetState(ESpiritState::Walking);
 	}
 }
 
