@@ -35,6 +35,7 @@ ASpirit::ASpirit()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	NiagaraFootsteps = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraFootsteps"));
 	NiagaraRevive = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraRevive"));
+	NiagaraIceTrail = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraIceTrail"));
 	ArrowLineTrace = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowLineTrace"));
 
 	// Setup attachments for components
@@ -44,6 +45,7 @@ ASpirit::ASpirit()
 	Camera->SetupAttachment(SpringArm);
 	NiagaraFootsteps->SetupAttachment(GetMesh());
 	NiagaraRevive->SetupAttachment(GetMesh());
+	NiagaraIceTrail->SetupAttachment(StaticMeshIce);
 	ArrowLineTrace->SetupAttachment(RootComponent);
 
 	// Set mesh position offsets
@@ -60,10 +62,11 @@ ASpirit::ASpirit()
 	SpringArm->bUsePawnControlRotation = true;
 
 	// Set Niagara system properties
-	NiagaraRevive->SetRelativeLocation(FVector(0, 0, 25));
-	NiagaraRevive->SetRelativeRotation(FRotator(0, 270, 0));
+	NiagaraRevive->SetRelativeLocationAndRotation(FVector(0, 0, 25), FRotator(0, 270, 0));
+	NiagaraIceTrail->SetRelativeLocationAndRotation(FVector(-19, 0, -5), FRotator(15, 180.f, 0));
 	NiagaraFootsteps->SetAutoActivate(false);
 	NiagaraRevive->SetAutoActivate(false);
+	NiagaraIceTrail->SetAutoActivate(false);
 
 	// Set capsule base height
 	GetCapsuleComponent()->SetCapsuleRadius(12.f);

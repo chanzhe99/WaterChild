@@ -86,6 +86,8 @@ private:
 	class UNiagaraComponent* NiagaraFootsteps;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Particles", meta = (AllowPrivateAccess = "true"))
 		class UNiagaraComponent* NiagaraRevive;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Particles", meta = (AllowPrivateAccess = "true"))
+		class UNiagaraComponent* NiagaraIceTrail;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"))
 		class UArrowComponent* ArrowLineTrace;
