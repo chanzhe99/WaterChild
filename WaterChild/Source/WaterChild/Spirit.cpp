@@ -167,12 +167,18 @@ void ASpirit::SetForm(ESpiritForm DesiredForm)
 	switch (SpiritForm)
 	{
 	case ESpiritForm::Default:
+		GetMesh()->Activate();
+		SkeletalMeshWater->Deactivate();
+		StaticMeshIce->Deactivate();
 		GetMesh()->SetVisibility(true);
 		SkeletalMeshWater->SetVisibility(false);
 		StaticMeshIce->SetVisibility(false);
 		break;
 
 	case ESpiritForm::Water:
+		GetMesh()->Deactivate();
+		SkeletalMeshWater->Activate();
+		StaticMeshIce->Deactivate();
 		GetMesh()->SetVisibility(false);
 		SkeletalMeshWater->SetVisibility(true);
 		StaticMeshIce->SetVisibility(false);
@@ -181,6 +187,9 @@ void ASpirit::SetForm(ESpiritForm DesiredForm)
 		break;
 
 	case ESpiritForm::Ice:
+		GetMesh()->Deactivate();
+		SkeletalMeshWater->Deactivate();
+		StaticMeshIce->Activate();
 		GetMesh()->SetVisibility(false);
 		SkeletalMeshWater->SetVisibility(false);
 		StaticMeshIce->SetVisibility(true);
