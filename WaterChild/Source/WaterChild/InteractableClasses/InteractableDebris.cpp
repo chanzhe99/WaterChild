@@ -33,5 +33,5 @@ void AInteractableDebris::Tick(float DeltaTime)
 
 void AInteractableDebris::OnInteract_Implementation(ASpirit* Caller)
 {
-	Destroy();
+	//Destroy();
 }
