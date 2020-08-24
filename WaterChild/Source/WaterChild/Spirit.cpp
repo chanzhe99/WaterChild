@@ -225,7 +225,8 @@ void ASpirit::Action()
 			NiagaraRevive->Activate();
 			break;
 		case ESpiritForm::Water:
-			OnJump();
+			if(SpiritState == ESpiritState::Idle || SpiritState == ESpiritState::Walking)
+				OnJump();
 			break;
 		case ESpiritForm::Ice:
 			if (CanBash) //OnBash();
