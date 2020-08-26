@@ -326,7 +326,7 @@ AActor* ASpirit::TraceLineStatic(float TraceLength)
 
 	FCollisionQueryParams TraceParams;
 	bool bHit = GetWorld()->LineTraceSingleByObjectType(Hit, LineStart, LineEnd, ECC_WorldStatic, TraceParams);
-	//DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Green, false, 0, 0, 2);
+	DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Green, false, 0, 0, 2);
 
 	if (bHit)
 	{
@@ -390,9 +390,9 @@ void ASpirit::OnBash_Implementation()
 
 	if (BashTime < BashDuration)
 	{
-		if (TraceLineStatic(30))
+		if (TraceLineStatic(40))
 		{
-			//UE_LOG(LogTemp, Warning, TEXT("HELLO"));
+			UE_LOG(LogTemp, Warning, TEXT("HELLO"));
 			BashTime = 0;
 			GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Destructible, ECR_Block);
 			SetState(ESpiritState::Idle);
