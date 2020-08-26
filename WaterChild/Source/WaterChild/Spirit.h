@@ -108,6 +108,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"));
 	float SqueezeTraceLength = 10;
 	bool CanBash = true;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bash", meta = (AllowPrivateAccess = "true"));
 	float BashDistance = 1500;
 	float BashTime = 0;
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -124,6 +125,7 @@ private:
 	void StopAction();
 	void TickBashCooldown(float DeltaTime);
 	AActor* TraceLine(float TraceLength);
+	AActor* TraceLineStatic(float TraceLength);
 
 	UFUNCTION()
 		void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

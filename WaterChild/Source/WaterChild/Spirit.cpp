@@ -315,6 +315,32 @@ AActor* ASpirit::TraceLine(float TraceLength)
 	else return ActorHit = nullptr;
 }
 
+AActor* ASpirit::TraceLineStatic(float TraceLength)
+{
+	FHitResult Hit;
+	AActor* ActorHit = nullptr;
+
+	FRotator LineRotation = ArrowLineTrace->GetComponentRotation();
+	FVector LineStart = ArrowLineTrace->GetComponentLocation();
+	FVector LineEnd = LineStart + (LineRotation.Vector() * TraceLength);
+
+	FCollisionQueryParams TraceParams;
+	bool bHit = GetWorld()->LineTraceSingleByObjectType(Hit, LineStart, LineEnd, ECC_WorldStatic, TraceParams);
+	//DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Green, false, 0, 0, 2);
+
+	if (bHit)
+	{
+		//DrawDebugBox(GetWorld(), Hit.ImpactPoint, FVector(5, 5, 5), FColor::Orange, false, 2);
+
+		//UE_LOG(LogTemp, Warning, TEXT("Crack Location: %f, %f"), Hit.GetComponent()->GetRelativeLocation().X, Hit.GetComponent()->GetRelativeLocation().Y);
+
+		if (!Hit.GetActor()->IsA(AInteractable::StaticClass()))
+			return ActorHit = Hit.GetActor();
+		else return ActorHit = nullptr;
+	}
+	else return ActorHit = nullptr;
+}
+
 void ASpirit::OnRevive_Implementation(AInteractablePlant* PlantHit)
 {
 	if (PlantHit)
@@ -364,6 +390,13 @@ void ASpirit::OnBash_Implementation()
 
 	if (BashTime < BashDuration)
 	{
+		if (TraceLineStatic(30))
+		{
+			//UE_LOG(LogTemp, Warning, TEXT("HELLO"));
+			BashTime = 0;
+			GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Destructible, ECR_Block);
+			SetState(ESpiritState::Idle);
+		}
 		AddActorWorldOffset(Direction * BashDistance * GetWorld()->GetDeltaSeconds());
 		BashTime += GetWorld()->GetDeltaSeconds();
 	}
