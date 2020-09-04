@@ -13,6 +13,7 @@ enum class ESpiritState : uint8
 	Walking		UMETA(DisplayName = "Walking"),
 	Falling		UMETA(DisplayName = "Falling"),
 	Reviving	UMETA(DisplayName = "Reviving"),
+	ChargingJump UMETA(DisplayName = "ChargingJump"),
 	Squeezing	UMETA(DisplayName = "Squeezing"),
 	Bashing		UMETA(DisplayName = "Bashing")
 };
@@ -45,8 +46,6 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	class USpringArmComponent* GetSpringArm() const { return SpringArm; }
-
 	// Changes the Spirit's state and form according to input parameter
 	UFUNCTION(BlueprintCallable)
 		void SetState(ESpiritState DesiredState) { SpiritState = DesiredState; }
@@ -58,7 +57,7 @@ public:
 	void OnRevive_Implementation(class AInteractablePlant* PlantHit);
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 		void OnJump();
-	void OnJump_Implementation() {}
+	void OnJump_Implementation();
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 		void OnSqueeze(class AInteractableCrack* CrackHit);
 	void OnSqueeze_Implementation(class AInteractableCrack* CrackHit);
@@ -67,6 +66,7 @@ public:
 	void OnBash_Implementation();
 
 	bool GetCrackEntrance() { return bIsCrackEntrance; }
+	class USpringArmComponent* GetSpringArm() const { return SpringArm; }
 
 private:
 #pragma region Spirit components
@@ -87,7 +87,11 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Particles", meta = (AllowPrivateAccess = "true"))
 		class UNiagaraComponent* NiagaraRevive;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Particles", meta = (AllowPrivateAccess = "true"))
+		class UNiagaraComponent* NiagaraJump;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Particles", meta = (AllowPrivateAccess = "true"))
 		class UNiagaraComponent* NiagaraIceTrail;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Particles", meta = (AllowPrivateAccess = "true"))
+		class UNiagaraComponent* NiagaraLand;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"))
 		class UArrowComponent* ArrowLineTrace;
@@ -107,10 +111,18 @@ private:
 	float ReviveTraceLength = 200;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"));
 	float SqueezeTraceLength = 10;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Jump", meta = (AllowPrivateAccess = "true"));
+	float JumpChargeDuration = 0.1f;
+	float JumpChargeTime = 0;
+	
 	bool CanBash = true;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bash", meta = (AllowPrivateAccess = "true"));
 	float BashDistance = 1500;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bash", meta = (AllowPrivateAccess = "true"));
+	float BashDuration = 0.15f;
 	float BashTime = 0;
+
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	bool bIsCrackEntrance;
 	class AInteractablePlant* SelectedPlant = nullptr;

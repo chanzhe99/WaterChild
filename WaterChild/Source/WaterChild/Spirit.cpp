@@ -35,7 +35,9 @@ ASpirit::ASpirit()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	NiagaraFootsteps = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraFootsteps"));
 	NiagaraRevive = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraRevive"));
+	NiagaraJump = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraJump"));
 	NiagaraIceTrail = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraIceTrail"));
+	NiagaraLand = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraLand"));
 	ArrowLineTrace = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowLineTrace"));
 
 	// Setup attachments for components
@@ -45,7 +47,9 @@ ASpirit::ASpirit()
 	Camera->SetupAttachment(SpringArm);
 	NiagaraFootsteps->SetupAttachment(GetMesh());
 	NiagaraRevive->SetupAttachment(GetMesh());
+	NiagaraJump->SetupAttachment(SkeletalMeshWater);
 	NiagaraIceTrail->SetupAttachment(StaticMeshIce);
+	NiagaraLand->SetupAttachment(RootComponent);
 	ArrowLineTrace->SetupAttachment(RootComponent);
 
 	// Set mesh position offsets
@@ -64,9 +68,12 @@ ASpirit::ASpirit()
 	// Set Niagara system properties
 	NiagaraRevive->SetRelativeLocationAndRotation(FVector(0, 0, 25), FRotator(0, 270, 0));
 	NiagaraIceTrail->SetRelativeLocationAndRotation(FVector(-19, 0, -5), FRotator(15, 180.f, 0));
+	NiagaraLand->SetRelativeLocation(FVector(0, 0, -27));
 	NiagaraFootsteps->SetAutoActivate(false);
 	NiagaraRevive->SetAutoActivate(false);
+	NiagaraJump->SetAutoActivate(false);
 	NiagaraIceTrail->SetAutoActivate(false);
+	NiagaraLand->SetAutoActivate(false);
 
 	// Set capsule base height
 	GetCapsuleComponent()->SetCapsuleRadius(12.f);
@@ -119,12 +126,26 @@ void ASpirit::Tick(float DeltaTime)
 		break;
 	case ESpiritState::Falling:
 		if (!GetCharacterMovement()->IsFalling())
+		{
+			if (SpiritForm != ESpiritForm::Water)
+			{
+				NiagaraLand->Deactivate();
+				NiagaraLand->Activate();
+			}
+			else
+			{
+				NiagaraJump->Deactivate();
+				NiagaraJump->Activate();
+			}
 			SetState(ESpiritState::Idle);
+		}
 		break;
 	case ESpiritState::Reviving:
 		UE_LOG(LogTemp, Warning, TEXT("Reviving"));
 		OnRevive(Cast<AInteractablePlant>(TraceLine(ReviveTraceLength)));
 		break;
+	case ESpiritState::ChargingJump:
+		OnJump();
 	case ESpiritState::Squeezing:
 		if(SelectedCrack)
 			OnSqueeze(SelectedCrack);
@@ -234,8 +255,8 @@ void ASpirit::Action()
 			NiagaraRevive->Activate();
 			break;
 		case ESpiritForm::Water:
-			if(SpiritState == ESpiritState::Idle || SpiritState == ESpiritState::Walking)
-				OnJump();
+			if (SpiritState == ESpiritState::Idle || SpiritState == ESpiritState::Walking)
+				SetState(ESpiritState::ChargingJump);
 			break;
 		case ESpiritForm::Ice:
 			if (CanBash) //OnBash();
@@ -370,6 +391,19 @@ void ASpirit::OnRevive_Implementation(AInteractablePlant* PlantHit)
 	}
 }
 
+void ASpirit::OnJump_Implementation()
+{
+	if (JumpChargeTime < JumpChargeDuration) JumpChargeTime += GetWorld()->GetDeltaSeconds();
+	else
+	{
+		ACharacter::Jump();
+		NiagaraJump->Deactivate();
+		NiagaraJump->Activate();
+		JumpChargeTime = 0;
+		SetState(ESpiritState::Falling);
+	}
+}
+
 void ASpirit::OnSqueeze_Implementation(AInteractableCrack* CrackHit)
 {
 	if (CrackHit)
@@ -381,12 +415,11 @@ void ASpirit::OnSqueeze_Implementation(AInteractableCrack* CrackHit)
 
 void ASpirit::OnBash_Implementation()
 {
-	float BashDuration = 0.15f;
-
 	CanBash = false;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Destructible, ECR_Overlap);
 	FRotator SpiritRotation = GetCapsuleComponent()->GetComponentRotation();
 	const FVector Direction = FRotationMatrix(SpiritRotation).GetUnitAxis(EAxis::X);
+	NiagaraIceTrail->Activate(true);
 
 	if (BashTime < BashDuration)
 	{
@@ -404,6 +437,7 @@ void ASpirit::OnBash_Implementation()
 	{
 		BashTime = 0;
 		GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Destructible, ECR_Block);
+		NiagaraIceTrail->Deactivate();
 		SetState(ESpiritState::Idle);
 	}
 }
