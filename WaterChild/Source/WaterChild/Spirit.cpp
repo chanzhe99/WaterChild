@@ -21,10 +21,14 @@ ASpirit::ASpirit()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	// Set controller default values
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 	GetCharacterMovement()->MaxWalkSpeed = 300;
+	GetCharacterMovement()->JumpZVelocity = 200;
+	GetCharacterMovement()->AirControl = 0.25;
 	GetCharacterMovement()->RotationRate.Yaw = 720;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 
@@ -35,9 +39,10 @@ ASpirit::ASpirit()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	NiagaraFootsteps = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraFootsteps"));
 	NiagaraRevive = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraRevive"));
-	NiagaraJump = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraJump"));
 	NiagaraIceTrail = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraIceTrail"));
-	NiagaraLand = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraLand"));
+	NiagaraJumpDefault = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraJumpDefault"));
+	NiagaraJumpWater = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraJumpWater"));
+	NiagaraJumpIce = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraJumpIce"));
 	ArrowLineTrace = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowLineTrace"));
 
 	// Setup attachments for components
@@ -46,44 +51,64 @@ ASpirit::ASpirit()
 	SpringArm->SetupAttachment(RootComponent);
 	Camera->SetupAttachment(SpringArm);
 	NiagaraFootsteps->SetupAttachment(GetMesh());
-	NiagaraRevive->SetupAttachment(GetMesh());
-	NiagaraJump->SetupAttachment(SkeletalMeshWater);
+	NiagaraRevive->SetupAttachment(ArrowLineTrace);
 	NiagaraIceTrail->SetupAttachment(StaticMeshIce);
-	NiagaraLand->SetupAttachment(RootComponent);
+	NiagaraJumpDefault->SetupAttachment(GetMesh());
+	NiagaraJumpWater->SetupAttachment(SkeletalMeshWater);
+	NiagaraJumpIce->SetupAttachment(StaticMeshIce);
 	ArrowLineTrace->SetupAttachment(RootComponent);
 
-	// Set mesh position offsets
+	// Set component position offsets
 	GetMesh()->SetRelativeLocation(FVector(0, 0, -27));
 	SkeletalMeshWater->SetRelativeLocation(FVector(-14, 0, -27));
 	StaticMeshIce->SetRelativeLocation(FVector(0, 0, -13));
+
+	SpringArm->SetRelativeLocation(FVector(-5, 0, 0));
+
+	NiagaraRevive->SetRelativeRotation(FRotator(0, 270, 0));
+	NiagaraIceTrail->SetRelativeLocationAndRotation(FVector(-19, 0, -5), FRotator(15, 180.f, 0));
 
 	// Set character mesh collision profiles
 	SkeletalMeshWater->SetCollisionProfileName(TEXT("CharacterMesh"));
 	StaticMeshIce->SetCollisionProfileName(TEXT("CharacterMesh"));
 
-	// Set spring arm properties
+	// Set component default values
 	SpringArm->TargetArmLength = 300.f;
 	SpringArm->bUsePawnControlRotation = true;
 
-	// Set Niagara system properties
-	NiagaraRevive->SetRelativeLocationAndRotation(FVector(0, 0, 25), FRotator(0, 270, 0));
-	NiagaraIceTrail->SetRelativeLocationAndRotation(FVector(-19, 0, -5), FRotator(15, 180.f, 0));
-	NiagaraLand->SetRelativeLocation(FVector(0, 0, -27));
 	NiagaraFootsteps->SetAutoActivate(false);
 	NiagaraRevive->SetAutoActivate(false);
-	NiagaraJump->SetAutoActivate(false);
 	NiagaraIceTrail->SetAutoActivate(false);
-	NiagaraLand->SetAutoActivate(false);
+	NiagaraJumpDefault->SetAutoActivate(false);
+	NiagaraJumpWater->SetAutoActivate(false);
+	NiagaraJumpIce->SetAutoActivate(false);
 
-	// Set capsule base height
 	GetCapsuleComponent()->SetCapsuleRadius(12.f);
 	GetCapsuleComponent()->SetCapsuleHalfHeight(25.f);
 
-	// Set spirit form to default
-	SetForm(ESpiritForm::Default);
+	// Set default variable values
+	SpiritState = ESpiritState::Idle;
+	SpiritForm = ESpiritForm::Default;
 
 	BaseTurnRate = 45.f;
 	BaseLookUpAtRate = 45.f;
+
+	ReviveTraceLength = 200;
+	SqueezeTraceLength = 10;
+
+	JumpChargeDuration = 0.1f;
+	JumpChargeTime = 0;
+
+	BashDistanceDefault = 300;
+	BashDuration = 0.15f;
+	BashTime = 0;
+	CanBash = true;
+	BashLocationStart = FVector().ZeroVector;
+	BashLocationEnd = FVector().ZeroVector;
+
+	bIsCrackEntrance = true;
+	SelectedPlant = nullptr;
+	SelectedCrack = nullptr;
 }
 
 // Called when the game starts or when spawned
@@ -127,25 +152,30 @@ void ASpirit::Tick(float DeltaTime)
 	case ESpiritState::Falling:
 		if (!GetCharacterMovement()->IsFalling())
 		{
-			if (SpiritForm != ESpiritForm::Water)
+			switch (SpiritForm)
 			{
-				NiagaraLand->Deactivate();
-				NiagaraLand->Activate();
-			}
-			else
-			{
-				NiagaraJump->Deactivate();
-				NiagaraJump->Activate();
+			case ESpiritForm::Default:
+				NiagaraJumpDefault->Deactivate();
+				NiagaraJumpDefault->Activate();
+				break;
+			case ESpiritForm::Water:
+				NiagaraJumpWater->Deactivate();
+				NiagaraJumpWater->Activate();
+				break;
+			case ESpiritForm::Ice:
+				NiagaraJumpIce->Deactivate();
+				NiagaraJumpIce->Activate();
+				break;
 			}
 			SetState(ESpiritState::Idle);
 		}
 		break;
 	case ESpiritState::Reviving:
-		UE_LOG(LogTemp, Warning, TEXT("Reviving"));
 		OnRevive(Cast<AInteractablePlant>(TraceLine(ReviveTraceLength)));
 		break;
 	case ESpiritState::ChargingJump:
 		OnJump();
+		break;
 	case ESpiritState::Squeezing:
 		if(SelectedCrack)
 			OnSqueeze(SelectedCrack);
@@ -167,6 +197,7 @@ void ASpirit::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction<SetFormDelegate>("IceFormButton", IE_Pressed, this, &ASpirit::SetForm, ESpiritForm::Ice);
 	PlayerInputComponent->BindAction("ActionButton", IE_Pressed, this, &ASpirit::Action);
 	PlayerInputComponent->BindAction("ActionButton", IE_Released, this, &ASpirit::StopAction);
+	PlayerInputComponent->BindAction("JumpButton", IE_Pressed, this, &ASpirit::Jump);
 
 	// Binds the movement axes
 	PlayerInputComponent->BindAxis("MoveForward", this, &ASpirit::MoveForward);
@@ -183,7 +214,8 @@ void ASpirit::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 // Changes the Spirit's form according to input parameter
 void ASpirit::SetForm(ESpiritForm DesiredForm)
 {
-	SpiritForm = DesiredForm;
+	if (SpiritForm == DesiredForm && SpiritForm != ESpiritForm::Default) SpiritForm = ESpiritForm::Default;
+	else SpiritForm = DesiredForm;
 
 	switch (SpiritForm)
 	{
@@ -203,8 +235,12 @@ void ASpirit::SetForm(ESpiritForm DesiredForm)
 		GetMesh()->SetVisibility(false);
 		SkeletalMeshWater->SetVisibility(true);
 		StaticMeshIce->SetVisibility(false);
-		if (SpiritState == ESpiritState::Reviving) SetState(ESpiritState::Idle);
-		if (NiagaraRevive->IsActive()) NiagaraRevive->Deactivate();
+		if (SpiritState == ESpiritState::Reviving)
+		{
+			ArrowLineTrace->SetRelativeRotation(FRotator().ZeroRotator);
+			NiagaraRevive->Deactivate();
+			SetState(ESpiritState::Idle);
+		}
 		break;
 
 	case ESpiritForm::Ice:
@@ -214,33 +250,70 @@ void ASpirit::SetForm(ESpiritForm DesiredForm)
 		GetMesh()->SetVisibility(false);
 		SkeletalMeshWater->SetVisibility(false);
 		StaticMeshIce->SetVisibility(true);
-		if (SpiritState == ESpiritState::Reviving) SetState(ESpiritState::Idle);
-		if (NiagaraRevive->IsActive()) NiagaraRevive->Deactivate();
+		if (SpiritState == ESpiritState::Reviving)
+		{
+			ArrowLineTrace->SetRelativeRotation(FRotator().ZeroRotator);
+			NiagaraRevive->Deactivate();
+			SetState(ESpiritState::Idle);
+		}
 		break;
 	}
 }
 
 void ASpirit::MoveForward(float Value)
 {
-	if (SpiritState != ESpiritState::Squeezing && SpiritState != ESpiritState::Bashing && Controller && Value != 0.f)
+	if (Controller && Value != 0.f && SpiritState != ESpiritState::Squeezing && SpiritState != ESpiritState::Bashing)
 	{
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
+		if (SpiritState == ESpiritState::Reviving)
+		{
+			const FRotator RevivePitch(Value * BaseTurnRate * 2 * GetWorld()->GetDeltaSeconds(), 0, 0);
+			ArrowLineTrace->AddRelativeRotation(RevivePitch);
 
-		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-		AddMovementInput(Direction, Value);
+			if (ArrowLineTrace->GetRelativeRotation().Pitch >= 50)
+				ArrowLineTrace->SetRelativeRotation(FRotator(50, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
+			else if (ArrowLineTrace->GetRelativeRotation().Pitch <= -5)
+				ArrowLineTrace->SetRelativeRotation(FRotator(-5, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
+		}
+		else
+		{
+			const FRotator Rotation = Controller->GetControlRotation();
+			const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+			AddMovementInput(Direction, Value);
+		}
 	}
+	
 }
 
 void ASpirit::MoveRight(float Value)
 {
-	if (SpiritState != ESpiritState::Squeezing && SpiritState != ESpiritState::Bashing && Controller && Value != 0.f)
+	if (Controller && Value != 0.f && SpiritState != ESpiritState::Squeezing && SpiritState != ESpiritState::Bashing)
 	{
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
+		if (SpiritState == ESpiritState::Reviving)
+		{
+			const FRotator ReviveYaw(0, Value * BaseTurnRate * 2 * GetWorld()->GetDeltaSeconds(), 0);
+			ArrowLineTrace->AddRelativeRotation(ReviveYaw);
 
-		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-		AddMovementInput(Direction, Value);
+			if (ArrowLineTrace->GetRelativeRotation().Yaw >= 45)
+			{
+				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, 45, 0));
+				AddActorWorldRotation(ReviveYaw);
+			}
+			else if (ArrowLineTrace->GetRelativeRotation().Yaw <= -45)
+			{
+				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, -45, 0));
+				AddActorWorldRotation(ReviveYaw);
+			}
+		}
+		else
+		{
+			const FRotator Rotation = Controller->GetControlRotation();
+			const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+			AddMovementInput(Direction, Value);
+		}
 	}
 }
 
@@ -255,12 +328,20 @@ void ASpirit::Action()
 			NiagaraRevive->Activate();
 			break;
 		case ESpiritForm::Water:
-			if (SpiritState == ESpiritState::Idle || SpiritState == ESpiritState::Walking)
-				SetState(ESpiritState::ChargingJump);
 			break;
 		case ESpiritForm::Ice:
-			if (CanBash) //OnBash();
+			if (CanBash)
+			{
+				FRotator SpiritRotation = GetCapsuleComponent()->GetComponentRotation();
+				const FVector Direction = FRotationMatrix(SpiritRotation).GetUnitAxis(EAxis::X);
+				float BashDistance = TraceLineDistance(BashDistanceDefault) - 5;
+
+				BashLocationStart = GetActorLocation();
+				BashLocationEnd = BashLocationStart + (Direction * BashDistance);
+				BashTime = BashDuration - (BashDistance / BashDistanceDefault * BashDuration);
+
 				SetState(ESpiritState::Bashing);
+			}
 			break;
 		}
 	}
@@ -279,8 +360,9 @@ void ASpirit::StopAction()
 				if (Interface) Interface->Execute_OnInteractEnd(SelectedPlant, this);
 			}
 			SelectedPlant = nullptr;
-			SetState(ESpiritState::Idle);
+			ArrowLineTrace->SetRelativeRotation(FRotator().ZeroRotator);
 			NiagaraRevive->Deactivate();
+			SetState(ESpiritState::Idle);
 			break;
 		case ESpiritForm::Water:
 			break;
@@ -288,6 +370,12 @@ void ASpirit::StopAction()
 			break;
 		}
 	}
+}
+
+void ASpirit::Jump()
+{
+	if (SpiritState == ESpiritState::Idle || SpiritState == ESpiritState::Walking)
+		SetState(ESpiritState::ChargingJump);
 }
 
 void ASpirit::TickBashCooldown(float DeltaTime)
@@ -317,7 +405,7 @@ AActor* ASpirit::TraceLine(float TraceLength)
 
 	FCollisionQueryParams TraceParams;
 	bool bHit = GetWorld()->LineTraceSingleByObjectType(Hit, LineStart, LineEnd, ECC_Destructible, TraceParams);
-	//DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Green, false, 0, 0, 2);
+	DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Green, false, 0, 0, 2);
 
 	if (bHit)
 	{
@@ -336,7 +424,7 @@ AActor* ASpirit::TraceLine(float TraceLength)
 	else return ActorHit = nullptr;
 }
 
-AActor* ASpirit::TraceLineStatic(float TraceLength)
+float ASpirit::TraceLineDistance(float TraceLength)
 {
 	FHitResult Hit;
 	AActor* ActorHit = nullptr;
@@ -352,14 +440,11 @@ AActor* ASpirit::TraceLineStatic(float TraceLength)
 	if (bHit)
 	{
 		//DrawDebugBox(GetWorld(), Hit.ImpactPoint, FVector(5, 5, 5), FColor::Orange, false, 2);
-
-		//UE_LOG(LogTemp, Warning, TEXT("Crack Location: %f, %f"), Hit.GetComponent()->GetRelativeLocation().X, Hit.GetComponent()->GetRelativeLocation().Y);
-
 		if (!Hit.GetActor()->IsA(AInteractable::StaticClass()))
-			return ActorHit = Hit.GetActor();
-		else return ActorHit = nullptr;
+			return Hit.Distance;
+		else return BashDistanceDefault;
 	}
-	else return ActorHit = nullptr;
+	else return BashDistanceDefault;
 }
 
 void ASpirit::OnRevive_Implementation(AInteractablePlant* PlantHit)
@@ -397,8 +482,22 @@ void ASpirit::OnJump_Implementation()
 	else
 	{
 		ACharacter::Jump();
-		NiagaraJump->Deactivate();
-		NiagaraJump->Activate();
+		switch (SpiritForm)
+		{
+		case ESpiritForm::Default:
+			NiagaraJumpDefault->Deactivate();
+			NiagaraJumpDefault->Activate();
+			break;
+		case ESpiritForm::Water:
+			NiagaraJumpWater->Deactivate();
+			NiagaraJumpWater->Activate();
+			break;
+		case ESpiritForm::Ice:
+			NiagaraJumpIce->Deactivate();
+			NiagaraJumpIce->Activate();
+			break;
+		}
+		
 		JumpChargeTime = 0;
 		SetState(ESpiritState::Falling);
 	}
@@ -417,20 +516,11 @@ void ASpirit::OnBash_Implementation()
 {
 	CanBash = false;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Destructible, ECR_Overlap);
-	FRotator SpiritRotation = GetCapsuleComponent()->GetComponentRotation();
-	const FVector Direction = FRotationMatrix(SpiritRotation).GetUnitAxis(EAxis::X);
 	NiagaraIceTrail->Activate(true);
 
 	if (BashTime < BashDuration)
 	{
-		if (TraceLineStatic(35))
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Bashed into static wall"));
-			BashTime = 0;
-			GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Destructible, ECR_Block);
-			SetState(ESpiritState::Idle);
-		}
-		AddActorWorldOffset(Direction * BashDistance * GetWorld()->GetDeltaSeconds());
+		SetActorRelativeLocation(FMath::Lerp(BashLocationStart, BashLocationEnd, BashTime / BashDuration));
 		BashTime += GetWorld()->GetDeltaSeconds();
 	}
 	else

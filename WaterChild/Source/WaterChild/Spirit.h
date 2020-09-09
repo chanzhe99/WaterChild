@@ -9,13 +9,13 @@
 UENUM(BlueprintType)
 enum class ESpiritState : uint8
 {
-	Idle		UMETA(DisplayName = "Idle"),
-	Walking		UMETA(DisplayName = "Walking"),
-	Falling		UMETA(DisplayName = "Falling"),
-	Reviving	UMETA(DisplayName = "Reviving"),
-	ChargingJump UMETA(DisplayName = "ChargingJump"),
-	Squeezing	UMETA(DisplayName = "Squeezing"),
-	Bashing		UMETA(DisplayName = "Bashing")
+	Idle			UMETA(DisplayName = "Idle"),
+	Walking			UMETA(DisplayName = "Walking"),
+	Falling			UMETA(DisplayName = "Falling"),
+	Reviving		UMETA(DisplayName = "Reviving"),
+	ChargingJump	UMETA(DisplayName = "ChargingJump"),
+	Squeezing		UMETA(DisplayName = "Squeezing"),
+	Bashing			UMETA(DisplayName = "Bashing")
 };
 
 UENUM(BlueprintType)
@@ -87,16 +87,19 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Particles", meta = (AllowPrivateAccess = "true"))
 		class UNiagaraComponent* NiagaraRevive;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Particles", meta = (AllowPrivateAccess = "true"))
-		class UNiagaraComponent* NiagaraJump;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Particles", meta = (AllowPrivateAccess = "true"))
 		class UNiagaraComponent* NiagaraIceTrail;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Particles", meta = (AllowPrivateAccess = "true"))
-		class UNiagaraComponent* NiagaraLand;
+		class UNiagaraComponent* NiagaraJumpDefault;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Particles", meta = (AllowPrivateAccess = "true"))
+		class UNiagaraComponent* NiagaraJumpWater;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Particles", meta = (AllowPrivateAccess = "true"))
+		class UNiagaraComponent* NiagaraJumpIce;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"))
 		class UArrowComponent* ArrowLineTrace;
 #pragma endregion
 
+#pragma region Component variables
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		ESpiritState SpiritState = ESpiritState::Idle;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -108,26 +111,28 @@ private:
 	float BaseLookUpAtRate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"));
-	float ReviveTraceLength = 200;
+	float ReviveTraceLength;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"));
-	float SqueezeTraceLength = 10;
+	float SqueezeTraceLength;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Jump", meta = (AllowPrivateAccess = "true"));
-	float JumpChargeDuration = 0.1f;
-	float JumpChargeTime = 0;
+	float JumpChargeDuration;
+	float JumpChargeTime;
 	
-	bool CanBash = true;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bash", meta = (AllowPrivateAccess = "true"));
-	float BashDistance = 1500;
+	float BashDistanceDefault;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bash", meta = (AllowPrivateAccess = "true"));
-	float BashDuration = 0.15f;
-	float BashTime = 0;
+	float BashDuration;
+	float BashTime;
+	bool CanBash;
+	FVector BashLocationStart;
+	FVector BashLocationEnd;
 
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	bool bIsCrackEntrance;
-	class AInteractablePlant* SelectedPlant = nullptr;
-	class AInteractableCrack* SelectedCrack = nullptr;
-
+	class AInteractablePlant* SelectedPlant;
+	class AInteractableCrack* SelectedCrack;
+#pragma endregion
 
 	void MoveForward(float Value);
 	void MoveRight(float Value);
@@ -135,9 +140,10 @@ private:
 	void LookUpAtRate(float Value) { AddControllerPitchInput(Value * BaseLookUpAtRate * GetWorld()->GetDeltaSeconds()); }
 	void Action();
 	void StopAction();
+	void Jump();
 	void TickBashCooldown(float DeltaTime);
 	AActor* TraceLine(float TraceLength);
-	AActor* TraceLineStatic(float TraceLength);
+	float TraceLineDistance(float TraceLength);
 
 	UFUNCTION()
 		void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

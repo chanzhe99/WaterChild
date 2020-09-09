@@ -114,7 +114,7 @@ void AInteractableCrack::Tick(float DeltaTime)
 
 void AInteractableCrack::OnInteract_Implementation(ASpirit* Caller)
 {
-	//UE_LOG(LogTemp, Warning, TEXT("CrackEntrance: %s"), Caller->GetCrackEntrance() ? TEXT("True") : TEXT("False"));
+	UE_LOG(LogTemp, Warning, TEXT("CrackEntrance: %s"), Caller->GetCrackEntrance() ? TEXT("True") : TEXT("False"));
 	if (Caller->GetCrackEntrance())
 		TraverseCrack(Caller, Crack1, &CrackExit2->GetComponentTransform());
 	else
