@@ -144,6 +144,7 @@ private:
 	void TickBashCooldown(float DeltaTime);
 	AActor* TraceLine(float TraceLength);
 	float TraceLineDistance(float TraceLength);
+	FVector_NetQuantizeNormal TraceLineStandingAngle(float TraceLength);
 
 	UFUNCTION()
 		void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
