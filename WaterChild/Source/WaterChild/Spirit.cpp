@@ -128,6 +128,8 @@ void ASpirit::Tick(float DeltaTime)
 	//if(TraceLine() != nullptr)
 		//UE_LOG(LogTemp, Warning, TEXT("Hit Name: %s"), *TraceLine()->GetName());
 
+	TraceLineStandingAngle(20);
+
 	if (!CanBash) TickBashCooldown(DeltaTime);
 
 	switch (SpiritState)
@@ -440,11 +442,34 @@ float ASpirit::TraceLineDistance(float TraceLength)
 	if (bHit)
 	{
 		//DrawDebugBox(GetWorld(), Hit.ImpactPoint, FVector(5, 5, 5), FColor::Orange, false, 2);
-		if (!Hit.GetActor()->IsA(AInteractable::StaticClass()))
+		if (Hit.GetActor() && !Hit.GetActor()->IsA(AInteractable::StaticClass()))
 			return Hit.Distance;
 		else return BashDistanceDefault;
 	}
 	else return BashDistanceDefault;
+}
+
+FVector_NetQuantizeNormal ASpirit::TraceLineStandingAngle(float TraceLength)
+{
+	FHitResult Hit;
+	AActor* ActorHit = nullptr;
+
+	FRotator LineRotation = ArrowLineTrace->GetComponentRotation() - FRotator(90, 0, 0);
+	FVector LineStart = ArrowLineTrace->GetComponentLocation();
+	FVector LineEnd = LineStart + (LineRotation.Vector() * TraceLength);
+	
+	FCollisionQueryParams TraceParams;
+	bool bHit = GetWorld()->LineTraceSingleByObjectType(Hit, LineStart, LineEnd, ECC_WorldStatic, TraceParams);
+	DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Red, false, 0, 0, 2);
+
+	if (bHit)
+	{
+		//DrawDebugBox(GetWorld(), Hit.ImpactPoint, FVector(5, 5, 5), FColor::Orange, false, 2);
+		if (Hit.GetActor() && !Hit.GetActor()->IsA(AInteractable::StaticClass()))
+			return Hit.Normal;
+		else return FVector_NetQuantizeNormal();
+	}
+	else return FVector_NetQuantizeNormal();
 }
 
 void ASpirit::OnRevive_Implementation(AInteractablePlant* PlantHit)
