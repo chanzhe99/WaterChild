@@ -8,6 +8,7 @@
 #include "Niagara/Public/NiagaraComponent.h"
 #include "Components/ArrowComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SphereComponent.h"
 #include "InteractableClasses/InteractableInterface.h"
 #include "InteractableClasses/InteractablePlant.h"
 #include "InteractableClasses/InteractableCrack.h"
@@ -44,6 +45,7 @@ ASpirit::ASpirit()
 	NiagaraJumpWater = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraJumpWater"));
 	NiagaraJumpIce = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraJumpIce"));
 	ArrowLineTrace = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowLineTrace"));
+	SphereClimb = CreateDefaultSubobject<USphereComponent>(TEXT("SphereClimb"));
 
 	// Setup attachments for components
 	SkeletalMeshWater->SetupAttachment(RootComponent);
@@ -57,6 +59,7 @@ ASpirit::ASpirit()
 	NiagaraJumpWater->SetupAttachment(SkeletalMeshWater);
 	NiagaraJumpIce->SetupAttachment(StaticMeshIce);
 	ArrowLineTrace->SetupAttachment(RootComponent);
+	SphereClimb->SetupAttachment(RootComponent);
 
 	// Set component position offsets
 	GetMesh()->SetRelativeLocation(FVector(0, 0, -27));
@@ -85,10 +88,10 @@ ASpirit::ASpirit()
 
 	GetCapsuleComponent()->SetCapsuleRadius(12.f);
 	GetCapsuleComponent()->SetCapsuleHalfHeight(25.f);
+	SphereClimb->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	// Set default variable values
 	SpiritState = ESpiritState::Idle;
-	SpiritForm = ESpiritForm::Default;
 
 	BaseTurnRate = 45.f;
 	BaseLookUpAtRate = 45.f;
@@ -117,7 +120,8 @@ void ASpirit::BeginPlay()
 	Super::BeginPlay();
 	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ASpirit::OnOverlapBegin);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Destructible, ECR_Block);
-	UE_LOG(LogTemp, Warning, TEXT("C++ Begin ran"));
+	SphereClimb->OnComponentBeginOverlap.AddDynamic(this, &ASpirit::OnOverlapBegin);
+	SphereClimb->OnComponentEndOverlap.AddDynamic(this, &ASpirit::OnOverlapEnd);
 }
 
 // Called every frame
@@ -125,10 +129,11 @@ void ASpirit::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	//SetActorLocation(FVector(GetActorLocation().X, GetActorLocation().Y, CharacterHeight));
+	//SetActorWorldOffset(FVector(0, 0, CharacterHeight));
 	//if(TraceLine() != nullptr)
 		//UE_LOG(LogTemp, Warning, TEXT("Hit Name: %s"), *TraceLine()->GetName());
-
-	TraceLineStandingAngle(20);
+	//UE_LOG(LogTemp, Warning, TEXT("Height: %f"), CharacterHeight);
 
 	if (!CanBash) TickBashCooldown(DeltaTime);
 
@@ -144,36 +149,23 @@ void ASpirit::Tick(float DeltaTime)
 		if (GetCharacterMovement()->IsFalling())
 			SetState(ESpiritState::Falling);
 
-		if (SpiritForm == ESpiritForm::Water)
-			if (TraceLine(SqueezeTraceLength) && TraceLine(SqueezeTraceLength)->IsA(AInteractableCrack::StaticClass()))
-			{
-				SelectedCrack = Cast<AInteractableCrack>(TraceLine(SqueezeTraceLength));
-				SetState(ESpiritState::Squeezing);
-			}
-		break;
-	case ESpiritState::Falling:
-		if (!GetCharacterMovement()->IsFalling())
+		TraceHit = TraceLine(SqueezeTraceLength);
+		if (TraceHit.GetActor() && TraceHit.GetActor()->IsA(AInteractableCrack::StaticClass()))
 		{
-			switch (SpiritForm)
-			{
-			case ESpiritForm::Default:
-				NiagaraJumpDefault->Deactivate();
-				NiagaraJumpDefault->Activate();
-				break;
-			case ESpiritForm::Water:
-				NiagaraJumpWater->Deactivate();
-				NiagaraJumpWater->Activate();
-				break;
-			case ESpiritForm::Ice:
-				NiagaraJumpIce->Deactivate();
-				NiagaraJumpIce->Activate();
-				break;
-			}
-			SetState(ESpiritState::Idle);
+			SelectedCrack = Cast<AInteractableCrack>(TraceHit.GetActor());
+			if (TraceHit.GetComponent()->GetRelativeLocation() == FVector::ZeroVector)
+				bIsCrackEntrance = true;
+			else bIsCrackEntrance = false;
+			SetState(ESpiritState::Squeezing);
 		}
 		break;
+	case ESpiritState::Falling:
+		TraceHit = TraceLine(ClimbTraceLength);
+		if (!GetCharacterMovement()->IsFalling())
+			SetState(ESpiritState::Idle);
+		break;
 	case ESpiritState::Reviving:
-		OnRevive(Cast<AInteractablePlant>(TraceLine(ReviveTraceLength)));
+		OnRevive(Cast<AInteractablePlant>(TraceLine(ReviveTraceLength).GetActor()));
 		break;
 	case ESpiritState::ChargingJump:
 		OnJump();
@@ -185,6 +177,12 @@ void ASpirit::Tick(float DeltaTime)
 	case ESpiritState::Bashing:
 		OnBash();
 		break;
+	case ESpiritState::Climbing:
+		FRotator ClimbRotation = TraceLine(ClimbTraceLength).ImpactNormal.Rotation();
+		ClimbRotation = FRotator(ClimbRotation.Pitch, ClimbRotation.Yaw, ClimbRotation.Roll) - FRotator(0, 0, 180);
+		SetActorRotation(ClimbRotation);
+		//SetActorRotation(TraceLine(ClimbTraceLength).Normal);
+		break;
 	}
 }
 
@@ -194,12 +192,11 @@ void ASpirit::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	// Binds the action buttons
-	PlayerInputComponent->BindAction<SetFormDelegate>("DefaultFormButton", IE_Pressed, this, &ASpirit::SetForm, ESpiritForm::Default);
-	PlayerInputComponent->BindAction<SetFormDelegate>("WaterFormButton", IE_Pressed, this, &ASpirit::SetForm, ESpiritForm::Water);
-	PlayerInputComponent->BindAction<SetFormDelegate>("IceFormButton", IE_Pressed, this, &ASpirit::SetForm, ESpiritForm::Ice);
 	PlayerInputComponent->BindAction("ActionButton", IE_Pressed, this, &ASpirit::Action);
 	PlayerInputComponent->BindAction("ActionButton", IE_Released, this, &ASpirit::StopAction);
 	PlayerInputComponent->BindAction("JumpButton", IE_Pressed, this, &ASpirit::Jump);
+	PlayerInputComponent->BindAction("ClimbButton", IE_Pressed, this, &ASpirit::Climb);
+	PlayerInputComponent->BindAction("ClimbButton", IE_Released, this, &ASpirit::StopClimb);
 
 	// Binds the movement axes
 	PlayerInputComponent->BindAxis("MoveForward", this, &ASpirit::MoveForward);
@@ -213,58 +210,25 @@ void ASpirit::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 }
 
-// Changes the Spirit's form according to input parameter
-void ASpirit::SetForm(ESpiritForm DesiredForm)
-{
-	if (SpiritForm == DesiredForm && SpiritForm != ESpiritForm::Default) SpiritForm = ESpiritForm::Default;
-	else SpiritForm = DesiredForm;
-
-	switch (SpiritForm)
-	{
-	case ESpiritForm::Default:
-		GetMesh()->Activate();
-		SkeletalMeshWater->Deactivate();
-		StaticMeshIce->Deactivate();
-		GetMesh()->SetVisibility(true);
-		SkeletalMeshWater->SetVisibility(false);
-		StaticMeshIce->SetVisibility(false);
-		break;
-
-	case ESpiritForm::Water:
-		GetMesh()->Deactivate();
-		SkeletalMeshWater->Activate();
-		StaticMeshIce->Deactivate();
-		GetMesh()->SetVisibility(false);
-		SkeletalMeshWater->SetVisibility(true);
-		StaticMeshIce->SetVisibility(false);
-		if (SpiritState == ESpiritState::Reviving)
-		{
-			ArrowLineTrace->SetRelativeRotation(FRotator().ZeroRotator);
-			NiagaraRevive->Deactivate();
-			SetState(ESpiritState::Idle);
-		}
-		break;
-
-	case ESpiritForm::Ice:
-		GetMesh()->Deactivate();
-		SkeletalMeshWater->Deactivate();
-		StaticMeshIce->Activate();
-		GetMesh()->SetVisibility(false);
-		SkeletalMeshWater->SetVisibility(false);
-		StaticMeshIce->SetVisibility(true);
-		if (SpiritState == ESpiritState::Reviving)
-		{
-			ArrowLineTrace->SetRelativeRotation(FRotator().ZeroRotator);
-			NiagaraRevive->Deactivate();
-			SetState(ESpiritState::Idle);
-		}
-		break;
-	}
-}
-
 void ASpirit::MoveForward(float Value)
 {
-	if (Controller && Value != 0.f && SpiritState != ESpiritState::Squeezing && SpiritState != ESpiritState::Bashing)
+	if (Controller && Value != 0.f)
+	{
+		if (SpiritState == ESpiritState::Climbing)
+		{
+
+		}
+		else
+		{
+			const FRotator Rotation = Controller->GetControlRotation();
+			const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+			AddMovementInput(Direction, Value);
+		}
+	}
+
+	/*if (Controller && Value != 0.f && SpiritState != ESpiritState::Squeezing && SpiritState != ESpiritState::Bashing)
 	{
 		if (SpiritState == ESpiritState::Reviving)
 		{
@@ -284,13 +248,29 @@ void ASpirit::MoveForward(float Value)
 			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 			AddMovementInput(Direction, Value);
 		}
-	}
+	}*/
 	
 }
 
 void ASpirit::MoveRight(float Value)
 {
-	if (Controller && Value != 0.f && SpiritState != ESpiritState::Squeezing && SpiritState != ESpiritState::Bashing)
+	if (Controller && Value != 0.f)
+	{
+		if (SpiritState == ESpiritState::Climbing)
+		{
+			FRotator ClimbRotation = GetCapsuleComponent()->GetComponentRotation();
+		}
+		else
+		{
+			const FRotator Rotation = Controller->GetControlRotation();
+			const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+			AddMovementInput(Direction, Value);
+		}
+	}
+
+	/*if (Controller && Value != 0.f && SpiritState != ESpiritState::Squeezing && SpiritState != ESpiritState::Bashing)
 	{
 		if (SpiritState == ESpiritState::Reviving)
 		{
@@ -316,36 +296,13 @@ void ASpirit::MoveRight(float Value)
 			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 			AddMovementInput(Direction, Value);
 		}
-	}
+	}*/
 }
 
 void ASpirit::Action()
 {
 	if (SpiritState != ESpiritState::Falling)
 	{
-		switch (SpiritForm)
-		{
-		case ESpiritForm::Default:
-			SetState(ESpiritState::Reviving);
-			NiagaraRevive->Activate();
-			break;
-		case ESpiritForm::Water:
-			break;
-		case ESpiritForm::Ice:
-			if (CanBash)
-			{
-				FRotator SpiritRotation = GetCapsuleComponent()->GetComponentRotation();
-				const FVector Direction = FRotationMatrix(SpiritRotation).GetUnitAxis(EAxis::X);
-				float BashDistance = TraceLineDistance(BashDistanceDefault) - 5;
-
-				BashLocationStart = GetActorLocation();
-				BashLocationEnd = BashLocationStart + (Direction * BashDistance);
-				BashTime = BashDuration - (BashDistance / BashDistanceDefault * BashDuration);
-
-				SetState(ESpiritState::Bashing);
-			}
-			break;
-		}
 	}
 }
 
@@ -353,24 +310,6 @@ void ASpirit::StopAction()
 {
 	if (SpiritState != ESpiritState::Falling)
 	{
-		switch (SpiritForm)
-		{
-		case ESpiritForm::Default:
-			if (SelectedPlant)
-			{
-				IInteractableInterface* Interface = Cast<IInteractableInterface>(SelectedPlant);
-				if (Interface) Interface->Execute_OnInteractEnd(SelectedPlant, this);
-			}
-			SelectedPlant = nullptr;
-			ArrowLineTrace->SetRelativeRotation(FRotator().ZeroRotator);
-			NiagaraRevive->Deactivate();
-			SetState(ESpiritState::Idle);
-			break;
-		case ESpiritForm::Water:
-			break;
-		case ESpiritForm::Ice:
-			break;
-		}
 	}
 }
 
@@ -378,6 +317,18 @@ void ASpirit::Jump()
 {
 	if (SpiritState == ESpiritState::Idle || SpiritState == ESpiritState::Walking)
 		SetState(ESpiritState::ChargingJump);
+}
+
+void ASpirit::Climb()
+{
+	SphereClimb->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	UE_LOG(LogTemp, Warning, TEXT("Climb pressed"));
+}
+
+void ASpirit::StopClimb()
+{
+	SphereClimb->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	UE_LOG(LogTemp, Warning, TEXT("Climb released"));
 }
 
 void ASpirit::TickBashCooldown(float DeltaTime)
@@ -396,17 +347,17 @@ void ASpirit::TickBashCooldown(float DeltaTime)
 	return;
 }
 
-AActor* ASpirit::TraceLine(float TraceLength)
+FHitResult ASpirit::TraceLine(float TraceLength)
 {
 	FHitResult Hit;
-	AActor* ActorHit = nullptr;
+	//AActor* ActorHit = nullptr;
 
 	FRotator LineRotation = ArrowLineTrace->GetComponentRotation();
 	FVector LineStart = ArrowLineTrace->GetComponentLocation();
 	FVector LineEnd = LineStart + (LineRotation.Vector() * TraceLength);
 
 	FCollisionQueryParams TraceParams;
-	bool bHit = GetWorld()->LineTraceSingleByObjectType(Hit, LineStart, LineEnd, ECC_Destructible, TraceParams);
+	bool bHit = GetWorld()->LineTraceSingleByObjectType(Hit, LineStart, LineEnd, ECC_WorldStatic, TraceParams);
 	DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Green, false, 0, 0, 2);
 
 	if (bHit)
@@ -414,16 +365,9 @@ AActor* ASpirit::TraceLine(float TraceLength)
 		//DrawDebugBox(GetWorld(), Hit.ImpactPoint, FVector(5, 5, 5), FColor::Orange, false, 2);
 		
 		//UE_LOG(LogTemp, Warning, TEXT("Crack Location: %f, %f"), Hit.GetComponent()->GetRelativeLocation().X, Hit.GetComponent()->GetRelativeLocation().Y);
-
-		if (Hit.GetComponent()->GetRelativeLocation() == FVector::ZeroVector)
-			bIsCrackEntrance = true;
-		else bIsCrackEntrance = false;
-
-		if (Hit.GetActor()->IsA(AInteractable::StaticClass()))
-			return ActorHit = Hit.GetActor();
-		else return ActorHit = nullptr;
+		return Hit;
 	}
-	else return ActorHit = nullptr;
+	else return FHitResult();
 }
 
 float ASpirit::TraceLineDistance(float TraceLength)
@@ -447,29 +391,6 @@ float ASpirit::TraceLineDistance(float TraceLength)
 		else return BashDistanceDefault;
 	}
 	else return BashDistanceDefault;
-}
-
-FVector_NetQuantizeNormal ASpirit::TraceLineStandingAngle(float TraceLength)
-{
-	FHitResult Hit;
-	AActor* ActorHit = nullptr;
-
-	FRotator LineRotation = ArrowLineTrace->GetComponentRotation() - FRotator(90, 0, 0);
-	FVector LineStart = ArrowLineTrace->GetComponentLocation();
-	FVector LineEnd = LineStart + (LineRotation.Vector() * TraceLength);
-	
-	FCollisionQueryParams TraceParams;
-	bool bHit = GetWorld()->LineTraceSingleByObjectType(Hit, LineStart, LineEnd, ECC_WorldStatic, TraceParams);
-	DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Red, false, 0, 0, 2);
-
-	if (bHit)
-	{
-		//DrawDebugBox(GetWorld(), Hit.ImpactPoint, FVector(5, 5, 5), FColor::Orange, false, 2);
-		if (Hit.GetActor() && !Hit.GetActor()->IsA(AInteractable::StaticClass()))
-			return Hit.Normal;
-		else return FVector_NetQuantizeNormal();
-	}
-	else return FVector_NetQuantizeNormal();
 }
 
 void ASpirit::OnRevive_Implementation(AInteractablePlant* PlantHit)
@@ -507,22 +428,6 @@ void ASpirit::OnJump_Implementation()
 	else
 	{
 		ACharacter::Jump();
-		switch (SpiritForm)
-		{
-		case ESpiritForm::Default:
-			NiagaraJumpDefault->Deactivate();
-			NiagaraJumpDefault->Activate();
-			break;
-		case ESpiritForm::Water:
-			NiagaraJumpWater->Deactivate();
-			NiagaraJumpWater->Activate();
-			break;
-		case ESpiritForm::Ice:
-			NiagaraJumpIce->Deactivate();
-			NiagaraJumpIce->Activate();
-			break;
-		}
-		
 		JumpChargeTime = 0;
 		SetState(ESpiritState::Falling);
 	}
@@ -565,4 +470,20 @@ void ASpirit::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherA
 		IInteractableInterface* Interface = Cast<IInteractableInterface>(OtherActor);
 		if (Interface) Interface->Execute_OnInteract(OtherActor, this);
 	}
+	if (OtherActor->ActorHasTag("Climbable"))
+	{
+		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+		SetState(ESpiritState::Climbing);
+	}
 }
+
+void ASpirit::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (OtherActor->ActorHasTag("Climbable"))
+	{
+		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+		SetState(ESpiritState::Falling);
+	}
+}
+
+

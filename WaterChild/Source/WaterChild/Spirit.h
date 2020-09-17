@@ -15,15 +15,8 @@ enum class ESpiritState : uint8
 	Reviving		UMETA(DisplayName = "Reviving"),
 	ChargingJump	UMETA(DisplayName = "ChargingJump"),
 	Squeezing		UMETA(DisplayName = "Squeezing"),
-	Bashing			UMETA(DisplayName = "Bashing")
-};
-
-UENUM(BlueprintType)
-enum class ESpiritForm : uint8
-{
-	Default		UMETA(DisplayName = "Default Form"),
-	Water		UMETA(DisplayName = "Water Form"),
-	Ice			UMETA(DisplayName = "Ice Form")
+	Bashing			UMETA(DisplayName = "Bashing"),
+	Climbing		UMETA(DisplayName = "Climbing")
 };
 
 UCLASS()
@@ -49,8 +42,8 @@ public:
 	// Changes the Spirit's state and form according to input parameter
 	UFUNCTION(BlueprintCallable)
 		void SetState(ESpiritState DesiredState) { SpiritState = DesiredState; }
-	void SetForm(ESpiritForm DesiredForm);
-	DECLARE_DELEGATE_OneParam(SetFormDelegate, ESpiritForm);
+	//void SetForm(ESpiritForm DesiredForm);
+	//DECLARE_DELEGATE_OneParam(SetFormDelegate, ESpiritForm);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 		void OnRevive(class AInteractablePlant* PlantHit);
@@ -97,18 +90,24 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"))
 		class UArrowComponent* ArrowLineTrace;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Climb", meta = (AllowPrivateAccess = "true"))
+		class USphereComponent* SphereClimb;
 #pragma endregion
 
 #pragma region Component variables
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		ESpiritState SpiritState = ESpiritState::Idle;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		ESpiritForm SpiritForm = ESpiritForm::Default;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"));
 	float BaseTurnRate;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"));
 	float BaseLookUpAtRate;
+
+	FHitResult TraceHit = FHitResult();
+
+	float ClimbTraceLength = 15;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Climbing", meta = (AllowPrivateAccess = "true"));
+	AActor* WallBeingClimbed = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"));
 	float ReviveTraceLength;
@@ -132,6 +131,8 @@ private:
 	bool bIsCrackEntrance;
 	class AInteractablePlant* SelectedPlant;
 	class AInteractableCrack* SelectedCrack;
+	AActor* SelectedClimbable;
+
 #pragma endregion
 
 	void MoveForward(float Value);
@@ -141,11 +142,14 @@ private:
 	void Action();
 	void StopAction();
 	void Jump();
+	void Climb();
+	void StopClimb();
 	void TickBashCooldown(float DeltaTime);
-	AActor* TraceLine(float TraceLength);
+	FHitResult TraceLine(float TraceLength);
 	float TraceLineDistance(float TraceLength);
-	FVector_NetQuantizeNormal TraceLineStandingAngle(float TraceLength);
 
 	UFUNCTION()
 		void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION()
+		void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 };
