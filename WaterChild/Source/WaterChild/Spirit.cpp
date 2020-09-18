@@ -178,10 +178,20 @@ void ASpirit::Tick(float DeltaTime)
 		OnBash();
 		break;
 	case ESpiritState::Climbing:
-		FRotator ClimbRotation = TraceLine(ClimbTraceLength).ImpactNormal.Rotation();
-		ClimbRotation = FRotator(ClimbRotation.Pitch, ClimbRotation.Yaw, ClimbRotation.Roll) - FRotator(0, 0, 180);
+		FRotator Rotation = Controller->GetControlRotation();
+		FRotator WallRotation = TraceLine(ClimbTraceLength).ImpactNormal.Rotation();
+		FRotator PitchRotation = FRotator().ZeroRotator - FRotator(WallRotation.Pitch, 0, 0);
+		FRotator YawRotation = WallRotation - FRotator(0, 180, 0);
+		FRotator ClimbRotation = FRotator(PitchRotation.Pitch, YawRotation.Yaw, Rotation.Roll);
 		SetActorRotation(ClimbRotation);
-		//SetActorRotation(TraceLine(ClimbTraceLength).Normal);
+
+		if (!TraceLine(ClimbTraceLength).GetActor())
+		{
+			GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+			SetState(ESpiritState::Falling);
+		}
+
+		//GetMesh()->SetWorldRotation(FRotator(90, 0, 0));
 		break;
 	}
 }
@@ -214,13 +224,16 @@ void ASpirit::MoveForward(float Value)
 {
 	if (Controller && Value != 0.f)
 	{
+		const FRotator Rotation = Controller->GetControlRotation();
+		
 		if (SpiritState == ESpiritState::Climbing)
 		{
-
+			const FRotator RollRotation(0, 0, Rotation.Roll);
+			FVector ClimbDirection = FRotationMatrix(RollRotation).GetUnitAxis(EAxis::Z);
+			AddMovementInput(ClimbDirection, Value);
 		}
 		else
 		{
-			const FRotator Rotation = Controller->GetControlRotation();
 			const FRotator YawRotation(0, Rotation.Yaw, 0);
 
 			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
@@ -256,14 +269,19 @@ void ASpirit::MoveRight(float Value)
 {
 	if (Controller && Value != 0.f)
 	{
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
+
 		if (SpiritState == ESpiritState::Climbing)
 		{
-			FRotator ClimbRotation = GetCapsuleComponent()->GetComponentRotation();
+			FRotator WallRotation = TraceLine(ClimbTraceLength).ImpactNormal.Rotation();
+			const FRotator RollRotation(0, 0, Rotation.Roll);
+			FVector ClimbDirection = FRotationMatrix(WallRotation - FRotator(0, 180, 0)).GetUnitAxis(EAxis::Y);
+			AddMovementInput(ClimbDirection, Value);
 		}
 		else
 		{
-			const FRotator Rotation = Controller->GetControlRotation();
-			const FRotator YawRotation(0, Rotation.Yaw, 0);
+			//const FRotator YawRotation(0, Rotation.Yaw, 0);
 
 			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 			AddMovementInput(Direction, Value);
@@ -321,14 +339,27 @@ void ASpirit::Jump()
 
 void ASpirit::Climb()
 {
-	SphereClimb->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	UE_LOG(LogTemp, Warning, TEXT("Climb pressed"));
+	if (TraceLine(ClimbTraceLength).GetActor() && TraceLine(ClimbTraceLength).GetActor()->ActorHasTag("Climbable"))
+	{
+		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+		SetState(ESpiritState::Climbing);
+	}
+
+	//SphereClimb->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	//UE_LOG(LogTemp, Warning, TEXT("Climb pressed"));
 }
 
 void ASpirit::StopClimb()
 {
-	SphereClimb->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	UE_LOG(LogTemp, Warning, TEXT("Climb released"));
+	if (SpiritState == ESpiritState::Climbing)
+	{
+		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+		SetState(ESpiritState::Falling);
+	}
+
+	//SphereClimb->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	//GetMesh()->SetRelativeRotation(FRotator(0, 0, 0));
+	//UE_LOG(LogTemp, Warning, TEXT("Climb released"));
 }
 
 void ASpirit::TickBashCooldown(float DeltaTime)
@@ -470,20 +501,20 @@ void ASpirit::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherA
 		IInteractableInterface* Interface = Cast<IInteractableInterface>(OtherActor);
 		if (Interface) Interface->Execute_OnInteract(OtherActor, this);
 	}
-	if (OtherActor->ActorHasTag("Climbable"))
+	/*if (OtherActor->ActorHasTag("Climbable"))
 	{
 		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 		SetState(ESpiritState::Climbing);
-	}
+	}*/
 }
 
 void ASpirit::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (OtherActor->ActorHasTag("Climbable"))
+	/*if (OtherActor->ActorHasTag("Climbable"))
 	{
 		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 		SetState(ESpiritState::Falling);
-	}
+	}*/
 }
 
 
