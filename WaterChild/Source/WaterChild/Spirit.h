@@ -15,7 +15,6 @@ enum class ESpiritState : uint8
 	Reviving		UMETA(DisplayName = "Reviving"),
 	ChargingJump	UMETA(DisplayName = "ChargingJump"),
 	Squeezing		UMETA(DisplayName = "Squeezing"),
-	Bashing			UMETA(DisplayName = "Bashing"),
 	Climbing		UMETA(DisplayName = "Climbing")
 };
 
@@ -41,22 +40,17 @@ public:
 
 	// Changes the Spirit's state and form according to input parameter
 	UFUNCTION(BlueprintCallable)
-		void SetState(ESpiritState DesiredState) { SpiritState = DesiredState; }
-	//void SetForm(ESpiritForm DesiredForm);
-	//DECLARE_DELEGATE_OneParam(SetFormDelegate, ESpiritForm);
+	void SetState(ESpiritState DesiredState) { SpiritState = DesiredState; }
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
-		void OnRevive(class AInteractablePlant* PlantHit);
+	void OnRevive(class AInteractablePlant* PlantHit);
 	void OnRevive_Implementation(class AInteractablePlant* PlantHit);
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
-		void OnJump();
+	void OnJump();
 	void OnJump_Implementation();
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
-		void OnSqueeze(class AInteractableCrack* CrackHit);
+	void OnSqueeze(class AInteractableCrack* CrackHit);
 	void OnSqueeze_Implementation(class AInteractableCrack* CrackHit);
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
-		void OnBash();
-	void OnBash_Implementation();
 
 	bool GetCrackEntrance() { return bIsCrackEntrance; }
 	class USpringArmComponent* GetSpringArm() const { return SpringArm; }
@@ -66,8 +60,6 @@ private:
 	// Spirit water and ice mesh components
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
 		class USkeletalMeshComponent* SkeletalMeshWater;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-		class UStaticMeshComponent* StaticMeshIce;
 
 	// Spirit spring arm and camera components
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
@@ -80,18 +72,12 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Particles", meta = (AllowPrivateAccess = "true"))
 		class UNiagaraComponent* NiagaraRevive;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Particles", meta = (AllowPrivateAccess = "true"))
-		class UNiagaraComponent* NiagaraIceTrail;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Particles", meta = (AllowPrivateAccess = "true"))
 		class UNiagaraComponent* NiagaraJumpDefault;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Particles", meta = (AllowPrivateAccess = "true"))
 		class UNiagaraComponent* NiagaraJumpWater;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Particles", meta = (AllowPrivateAccess = "true"))
-		class UNiagaraComponent* NiagaraJumpIce;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"))
 		class UArrowComponent* ArrowLineTrace;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Climb", meta = (AllowPrivateAccess = "true"))
-		class USphereComponent* SphereClimb;
 #pragma endregion
 
 #pragma region Component variables
@@ -117,20 +103,14 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Jump", meta = (AllowPrivateAccess = "true"));
 	float JumpChargeDuration;
 	float JumpChargeTime;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bash", meta = (AllowPrivateAccess = "true"));
-	float BashDistanceDefault;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bash", meta = (AllowPrivateAccess = "true"));
-	float BashDuration;
-	float BashTime;
-	bool CanBash;
-	FVector BashLocationStart;
-	FVector BashLocationEnd;
 
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	bool bIsCrackEntrance;
 	class AInteractablePlant* SelectedPlant;
 	class AInteractableCrack* SelectedCrack;
+
+	FVector HitLocation = FVector().ZeroVector;
+	FVector HitNormal = FVector().ZeroVector;
 	AActor* SelectedClimbable;
 
 #pragma endregion
@@ -144,9 +124,7 @@ private:
 	void Jump();
 	void Climb();
 	void StopClimb();
-	void TickBashCooldown(float DeltaTime);
 	FHitResult TraceLine(float TraceLength);
-	float TraceLineDistance(float TraceLength);
 
 	UFUNCTION()
 		void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

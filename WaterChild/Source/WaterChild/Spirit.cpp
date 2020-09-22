@@ -35,45 +35,34 @@ ASpirit::ASpirit()
 
 	// Creates subobject for components
 	SkeletalMeshWater = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshWater"));
-	StaticMeshIce = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshIce"));
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	NiagaraFootsteps = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraFootsteps"));
 	NiagaraRevive = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraRevive"));
-	NiagaraIceTrail = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraIceTrail"));
 	NiagaraJumpDefault = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraJumpDefault"));
 	NiagaraJumpWater = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraJumpWater"));
-	NiagaraJumpIce = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraJumpIce"));
 	ArrowLineTrace = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowLineTrace"));
-	SphereClimb = CreateDefaultSubobject<USphereComponent>(TEXT("SphereClimb"));
 
 	// Setup attachments for components
 	SkeletalMeshWater->SetupAttachment(RootComponent);
-	StaticMeshIce->SetupAttachment(RootComponent);
 	SpringArm->SetupAttachment(RootComponent);
 	Camera->SetupAttachment(SpringArm);
 	NiagaraFootsteps->SetupAttachment(GetMesh());
 	NiagaraRevive->SetupAttachment(ArrowLineTrace);
-	NiagaraIceTrail->SetupAttachment(StaticMeshIce);
 	NiagaraJumpDefault->SetupAttachment(GetMesh());
 	NiagaraJumpWater->SetupAttachment(SkeletalMeshWater);
-	NiagaraJumpIce->SetupAttachment(StaticMeshIce);
 	ArrowLineTrace->SetupAttachment(RootComponent);
-	SphereClimb->SetupAttachment(RootComponent);
 
 	// Set component position offsets
 	GetMesh()->SetRelativeLocation(FVector(0, 0, -27));
 	SkeletalMeshWater->SetRelativeLocation(FVector(-14, 0, -27));
-	StaticMeshIce->SetRelativeLocation(FVector(0, 0, -13));
 
 	SpringArm->SetRelativeLocation(FVector(-5, 0, 0));
 
 	NiagaraRevive->SetRelativeRotation(FRotator(0, 270, 0));
-	NiagaraIceTrail->SetRelativeLocationAndRotation(FVector(-19, 0, -5), FRotator(15, 180.f, 0));
 
 	// Set character mesh collision profiles
 	SkeletalMeshWater->SetCollisionProfileName(TEXT("CharacterMesh"));
-	StaticMeshIce->SetCollisionProfileName(TEXT("CharacterMesh"));
 
 	// Set component default values
 	SpringArm->TargetArmLength = 300.f;
@@ -81,14 +70,11 @@ ASpirit::ASpirit()
 
 	NiagaraFootsteps->SetAutoActivate(false);
 	NiagaraRevive->SetAutoActivate(false);
-	NiagaraIceTrail->SetAutoActivate(false);
 	NiagaraJumpDefault->SetAutoActivate(false);
 	NiagaraJumpWater->SetAutoActivate(false);
-	NiagaraJumpIce->SetAutoActivate(false);
 
 	GetCapsuleComponent()->SetCapsuleRadius(12.f);
 	GetCapsuleComponent()->SetCapsuleHalfHeight(25.f);
-	SphereClimb->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	// Set default variable values
 	SpiritState = ESpiritState::Idle;
@@ -102,13 +88,6 @@ ASpirit::ASpirit()
 	JumpChargeDuration = 0.1f;
 	JumpChargeTime = 0;
 
-	BashDistanceDefault = 300;
-	BashDuration = 0.15f;
-	BashTime = 0;
-	CanBash = true;
-	BashLocationStart = FVector().ZeroVector;
-	BashLocationEnd = FVector().ZeroVector;
-
 	bIsCrackEntrance = true;
 	SelectedPlant = nullptr;
 	SelectedCrack = nullptr;
@@ -120,22 +99,12 @@ void ASpirit::BeginPlay()
 	Super::BeginPlay();
 	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ASpirit::OnOverlapBegin);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Destructible, ECR_Block);
-	SphereClimb->OnComponentBeginOverlap.AddDynamic(this, &ASpirit::OnOverlapBegin);
-	SphereClimb->OnComponentEndOverlap.AddDynamic(this, &ASpirit::OnOverlapEnd);
 }
 
 // Called every frame
 void ASpirit::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	//SetActorLocation(FVector(GetActorLocation().X, GetActorLocation().Y, CharacterHeight));
-	//SetActorWorldOffset(FVector(0, 0, CharacterHeight));
-	//if(TraceLine() != nullptr)
-		//UE_LOG(LogTemp, Warning, TEXT("Hit Name: %s"), *TraceLine()->GetName());
-	//UE_LOG(LogTemp, Warning, TEXT("Height: %f"), CharacterHeight);
-
-	if (!CanBash) TickBashCooldown(DeltaTime);
 
 	switch (SpiritState)
 	{
@@ -174,14 +143,12 @@ void ASpirit::Tick(float DeltaTime)
 		if(SelectedCrack)
 			OnSqueeze(SelectedCrack);
 		break;
-	case ESpiritState::Bashing:
-		OnBash();
-		break;
 	case ESpiritState::Climbing:
 		FRotator Rotation = Controller->GetControlRotation();
 		FRotator WallRotation = TraceLine(ClimbTraceLength).ImpactNormal.Rotation();
 		FRotator PitchRotation = FRotator().ZeroRotator - FRotator(WallRotation.Pitch, 0, 0);
 		FRotator YawRotation = WallRotation - FRotator(0, 180, 0);
+		FRotator RollRotation = GetActorForwardVector().Rotation();
 		FRotator ClimbRotation = FRotator(PitchRotation.Pitch, YawRotation.Yaw, Rotation.Roll);
 		SetActorRotation(ClimbRotation);
 
@@ -341,6 +308,8 @@ void ASpirit::Climb()
 {
 	if (TraceLine(ClimbTraceLength).GetActor() && TraceLine(ClimbTraceLength).GetActor()->ActorHasTag("Climbable"))
 	{
+		HitLocation = TraceLine(ClimbTraceLength).Location;
+		HitNormal = TraceLine(ClimbTraceLength).ImpactNormal;
 		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 		SetState(ESpiritState::Climbing);
 	}
@@ -362,49 +331,10 @@ void ASpirit::StopClimb()
 	//UE_LOG(LogTemp, Warning, TEXT("Climb released"));
 }
 
-void ASpirit::TickBashCooldown(float DeltaTime)
-{
-	float BashCooldown = 1.0f;
-	static float BashCooldownDuration;
-
-	BashCooldownDuration += DeltaTime;
-
-	if (BashCooldownDuration >= BashCooldown)
-	{
-		CanBash = true;
-		BashCooldownDuration = 0;
-	}
-
-	return;
-}
-
 FHitResult ASpirit::TraceLine(float TraceLength)
 {
 	FHitResult Hit;
 	//AActor* ActorHit = nullptr;
-
-	FRotator LineRotation = ArrowLineTrace->GetComponentRotation();
-	FVector LineStart = ArrowLineTrace->GetComponentLocation();
-	FVector LineEnd = LineStart + (LineRotation.Vector() * TraceLength);
-
-	FCollisionQueryParams TraceParams;
-	bool bHit = GetWorld()->LineTraceSingleByObjectType(Hit, LineStart, LineEnd, ECC_WorldStatic, TraceParams);
-	DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Green, false, 0, 0, 2);
-
-	if (bHit)
-	{
-		//DrawDebugBox(GetWorld(), Hit.ImpactPoint, FVector(5, 5, 5), FColor::Orange, false, 2);
-		
-		//UE_LOG(LogTemp, Warning, TEXT("Crack Location: %f, %f"), Hit.GetComponent()->GetRelativeLocation().X, Hit.GetComponent()->GetRelativeLocation().Y);
-		return Hit;
-	}
-	else return FHitResult();
-}
-
-float ASpirit::TraceLineDistance(float TraceLength)
-{
-	FHitResult Hit;
-	AActor* ActorHit = nullptr;
 
 	FRotator LineRotation = ArrowLineTrace->GetComponentRotation();
 	FVector LineStart = ArrowLineTrace->GetComponentLocation();
@@ -417,11 +347,11 @@ float ASpirit::TraceLineDistance(float TraceLength)
 	if (bHit)
 	{
 		//DrawDebugBox(GetWorld(), Hit.ImpactPoint, FVector(5, 5, 5), FColor::Orange, false, 2);
-		if (Hit.GetActor() && !Hit.GetActor()->IsA(AInteractable::StaticClass()))
-			return Hit.Distance;
-		else return BashDistanceDefault;
+		
+		//UE_LOG(LogTemp, Warning, TEXT("Crack Location: %f, %f"), Hit.GetComponent()->GetRelativeLocation().X, Hit.GetComponent()->GetRelativeLocation().Y);
+		return Hit;
 	}
-	else return BashDistanceDefault;
+	else return FHitResult();
 }
 
 void ASpirit::OnRevive_Implementation(AInteractablePlant* PlantHit)
@@ -473,26 +403,6 @@ void ASpirit::OnSqueeze_Implementation(AInteractableCrack* CrackHit)
 	}
 }
 
-void ASpirit::OnBash_Implementation()
-{
-	CanBash = false;
-	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Destructible, ECR_Overlap);
-	NiagaraIceTrail->Activate(true);
-
-	if (BashTime < BashDuration)
-	{
-		SetActorRelativeLocation(FMath::Lerp(BashLocationStart, BashLocationEnd, BashTime / BashDuration));
-		BashTime += GetWorld()->GetDeltaSeconds();
-	}
-	else
-	{
-		BashTime = 0;
-		GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Destructible, ECR_Block);
-		NiagaraIceTrail->Deactivate();
-		SetState(ESpiritState::Idle);
-	}
-}
-
 void ASpirit::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Overlap test called"));
@@ -516,5 +426,3 @@ void ASpirit::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherAct
 		SetState(ESpiritState::Falling);
 	}*/
 }
-
-
