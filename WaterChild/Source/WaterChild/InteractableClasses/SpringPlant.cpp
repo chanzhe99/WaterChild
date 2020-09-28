@@ -40,7 +40,7 @@ void ASpringPlant::BeginPlay()
 	Super::BeginPlay();
 
 	//TODO remove once the grow feature is done
-	PlantStatus = EPlantState::Alive;
+	PlantState = EPlantState::Alive;
 
 }
 
@@ -53,7 +53,7 @@ void ASpringPlant::Tick(float DeltaTime)
 
 void ASpringPlant::OnInteract_Implementation(ASpirit* Caller)
 {
-	switch (PlantStatus)
+	switch (PlantState)
 	{
 	case EPlantState::Dead:
 		UE_LOG(LogTemp, Warning, TEXT("Plant is now growing"));
@@ -65,7 +65,7 @@ void ASpringPlant::OnInteract_Implementation(ASpirit* Caller)
 	// Water value ticker
 	if (CurrentWaterValue >= MaxWaterValue)
 	{
-		PlantStatus = EPlantState::Alive;
+		PlantState = EPlantState::Alive;
 
 		// Collision changer
 		FlowerCollider->SetCollisionProfileName(TEXT("BlockAllDynamic"));
@@ -83,7 +83,7 @@ void ASpringPlant::OnInteractEnd_Implementation(ASpirit* Caller)
 {
 	//UE_LOG(LogTemp, Warning, TEXT("End call"));
 
-	if (PlantStatus == EPlantState::Growing && CurrentWaterValue <= 0)
+	if (PlantState == EPlantState::Growing && CurrentWaterValue <= 0)
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("Plant stopped growing"));
 		SetPlantState(EPlantState::Dead);
@@ -91,7 +91,7 @@ void ASpringPlant::OnInteractEnd_Implementation(ASpirit* Caller)
 	}
 
 	// Boost player
-	switch (PlantStatus)
+	switch (PlantState)
 	{
 	case EPlantState::Alive:
 		Caller->GetCharacterMovement()->Velocity = FVector::ZeroVector;

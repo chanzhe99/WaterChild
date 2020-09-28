@@ -11,14 +11,14 @@ APlant::APlant()
 }
 
 // Called when the game starts or when spawned
-void APlatformPlant::BeginPlay()
+void APlant::BeginPlay()
 {
 	Super::BeginPlay();
 
 }
 
 // Called every frame
-void APlatformPlant::Tick(float DeltaTime)
+void APlant::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 

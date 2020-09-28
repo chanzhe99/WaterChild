@@ -51,7 +51,7 @@ void APlatformPlant::OnInteract_Implementation(ASpirit* Caller)
 {
 	// State changer for dead to growing
 	//UE_LOG(LogTemp, Warning, TEXT("Plant is now growing"));
-	switch (PlantStatus)
+	switch (PlantState)
 	{
 	case EPlantState::Dead:
 		SetPlantState(EPlantState::Growing);
@@ -62,7 +62,7 @@ void APlatformPlant::OnInteract_Implementation(ASpirit* Caller)
 	// WaterValue incrementer
 	if (CurrentWaterValue >= MaxWaterValue)
 	{
-		PlantStatus = EPlantState::Alive;
+		PlantState = EPlantState::Alive;
 
 		// Collision changer
 		PetalCollider->SetCollisionProfileName(TEXT("BlockAllDynamic"));
@@ -76,7 +76,7 @@ void APlatformPlant::OnInteract_Implementation(ASpirit* Caller)
 void APlatformPlant::OnInteractEnd_Implementation(ASpirit* Caller)
 {
 	//UE_LOG(LogTemp, Warning, TEXT("Plant stopped growing"));
-	if (PlantStatus == EPlantState::Growing && CurrentWaterValue <= 0)
+	if (PlantState == EPlantState::Growing && CurrentWaterValue <= 0)
 	{
 		SetPlantState(EPlantState::Dead);
 		PrimaryActorTick.bCanEverTick = false;
