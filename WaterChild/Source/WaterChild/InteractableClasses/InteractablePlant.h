@@ -7,7 +7,7 @@
 #include "InteractablePlant.generated.h"
 
 UENUM(BlueprintType)
-enum class EPlantState : uint8
+enum class EOldPlantState : uint8
 {
 	Dead		UMETA(DisplayName = "Dead"),
 	Reviving	UMETA(DisplayName = "Reviving"),
@@ -32,8 +32,8 @@ public:
 	virtual void OnInteract_Implementation(ASpirit* Caller) override;
 	virtual void OnInteractEnd_Implementation(ASpirit* Caller) override;
 
-	EPlantState GetPlantState() { return PlantState; }
-	void SetPlantState(EPlantState DesiredState) { PlantState = DesiredState; }
+	EOldPlantState GetPlantState() { return PlantState; }
+	void SetPlantState(EOldPlantState DesiredState) { PlantState = DesiredState; }
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
@@ -48,7 +48,7 @@ private:
 	class UBoxComponent* ReviveCollider;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	EPlantState PlantState = EPlantState::Dead;
+	EOldPlantState PlantState = EOldPlantState::Dead;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Revive Settings", meta = (AllowPrivateAccess = "true"))
 	float ReviveSpeed = 100;

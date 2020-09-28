@@ -1,13 +1,13 @@
 // Copyright SkyJus Works. All Rights Reserved.
 
 
-#include "InteractablePlant.h"
+#include "PlatformPlant.h"
 #include "Components/BoxComponent.h"
 
 // Sets default values
-AInteractablePlant::AInteractablePlant()
+APlatformPlant::APlatformPlant()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	FloorPlane = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("FloorPlane"));
 	StemMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("StemMesh"));
@@ -21,7 +21,7 @@ AInteractablePlant::AInteractablePlant()
 	PetalCollider->SetupAttachment(PetalMesh);
 	ReviveCollider->SetupAttachment(StemMesh);
 
-	StemMesh->SetRelativeLocation(FVector(0, 0, DefaultPlantHeight));
+	StemMesh->SetRelativeLocation(FVector(0, 0, -372));
 	PetalCollider->SetRelativeLocation(FVector(0, 0, 382));
 	ReviveCollider->SetRelativeLocation(FVector(0, 0, 50));
 
@@ -34,60 +34,51 @@ AInteractablePlant::AInteractablePlant()
 }
 
 // Called when the game starts or when spawned
-void AInteractablePlant::BeginPlay()
+void APlatformPlant::BeginPlay()
 {
 	Super::BeginPlay();
-	RevivedPlantHeight = StemMesh->GetRelativeLocation().Z;
-	StemMesh->SetRelativeLocation(FVector(0, 0, DefaultPlantHeight));
 
-	UE_LOG(LogTemp, Warning, TEXT("%f"), RevivedPlantHeight)
 }
 
 // Called every frame
-void AInteractablePlant::Tick(float DeltaTime)
+void APlatformPlant::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	//UE_LOG(LogTemp, Warning, TEXT("Plant Updating"))
+}
 
-	switch (PlantState)
+void APlatformPlant::OnInteract_Implementation(ASpirit* Caller)
+{
+	// State changer for dead to growing
+	//UE_LOG(LogTemp, Warning, TEXT("Plant is now growing"));
+	switch (PlantStatus)
 	{
-	case EOldPlantState::Dead:
-		if (StemMesh->GetRelativeLocation().Z > DefaultPlantHeight)
-			StemMesh->AddLocalOffset(FVector(0, 0, -ReviveSpeed * GetWorld()->GetDeltaSeconds()));
+	case EPlantState::Dead:
+		SetPlantState(EPlantState::Growing);
+		PrimaryActorTick.bCanEverTick = true;
 		break;
-	case EOldPlantState::Reviving:
-		if (StemMesh->GetRelativeLocation().Z < RevivedPlantHeight)
-			StemMesh->AddLocalOffset(FVector(0, 0, ReviveSpeed * GetWorld()->GetDeltaSeconds()));
-		else SetPlantState(EOldPlantState::Revived);
-		break;
-	case EOldPlantState::Revived:
+	}
+
+	// WaterValue incrementer
+	if (CurrentWaterValue >= MaxWaterValue)
+	{
+		PlantStatus = EPlantState::Alive;
+
+		// Collision changer
 		PetalCollider->SetCollisionProfileName(TEXT("BlockAllDynamic"));
 		PetalCollider->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
 		PetalCollider->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 		SetActorTickEnabled(false);
-		break;
 	}
+	CurrentWaterValue += GetWorld()->GetDeltaSeconds();
 }
 
-void AInteractablePlant::OnInteract_Implementation(ASpirit* Caller)
+void APlatformPlant::OnInteractEnd_Implementation(ASpirit* Caller)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Plant is being revived"));
-	switch (PlantState)
+	//UE_LOG(LogTemp, Warning, TEXT("Plant stopped growing"));
+	if (PlantStatus == EPlantState::Growing && CurrentWaterValue <= 0)
 	{
-	case EOldPlantState::Dead:
-		SetPlantState(EOldPlantState::Reviving);
-		break;
-	}
-}
-
-void AInteractablePlant::OnInteractEnd_Implementation(ASpirit* Caller)
-{
-	UE_LOG(LogTemp, Warning, TEXT("Plant stopped reviving"));
-	switch (PlantState)
-	{
-	case EOldPlantState::Reviving:
-		SetPlantState(EOldPlantState::Dead);
-		break;
+		SetPlantState(EPlantState::Dead);
+		PrimaryActorTick.bCanEverTick = false;
 	}
 }
