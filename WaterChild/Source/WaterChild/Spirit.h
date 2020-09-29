@@ -43,11 +43,17 @@ public:
 	void SetState(ESpiritState DesiredState) { SpiritState = DesiredState; }
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+	void TransitionToClimb();
+	void TransitionToClimb_Implementation() {};
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void OnRevive(class AInteractablePlant* PlantHit);
 	void OnRevive_Implementation(class AInteractablePlant* PlantHit);
+
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void OnJump();
 	void OnJump_Implementation();
+
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void OnSqueeze(class AInteractableCrack* CrackHit);
 	void OnSqueeze_Implementation(class AInteractableCrack* CrackHit);
@@ -59,30 +65,30 @@ private:
 #pragma region Spirit components
 	// Spirit water and ice mesh components
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-		class USkeletalMeshComponent* SkeletalMeshWater;
+	class USkeletalMeshComponent* SkeletalMeshWater;
 
 	// Spirit spring arm and camera components
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-		class USpringArmComponent* SpringArm;
+	class USpringArmComponent* SpringArm;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-		class UCameraComponent* Camera;
+	class UCameraComponent* Camera;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Particles", meta = (AllowPrivateAccess = "true"))
 	class UNiagaraComponent* NiagaraFootsteps;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Particles", meta = (AllowPrivateAccess = "true"))
-		class UNiagaraComponent* NiagaraRevive;
+	class UNiagaraComponent* NiagaraRevive;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Particles", meta = (AllowPrivateAccess = "true"))
-		class UNiagaraComponent* NiagaraJumpDefault;
+	class UNiagaraComponent* NiagaraJumpDefault;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Particles", meta = (AllowPrivateAccess = "true"))
-		class UNiagaraComponent* NiagaraJumpWater;
+	class UNiagaraComponent* NiagaraJumpWater;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"))
-		class UArrowComponent* ArrowLineTrace;
+	class UArrowComponent* ArrowLineTrace;
 #pragma endregion
 
 #pragma region Component variables
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		ESpiritState SpiritState = ESpiritState::Idle;
+	ESpiritState SpiritState = ESpiritState::Idle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"));
 	float BaseTurnRate;
@@ -91,14 +97,14 @@ private:
 
 	FHitResult TraceHit = FHitResult();
 
-	float ClimbTraceLength = 15;
+	float ClimbTraceLength = 30;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Climbing", meta = (AllowPrivateAccess = "true"));
 	AActor* WallBeingClimbed = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"));
 	float ReviveTraceLength;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"));
-	float SqueezeTraceLength;
+	float SqueezeTraceLength = 15;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Jump", meta = (AllowPrivateAccess = "true"));
 	float JumpChargeDuration;
@@ -109,9 +115,20 @@ private:
 	class AInteractablePlant* SelectedPlant;
 	class AInteractableCrack* SelectedCrack;
 
-	FVector HitLocation = FVector().ZeroVector;
-	FVector HitNormal = FVector().ZeroVector;
+	//FVector HitLocation = FVector().ZeroVector;
+	//FVector HitNormal = FVector().ZeroVector;
+	//FVector TransitionStartLocation = FVector().ZeroVector;
+	//FVector MeshBaseLocation = FVector().ZeroVector;
+	//FRotator TransitionStartRotation = FRotator().ZeroRotator;
 	AActor* SelectedClimbable;
+
+	FRotator BaseRotation = FRotator::ZeroRotator;
+
+	FVector ClimbConstantVelocityDirection = FVector::ZeroVector;
+	FVector ClimbForwardVector = FVector::ZeroVector;
+	FVector ClimbRightVector = FVector::ZeroVector;
+
+	FRotator ClimbRotation = FRotator::ZeroRotator;
 
 #pragma endregion
 
