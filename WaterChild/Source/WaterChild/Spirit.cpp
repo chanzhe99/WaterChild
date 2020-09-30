@@ -2,7 +2,6 @@
 
 
 #include "Spirit.h"
-//#include "GameFramework/PlayerController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
@@ -14,6 +13,7 @@
 #include "InteractableClasses/InteractablePlant.h"
 #include "InteractableClasses/InteractableCrack.h"
 #include "InteractableClasses/InteractableDebris.h"
+#include "InteractableClasses/SpringPlant.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -140,6 +140,16 @@ void ASpirit::Tick(float DeltaTime)
 			NiagaraJumpDefault->Activate();
 			SetState(ESpiritState::Idle);
 		}
+
+		if (TraceHit.GetActor() && TraceHit.GetActor()->IsA(AInteractableCrack::StaticClass()))
+		{
+			SelectedCrack = Cast<AInteractableCrack>(TraceHit.GetActor());
+			if (TraceHit.GetComponent()->GetRelativeLocation() == FVector::ZeroVector)
+				bIsCrackEntrance = true;
+			else bIsCrackEntrance = false;
+			SetState(ESpiritState::Squeezing);
+		}
+
 		break;
 	case ESpiritState::Reviving:
 		OnRevive(Cast<AInteractablePlant>(TraceLine(ReviveTraceLength).GetActor()));
@@ -176,11 +186,12 @@ void ASpirit::Tick(float DeltaTime)
 		//FRotator ClimbRotation = FRotator(PitchRotation.Pitch, YawRotation.Yaw, Rotation.Roll);
 		//SetActorRotation(ClimbRotation);
 
-		/*if (!TraceLine(ClimbTraceLength).GetActor())
+		if (!TraceLine(ClimbTraceLength).GetActor())
 		{
-			GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-			SetState(ESpiritState::Falling);
-		}*/
+			/*GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+			SetState(ESpiritState::Falling);*/
+			StopClimb();
+		}
 
 		//GetMesh()->SetWorldRotation(FRotator(90, 0, 0));
 		break;
@@ -489,10 +500,6 @@ void ASpirit::StopClimb()
 		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 		SetState(ESpiritState::Falling);
 	}
-
-	//SphereClimb->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	//GetMesh()->SetRelativeRotation(FRotator(0, 0, 0));
-	//UE_LOG(LogTemp, Warning, TEXT("Climb released"));
 }
 
 FHitResult ASpirit::TraceLine(float TraceLength)
@@ -575,6 +582,13 @@ void ASpirit::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherA
 		IInteractableInterface* Interface = Cast<IInteractableInterface>(OtherActor);
 		if (Interface) Interface->Execute_OnInteract(OtherActor, this);
 	}
+
+	if (OtherActor->IsA(ASpringPlant::StaticClass()) && SpiritState == ESpiritState::Falling)
+	{
+		IInteractableInterface* Interface = Cast<IInteractableInterface>(OtherActor);
+		if (Interface) Interface->Execute_OnInteractEnd(OtherActor, this);
+	}
+
 	/*if (OtherActor->ActorHasTag("Climbable"))
 	{
 		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
