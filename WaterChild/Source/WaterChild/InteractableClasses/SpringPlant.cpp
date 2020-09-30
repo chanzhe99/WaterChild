@@ -8,7 +8,7 @@
 // Sets default values
 ASpringPlant::ASpringPlant()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	// Component creation
 	FloorPlane = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("FloorPlane"));
