@@ -96,6 +96,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"));
 	float BaseLookUpAtRate;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"));
 	FHitResult TraceHit = FHitResult();
 
 	float ClimbTraceLength = 30;

@@ -17,6 +17,7 @@
 #include "InteractableClasses/SpringPlant.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 #define OUT
 
@@ -210,6 +211,7 @@ void ASpirit::Tick(float DeltaTime)
 
 		break;
 	case ESpiritState::Reviving:
+		TraceHit = TraceLine(ReviveTraceLength);
 		OnRevive(Cast<APlant>(TraceLine(ReviveTraceLength).GetActor()));
 		break;
 	case ESpiritState::ChargingJump:
@@ -520,13 +522,22 @@ FHitResult ASpirit::TraceLine(float TraceLength)
 	FVector LineStart = ArrowLineTrace->GetComponentLocation();
 	FVector LineEnd = LineStart + (LineRotation.Vector() * TraceLength);
 
-	FCollisionQueryParams TraceParams;
+	FCollisionQueryParams TraceParams = FCollisionQueryParams(TEXT("Trace"), true, this);
+	TraceParams.bTraceComplex = true;
+	Hit = FHitResult(ForceInit);
+
+	UE_LOG(LogTemp, Warning, TEXT("IsTraceComplex: %s"), (TraceParams.bTraceComplex) ? TEXT("True") : TEXT("False"));
+	//TraceParams.bTraceComplex;
+
+	//TODO try out kismet linetrace to see if it works for mural
+	//UKismetSystemLibrary::LineTraceSingleForObjects();
+
 	bool bHit = GetWorld()->LineTraceSingleByObjectType(Hit, LineStart, LineEnd, ECC_WorldStatic, TraceParams);
 	DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Green, false, 0, 0, 2);
 
 	if (bHit)
 	{
-		//DrawDebugBox(GetWorld(), Hit.ImpactPoint, FVector(5, 5, 5), FColor::Orange, false, 2);
+		DrawDebugBox(GetWorld(), Hit.ImpactPoint, FVector(5, 5, 5), FColor::Orange, false, 2);
 		
 		//UE_LOG(LogTemp, Warning, TEXT("Crack Location: %f, %f"), Hit.GetComponent()->GetRelativeLocation().X, Hit.GetComponent()->GetRelativeLocation().Y);
 		return Hit;
