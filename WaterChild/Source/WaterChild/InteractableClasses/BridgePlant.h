@@ -4,15 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "Plant.h"
-#include "SpringPlant.generated.h"
+#include "BridgePlant.generated.h"
 
 UCLASS()
-class WATERCHILD_API ASpringPlant : public APlant
+class WATERCHILD_API ABridgePlant : public APlant
 {
 	GENERATED_BODY()
 	
 public:
-	ASpringPlant();
+	ABridgePlant();
 
 protected:
 	// Called when the game starts or when spawned
@@ -24,22 +24,13 @@ public:
 	virtual void OnInteract_Implementation(ASpirit* Caller) override;
 	virtual void OnInteractEnd_Implementation(ASpirit* Caller) override;
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Spring Plant Features")
-	void BounceAnimation();
-	virtual void BounceAnimation_Implementation();
-
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent* FloorPlane;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-	class USkeletalMeshComponent* FlowerMesh;
+	class USkeletalMeshComponent* BridgeMesh;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collider", meta = (AllowPrivateAccess = "true"))
-	class UBoxComponent* FlowerCollider;
+	class UBoxComponent* BridgeCollider;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collider", meta = (AllowPrivateAccess = "true"))
 	class UBoxComponent* ReviveCollider;
-
-	UPROPERTY(EditAnywhere, Category = "Plant variables", meta = (AllowPrivateAccess = "true"))
-	float BounceForwardVelocity = 0.;
-	float BounceSideVelocity = 0.;
-	float BounceUpVelocity = 1000.;
 };

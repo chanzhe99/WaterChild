@@ -38,6 +38,8 @@ void APlatformPlant::BeginPlay()
 {
 	Super::BeginPlay();
 
+	//TODO remove once the grow feature is done
+	PlantState = EPlantState::Alive;
 }
 
 // Called every frame
@@ -69,7 +71,10 @@ void APlatformPlant::OnInteract_Implementation(ASpirit* Caller)
 		PetalCollider->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
 		PetalCollider->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 		SetActorTickEnabled(false);
+
+		PlayPlantAnimation();
 	}
+	UE_LOG(LogTemp, Warning, TEXT("PlatformPlant gaining water"));
 	CurrentWaterValue += GetWorld()->GetDeltaSeconds();
 }
 

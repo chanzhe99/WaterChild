@@ -8,7 +8,7 @@
 // Sets default values
 ASpringPlant::ASpringPlant()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	// Component creation
 	FloorPlane = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("FloorPlane"));
@@ -73,10 +73,8 @@ void ASpringPlant::OnInteract_Implementation(ASpirit* Caller)
 		FlowerCollider->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 		SetActorTickEnabled(false);
 	}
-	else
-	{
-		CurrentWaterValue += GetWorld()->GetDeltaSeconds();
-	}
+	UE_LOG(LogTemp, Warning, TEXT("SpringPlant gaining water"));
+	CurrentWaterValue += GetWorld()->GetDeltaSeconds();
 }
 
 void ASpringPlant::OnInteractEnd_Implementation(ASpirit* Caller)
@@ -96,6 +94,12 @@ void ASpringPlant::OnInteractEnd_Implementation(ASpirit* Caller)
 	case EPlantState::Alive:
 		Caller->GetCharacterMovement()->Velocity = FVector::ZeroVector;
 		//UE_LOG(LogTemp, Warning, TEXT("Boost"));
+		BounceAnimation();
 		Caller->LaunchCharacter(FVector(BounceForwardVelocity, BounceSideVelocity, BounceUpVelocity), false, false);
 	}
+}
+
+void ASpringPlant::BounceAnimation_Implementation()
+{
+
 }

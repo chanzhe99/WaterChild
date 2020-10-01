@@ -26,13 +26,13 @@ public:
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-		class UStaticMeshComponent* FloorPlane;
+	class UStaticMeshComponent* FloorPlane;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-		class USkeletalMeshComponent* StemMesh;
+	class USkeletalMeshComponent* StemMesh;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-		class USkeletalMeshComponent* PetalMesh;
+	class USkeletalMeshComponent* PetalMesh;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collider", meta = (AllowPrivateAccess = "true"))
-		class UBoxComponent* PetalCollider;
+	class UBoxComponent* PetalCollider;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collider", meta = (AllowPrivateAccess = "true"))
-		class UBoxComponent* ReviveCollider;
+	class UBoxComponent* ReviveCollider;
 };

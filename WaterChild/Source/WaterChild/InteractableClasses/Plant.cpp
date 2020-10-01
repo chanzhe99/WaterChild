@@ -23,3 +23,8 @@ void APlant::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 }
+
+void APlant::PlayPlantAnimation_Implementation()
+{
+
+}
