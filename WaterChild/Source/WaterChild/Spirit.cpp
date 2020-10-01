@@ -13,6 +13,7 @@
 #include "InteractableClasses/InteractablePlant.h"
 #include "InteractableClasses/InteractableCrack.h"
 #include "InteractableClasses/InteractableDebris.h"
+#include "InteractableClasses/Plant.h"
 #include "InteractableClasses/SpringPlant.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -60,6 +61,8 @@ ASpirit::ASpirit()
 	SkeletalMeshWater->SetRelativeLocation(FVector(-14, 0, -27));
 
 	SpringArm->SetRelativeLocation(FVector(-5, 0, 0));
+	SpringArm->SocketOffset = FVector(0, 0, 60);
+	SpringArm->bEnableCameraLag = true;
 
 	NiagaraRevive->SetRelativeRotation(FRotator(0, 270, 0));
 
@@ -107,8 +110,63 @@ void ASpirit::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	//TraceLine(ClimbTraceLength);
-	//UE_LOG(LogTemp, Warning, TEXT("FwVector: X: %f, Y: %f, Z: %f"), GetActorForwardVector().X, GetActorForwardVector().Y, GetActorForwardVector().Z);
+	if (bIsCheckingForClimbable)
+	{
+		if (TraceLine(ClimbTraceLength).GetActor() && TraceLine(ClimbTraceLength).GetActor()->ActorHasTag("Climbable"))
+		{
+			bIsCheckingForClimbable = false;
+
+			//SpringArm->bUsePawnControlRotation = false;
+			//UE_LOG(LogTemp, Warning, TEXT("FwVector: X: %f, Y: %f, Z: %f"), GetActorForwardVector().X, GetActorForwardVector().Y, GetActorForwardVector().Z);
+			AActor* HitActor = TraceLine(ClimbTraceLength).GetActor();
+			UE_LOG(LogTemp, Warning, TEXT("Hitted something"))
+
+				BaseRotation = GetActorRotation();
+
+			// Get wall hit location & rotation
+			FVector WallLocation = TraceLine(ClimbTraceLength).Location;
+			FVector WallNormal = TraceLine(ClimbTraceLength).ImpactNormal;
+
+			// Get start location & rotation
+			FVector TransitionStartLocation = GetActorLocation();
+			FRotator TransitionStartRotation = GetActorRotation();
+
+			// Get base of mesh location
+			FVector MeshBaseLocation = GetMesh()->GetComponentLocation();
+
+			FVector CrossProduct = FVector::CrossProduct((WallLocation - MeshBaseLocation).GetSafeNormal(), WallNormal) * -1;
+			FVector WallForwardVector = FVector::CrossProduct(CrossProduct, WallNormal);
+			FVector WallRightVector = FVector::CrossProduct(WallForwardVector, WallNormal);
+
+			FVector TransitionEndLocation = WallLocation + (GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * WallNormal);
+			FRotator TransitionEndRotation = UKismetMathLibrary::MakeRotationFromAxes(WallForwardVector, WallRightVector, WallNormal);
+
+			WallForwardVector = WallForwardVector.GetSafeNormal();
+			WallRightVector = WallRightVector.GetSafeNormal();
+
+			SetActorLocationAndRotation(TransitionEndLocation, TransitionEndRotation);
+			ClimbConstantVelocityDirection = GetActorForwardVector();
+
+			GetMesh()->Deactivate();
+			GetMesh()->SetVisibility(false);
+			SkeletalMeshWater->Activate();
+			SkeletalMeshWater->SetVisibility(true);
+			GetCharacterMovement()->bOrientRotationToMovement = false;
+
+			ArrowLineTrace->SetWorldRotation((GetActorUpVector() * -1).GetSafeNormal().Rotation());
+			//AddLocalRotation(FRotator(-90, 0, 0));
+
+			TransitionToClimb();
+
+			//UE_LOG(LogTemp, Warning, TEXT("WallFwVector: X: %f, Y: %f, Z: %f"), WallForwardVector.X, WallForwardVector.Y, WallForwardVector.Z);
+			//UE_LOG(LogTemp, Warning, TEXT("FwVector: X: %f, Y: %f, Z: %f"), GetActorForwardVector().X, GetActorForwardVector().Y, GetActorForwardVector().Z);
+			//UE_LOG(LogTemp, Warning, TEXT("EndRot: P: %f, Y: %f, R: %f"), TransitionEndRotation.Pitch, TransitionEndRotation.Yaw, TransitionEndRotation.Roll);
+
+
+			GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+			SetState(ESpiritState::Climbing);
+		}
+	}
 
 	switch (SpiritState)
 	{
@@ -152,7 +210,7 @@ void ASpirit::Tick(float DeltaTime)
 
 		break;
 	case ESpiritState::Reviving:
-		OnRevive(Cast<AInteractablePlant>(TraceLine(ReviveTraceLength).GetActor()));
+		OnRevive(Cast<APlant>(TraceLine(ReviveTraceLength).GetActor()));
 		break;
 	case ESpiritState::ChargingJump:
 		OnJump();
@@ -215,8 +273,8 @@ void ASpirit::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis("MoveRight", this, &ASpirit::MoveRight);
 
 	// Binds the camera control axes
-	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+	PlayerInputComponent->BindAxis("Turn", this, &ASpirit::TurnAt);
+	PlayerInputComponent->BindAxis("LookUp", this, &ASpirit::LookUpAt);
 	PlayerInputComponent->BindAxis("TurnRate", this, &ASpirit::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &ASpirit::LookUpAtRate);
 
@@ -224,7 +282,7 @@ void ASpirit::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 void ASpirit::MoveForward(float Value)
 {
-	if (Controller && Value != 0.f)
+	if (Controller && Value != 0.f && SpiritState != ESpiritState::Squeezing)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
 		
@@ -259,8 +317,8 @@ void ASpirit::MoveForward(float Value)
 
 			AddMovementInput((NewForwardVector + NewRightVector).GetSafeNormal(), Value);
 
-			const FRotator YawRotation(0, ClimbRotation.Yaw, 0);
-			const FVector ClimbDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Z);
+			//const FRotator YawRotation(0, ClimbRotation.Yaw, 0);
+			//const FVector ClimbDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Z);
 			//AddMovementInput(ClimbDirection, Value);
 			//AddMovementInput(ClimbForwardVector, Value);
 		}
@@ -273,34 +331,11 @@ void ASpirit::MoveForward(float Value)
 			AddMovementInput(Direction, Value);
 		}
 	}
-
-	/*if (Controller && Value != 0.f && SpiritState != ESpiritState::Squeezing && SpiritState != ESpiritState::Bashing)
-	{
-		if (SpiritState == ESpiritState::Reviving)
-		{
-			const FRotator RevivePitch(Value * BaseTurnRate * 2 * GetWorld()->GetDeltaSeconds(), 0, 0);
-			ArrowLineTrace->AddRelativeRotation(RevivePitch);
-
-			if (ArrowLineTrace->GetRelativeRotation().Pitch >= 50)
-				ArrowLineTrace->SetRelativeRotation(FRotator(50, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
-			else if (ArrowLineTrace->GetRelativeRotation().Pitch <= -5)
-				ArrowLineTrace->SetRelativeRotation(FRotator(-5, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
-		}
-		else
-		{
-			const FRotator Rotation = Controller->GetControlRotation();
-			const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-			AddMovementInput(Direction, Value);
-		}
-	}*/
-	
 }
 
 void ASpirit::MoveRight(float Value)
 {
-	if (Controller && Value != 0.f)
+	if (Controller && Value != 0.f && SpiritState != ESpiritState::Squeezing)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
 		//const FRotator YawRotation(0, Rotation.Yaw, 0);
@@ -350,10 +385,10 @@ void ASpirit::MoveRight(float Value)
 
 			//AddMovementInput(ClimbRightVector, Value);
 
-			const FRotator YawRotation(0, ClimbRotation.Yaw, 0);
+			//const FRotator YawRotation(0, ClimbRotation.Yaw, 0);
 			//UE_LOG(LogTemp, Warning, TEXT("YawRot: P: %f, Y: %f, R: %f"), YawRotation.Pitch, YawRotation.Yaw, YawRotation.Roll);
-			const FVector ClimbDirection = FRotationMatrix(WallRotation - FRotator(0, 180, 0)).GetUnitAxis(EAxis::Y);
-			UE_LOG(LogTemp, Warning, TEXT("ClimbDir: X: %f, Y: %f, Z: %f"), ClimbDirection.X, ClimbDirection.Y * Value, ClimbDirection.Z);
+			//const FVector ClimbDirection = FRotationMatrix(WallRotation - FRotator(0, 180, 0)).GetUnitAxis(EAxis::Y);
+			//UE_LOG(LogTemp, Warning, TEXT("ClimbDir: X: %f, Y: %f, Z: %f"), ClimbDirection.X, ClimbDirection.Y * Value, ClimbDirection.Z);
 			//AddMovementInput(ClimbDirection, Value);
 			//AddMovementInput()
 		}
@@ -365,34 +400,6 @@ void ASpirit::MoveRight(float Value)
 			AddMovementInput(Direction, Value);
 		}
 	}
-
-	/*if (Controller && Value != 0.f && SpiritState != ESpiritState::Squeezing && SpiritState != ESpiritState::Bashing)
-	{
-		if (SpiritState == ESpiritState::Reviving)
-		{
-			const FRotator ReviveYaw(0, Value * BaseTurnRate * 2 * GetWorld()->GetDeltaSeconds(), 0);
-			ArrowLineTrace->AddRelativeRotation(ReviveYaw);
-
-			if (ArrowLineTrace->GetRelativeRotation().Yaw >= 45)
-			{
-				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, 45, 0));
-				AddActorWorldRotation(ReviveYaw);
-			}
-			else if (ArrowLineTrace->GetRelativeRotation().Yaw <= -45)
-			{
-				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, -45, 0));
-				AddActorWorldRotation(ReviveYaw);
-			}
-		}
-		else
-		{
-			const FRotator Rotation = Controller->GetControlRotation();
-			const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-			AddMovementInput(Direction, Value);
-		}
-	}*/
 }
 
 void ASpirit::Action()
@@ -428,57 +435,58 @@ void ASpirit::Jump()
 
 void ASpirit::Climb()
 {
-	if (TraceLine(ClimbTraceLength).GetActor() && TraceLine(ClimbTraceLength).GetActor()->ActorHasTag("Climbable"))
-	{
-		//UE_LOG(LogTemp, Warning, TEXT("FwVector: X: %f, Y: %f, Z: %f"), GetActorForwardVector().X, GetActorForwardVector().Y, GetActorForwardVector().Z);
-		AActor* HitActor = TraceLine(ClimbTraceLength).GetActor();
-		UE_LOG(LogTemp, Warning, TEXT("Hitted something"))
+	bIsCheckingForClimbable = true;
+	//if (TraceLine(ClimbTraceLength).GetActor() && TraceLine(ClimbTraceLength).GetActor()->ActorHasTag("Climbable"))
+	//{
+	//	//UE_LOG(LogTemp, Warning, TEXT("FwVector: X: %f, Y: %f, Z: %f"), GetActorForwardVector().X, GetActorForwardVector().Y, GetActorForwardVector().Z);
+	//	AActor* HitActor = TraceLine(ClimbTraceLength).GetActor();
+	//	UE_LOG(LogTemp, Warning, TEXT("Hitted something"))
 
-		BaseRotation = GetActorRotation();
+	//	BaseRotation = GetActorRotation();
 
-		// Get wall hit location & rotation
-		FVector WallLocation = TraceLine(ClimbTraceLength).Location;
-		FVector WallNormal = TraceLine(ClimbTraceLength).ImpactNormal;
+	//	// Get wall hit location & rotation
+	//	FVector WallLocation = TraceLine(ClimbTraceLength).Location;
+	//	FVector WallNormal = TraceLine(ClimbTraceLength).ImpactNormal;
 
-		// Get start location & rotation
-		FVector TransitionStartLocation = GetActorLocation();
-		FRotator TransitionStartRotation = GetActorRotation();
+	//	// Get start location & rotation
+	//	FVector TransitionStartLocation = GetActorLocation();
+	//	FRotator TransitionStartRotation = GetActorRotation();
 
-		// Get base of mesh location
-		FVector MeshBaseLocation = GetMesh()->GetComponentLocation();
+	//	// Get base of mesh location
+	//	FVector MeshBaseLocation = GetMesh()->GetComponentLocation();
 
-		FVector CrossProduct = FVector::CrossProduct((WallLocation - MeshBaseLocation).GetSafeNormal(), WallNormal) * -1;
-		FVector WallForwardVector = FVector::CrossProduct(CrossProduct, WallNormal);
-		FVector WallRightVector = FVector::CrossProduct(WallForwardVector, WallNormal);
+	//	FVector CrossProduct = FVector::CrossProduct((WallLocation - MeshBaseLocation).GetSafeNormal(), WallNormal) * -1;
+	//	FVector WallForwardVector = FVector::CrossProduct(CrossProduct, WallNormal);
+	//	FVector WallRightVector = FVector::CrossProduct(WallForwardVector, WallNormal);
 
-		FVector TransitionEndLocation = WallLocation + (GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * WallNormal);
-		FRotator TransitionEndRotation = UKismetMathLibrary::MakeRotationFromAxes(WallForwardVector, WallRightVector, WallNormal);
+	//	FVector TransitionEndLocation = WallLocation + (GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * WallNormal);
+	//	FRotator TransitionEndRotation = UKismetMathLibrary::MakeRotationFromAxes(WallForwardVector, WallRightVector, WallNormal);
 
-		WallForwardVector = WallForwardVector.GetSafeNormal();
-		WallRightVector = WallRightVector.GetSafeNormal();
+	//	WallForwardVector = WallForwardVector.GetSafeNormal();
+	//	WallRightVector = WallRightVector.GetSafeNormal();
 
-		SetActorLocationAndRotation(TransitionEndLocation, TransitionEndRotation);
-		ClimbConstantVelocityDirection = GetActorForwardVector();
+	//	SetActorLocationAndRotation(TransitionEndLocation, TransitionEndRotation);
+	//	ClimbConstantVelocityDirection = GetActorForwardVector();
 
-		GetMesh()->Deactivate();
-		GetMesh()->SetVisibility(false);
-		SkeletalMeshWater->Activate();
-		SkeletalMeshWater->SetVisibility(true);
-		GetCharacterMovement()->bOrientRotationToMovement = false;
+	//	GetMesh()->Deactivate();
+	//	GetMesh()->SetVisibility(false);
+	//	SkeletalMeshWater->Activate();
+	//	SkeletalMeshWater->SetVisibility(true);
+	//	GetCharacterMovement()->bOrientRotationToMovement = false;
 
-		ArrowLineTrace->SetWorldRotation((GetActorUpVector() * -1).GetSafeNormal().Rotation());
-			//AddLocalRotation(FRotator(-90, 0, 0));
+	//	ArrowLineTrace->SetWorldRotation((GetActorUpVector() * -1).GetSafeNormal().Rotation());
+	//		//AddLocalRotation(FRotator(-90, 0, 0));
 
-		TransitionToClimb();
+	//	TransitionToClimb();
 
-		//UE_LOG(LogTemp, Warning, TEXT("WallFwVector: X: %f, Y: %f, Z: %f"), WallForwardVector.X, WallForwardVector.Y, WallForwardVector.Z);
-		//UE_LOG(LogTemp, Warning, TEXT("FwVector: X: %f, Y: %f, Z: %f"), GetActorForwardVector().X, GetActorForwardVector().Y, GetActorForwardVector().Z);
-		//UE_LOG(LogTemp, Warning, TEXT("EndRot: P: %f, Y: %f, R: %f"), TransitionEndRotation.Pitch, TransitionEndRotation.Yaw, TransitionEndRotation.Roll);
-		
+	//	//UE_LOG(LogTemp, Warning, TEXT("WallFwVector: X: %f, Y: %f, Z: %f"), WallForwardVector.X, WallForwardVector.Y, WallForwardVector.Z);
+	//	//UE_LOG(LogTemp, Warning, TEXT("FwVector: X: %f, Y: %f, Z: %f"), GetActorForwardVector().X, GetActorForwardVector().Y, GetActorForwardVector().Z);
+	//	//UE_LOG(LogTemp, Warning, TEXT("EndRot: P: %f, Y: %f, R: %f"), TransitionEndRotation.Pitch, TransitionEndRotation.Yaw, TransitionEndRotation.Roll);
+	//	
 
-		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
-		SetState(ESpiritState::Climbing);
-	}
+	//	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+	//	SetState(ESpiritState::Climbing);
+	//}
 
 	//SphereClimb->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	//UE_LOG(LogTemp, Warning, TEXT("Climb pressed"));
@@ -486,6 +494,7 @@ void ASpirit::Climb()
 
 void ASpirit::StopClimb()
 {
+	bIsCheckingForClimbable = false;
 	if (SpiritState == ESpiritState::Climbing)
 	{
 		SetActorRotation(BaseRotation);
@@ -525,7 +534,7 @@ FHitResult ASpirit::TraceLine(float TraceLength)
 	else return FHitResult();
 }
 
-void ASpirit::OnRevive_Implementation(AInteractablePlant* PlantHit)
+void ASpirit::OnRevive_Implementation(APlant* PlantHit)
 {
 	if (PlantHit)
 	{

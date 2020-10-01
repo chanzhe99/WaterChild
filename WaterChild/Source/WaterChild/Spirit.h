@@ -41,14 +41,15 @@ public:
 	// Changes the Spirit's state and form according to input parameter
 	UFUNCTION(BlueprintCallable)
 	void SetState(ESpiritState DesiredState) { SpiritState = DesiredState; }
+	ESpiritState GetState() { return SpiritState; }
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void TransitionToClimb();
 	void TransitionToClimb_Implementation() {};
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
-	void OnRevive(class AInteractablePlant* PlantHit);
-	void OnRevive_Implementation(class AInteractablePlant* PlantHit);
+	void OnRevive(class APlant* PlantHit);
+	void OnRevive_Implementation(class APlant* PlantHit);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void OnJump();
@@ -112,30 +113,25 @@ private:
 
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	bool bIsCrackEntrance;
-	class AInteractablePlant* SelectedPlant;
+	class APlant* SelectedPlant;
 	class AInteractableCrack* SelectedCrack;
 
-	//FVector HitLocation = FVector().ZeroVector;
-	//FVector HitNormal = FVector().ZeroVector;
-	//FVector TransitionStartLocation = FVector().ZeroVector;
-	//FVector MeshBaseLocation = FVector().ZeroVector;
-	//FRotator TransitionStartRotation = FRotator().ZeroRotator;
+	bool bIsCheckingForClimbable = false;
 	AActor* SelectedClimbable;
-
 	FRotator BaseRotation = FRotator::ZeroRotator;
-
 	FVector ClimbConstantVelocityDirection = FVector::ZeroVector;
 	FVector ClimbForwardVector = FVector::ZeroVector;
 	FVector ClimbRightVector = FVector::ZeroVector;
-
 	FRotator ClimbRotation = FRotator::ZeroRotator;
 
 #pragma endregion
 
 	void MoveForward(float Value);
 	void MoveRight(float Value);
-	void TurnAtRate(float Value) { AddControllerYawInput(Value * BaseTurnRate * GetWorld()->GetDeltaSeconds()); }
-	void LookUpAtRate(float Value) { AddControllerPitchInput(Value * BaseLookUpAtRate * GetWorld()->GetDeltaSeconds()); }
+	void TurnAt(float Value) { if (SpiritState != ESpiritState::Climbing) AddControllerYawInput(Value); }
+	void LookUpAt(float Value) { if (SpiritState != ESpiritState::Climbing) AddControllerPitchInput(Value); }
+	void TurnAtRate(float Value) { if (SpiritState != ESpiritState::Climbing) AddControllerYawInput(Value * BaseTurnRate * GetWorld()->GetDeltaSeconds()); }
+	void LookUpAtRate(float Value) { if(SpiritState != ESpiritState::Climbing) AddControllerPitchInput(Value * BaseLookUpAtRate * GetWorld()->GetDeltaSeconds()); }
 	void Action();
 	void StopAction();
 	void Jump();
