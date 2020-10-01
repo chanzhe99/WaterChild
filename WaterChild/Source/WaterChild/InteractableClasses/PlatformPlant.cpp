@@ -7,7 +7,7 @@
 // Sets default values
 APlatformPlant::APlatformPlant()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	FloorPlane = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("FloorPlane"));
 	StemMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("StemMesh"));
@@ -38,8 +38,6 @@ void APlatformPlant::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//TODO remove once the grow feature is done
-	PlantState = EPlantState::Alive;
 }
 
 // Called every frame
@@ -52,7 +50,7 @@ void APlatformPlant::Tick(float DeltaTime)
 void APlatformPlant::OnInteract_Implementation(ASpirit* Caller)
 {
 	// State changer for dead to growing
-	//UE_LOG(LogTemp, Warning, TEXT("Plant is now growing"));
+	UE_LOG(LogTemp, Warning, TEXT("Plant is now growing"));
 	switch (PlantState)
 	{
 	case EPlantState::Dead:

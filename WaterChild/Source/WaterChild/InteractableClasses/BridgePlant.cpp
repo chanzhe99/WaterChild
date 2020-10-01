@@ -6,7 +6,7 @@
 
 ABridgePlant::ABridgePlant()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	FloorPlane = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("FloorPlane"));
 	BridgeMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BridgeMesh"));
@@ -35,6 +35,7 @@ void ABridgePlant::BeginPlay()
 void ABridgePlant::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
 }
 
 void ABridgePlant::OnInteract_Implementation(ASpirit* Caller)
