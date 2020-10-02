@@ -25,7 +25,7 @@ APlatformPlant::APlatformPlant()
 	PetalCollider->SetupAttachment(PetalMesh3);
 	ReviveCollider->SetupAttachment(StemMesh);
 
-	StemMesh->SetRelativeLocation(FVector(0, 0, -372));
+	StemMesh->SetRelativeLocation(FVector(0, 0, DefaultPlantHeight));
 	PetalCollider->SetRelativeLocation(FVector(0, 0, 382));
 	ReviveCollider->SetRelativeLocation(FVector(0, 0, 50));
 
@@ -42,6 +42,8 @@ void APlatformPlant::BeginPlay()
 {
 	Super::BeginPlay();
 
+	GrownPlantHeight = StemMesh->GetRelativeLocation().Z;
+	StemMesh->SetRelativeLocation(FVector(0, 0, DefaultPlantHeight));
 }
 
 // Called every frame
@@ -49,6 +51,18 @@ void APlatformPlant::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (PlantState == EPlantState::Alive && !bGrownUp)
+	{
+		if (StemMesh->GetRelativeLocation().Z < GrownPlantHeight)
+		{
+			StemMesh->AddLocalOffset(FVector(0, 0, GrowSpeed * GetWorld()->GetDeltaSeconds()));
+		}
+		else
+		{
+			bGrownUp = true;
+			SetActorTickEnabled(false);
+		}
+	}
 }
 
 void APlatformPlant::OnInteract_Implementation(ASpirit* Caller)
@@ -72,7 +86,6 @@ void APlatformPlant::OnInteract_Implementation(ASpirit* Caller)
 		PetalCollider->SetCollisionProfileName(TEXT("BlockAllDynamic"));
 		PetalCollider->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
 		PetalCollider->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
-		SetActorTickEnabled(false);
 
 		PlayPlantAnimation();
 	}

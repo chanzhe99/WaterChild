@@ -39,4 +39,10 @@ private:
 	class UBoxComponent* PetalCollider;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collider", meta = (AllowPrivateAccess = "true"))
 	class UBoxComponent* ReviveCollider;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Grown Settings", meta = (AllowPrivateAccess = "true"))
+	float GrowSpeed = 200;
+	float DefaultPlantHeight = -372;
+	float GrownPlantHeight = 0;
+	bool bGrownUp = false;
 };
