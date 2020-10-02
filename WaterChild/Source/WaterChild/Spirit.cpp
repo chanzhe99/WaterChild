@@ -88,8 +88,6 @@ ASpirit::ASpirit()
 	BaseTurnRate = 45.f;
 	BaseLookUpAtRate = 45.f;
 
-	ReviveTraceLength = 200;
-
 	JumpChargeDuration = 0.1f;
 	JumpChargeTime = 0;
 
@@ -526,7 +524,7 @@ FHitResult ASpirit::TraceLine(float TraceLength)
 	TraceParams.bTraceComplex = true;
 	Hit = FHitResult(ForceInit);
 
-	UE_LOG(LogTemp, Warning, TEXT("IsTraceComplex: %s"), (TraceParams.bTraceComplex) ? TEXT("True") : TEXT("False"));
+	//UE_LOG(LogTemp, Warning, TEXT("IsTraceComplex: %s"), (TraceParams.bTraceComplex) ? TEXT("True") : TEXT("False"));
 	//TraceParams.bTraceComplex;
 
 	//TODO try out kismet linetrace to see if it works for mural

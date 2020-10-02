@@ -104,7 +104,7 @@ private:
 	AActor* WallBeingClimbed = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"));
-	float ReviveTraceLength;
+	float ReviveTraceLength = 250;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"));
 	float SqueezeTraceLength = 15;
 
