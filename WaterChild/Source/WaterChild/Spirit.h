@@ -85,6 +85,13 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"))
 	class UArrowComponent* ArrowLineTrace;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"))
+		class UArrowComponent* ClimbLineTraceUp;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"))
+		class UArrowComponent* ClimbLineTraceLeft;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"))
+		class UArrowComponent* ClimbLineTraceRight;
 #pragma endregion
 
 #pragma region Component variables
@@ -99,12 +106,13 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"));
 	FHitResult TraceHit = FHitResult();
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"));
 	float ClimbTraceLength = 30;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Climbing", meta = (AllowPrivateAccess = "true"));
 	AActor* WallBeingClimbed = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"));
-	float ReviveTraceLength = 250;
+	float ReviveTraceLength = 300;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"));
 	float SqueezeTraceLength = 15;
 
@@ -120,6 +128,7 @@ private:
 	bool bIsCheckingForClimbable = false;
 	AActor* SelectedClimbable;
 	FRotator BaseRotation = FRotator::ZeroRotator;
+	FVector WallNormal = FVector::ZeroVector;
 	FVector ClimbConstantVelocityDirection = FVector::ZeroVector;
 	FVector ClimbForwardVector = FVector::ZeroVector;
 	FVector ClimbRightVector = FVector::ZeroVector;
@@ -129,16 +138,17 @@ private:
 
 	void MoveForward(float Value);
 	void MoveRight(float Value);
-	void TurnAt(float Value) { if (SpiritState != ESpiritState::Climbing) AddControllerYawInput(Value); }
-	void LookUpAt(float Value) { if (SpiritState != ESpiritState::Climbing) AddControllerPitchInput(Value); }
-	void TurnAtRate(float Value) { if (SpiritState != ESpiritState::Climbing) AddControllerYawInput(Value * BaseTurnRate * GetWorld()->GetDeltaSeconds()); }
-	void LookUpAtRate(float Value) { if(SpiritState != ESpiritState::Climbing) AddControllerPitchInput(Value * BaseLookUpAtRate * GetWorld()->GetDeltaSeconds()); }
+	void TurnAt(float Value)		{ AddControllerYawInput(Value); }
+	void LookUpAt(float Value)		{ AddControllerPitchInput(Value); }
+	void TurnAtRate(float Value)	{ AddControllerYawInput(Value * BaseTurnRate * GetWorld()->GetDeltaSeconds()); }
+	void LookUpAtRate(float Value)	{ AddControllerPitchInput(Value * BaseLookUpAtRate * GetWorld()->GetDeltaSeconds()); }
 	void Action();
 	void StopAction();
 	void Jump();
 	void Climb();
 	void StopClimb();
 	FHitResult TraceLine(float TraceLength);
+	FHitResult ClimbTraceLine(FVector2D Direction);
 
 	UFUNCTION()
 		void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
