@@ -41,32 +41,28 @@ ASpirit::ASpirit()
 	SkeletalMeshWater = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshWater"));
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
+	ArrowLineTrace = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowLineTrace"));
+	ArrowLeftFoot = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowLeftFoot"));
+	ArrowRightFoot = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowRightFoot"));
 	NiagaraFootsteps = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraFootsteps"));
 	NiagaraRevive = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraRevive"));
 	NiagaraJumpDefault = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraJumpDefault"));
 	NiagaraJumpWater = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraJumpWater"));
-	ArrowLineTrace = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowLineTrace"));
-
-	ClimbLineTraceUp = CreateDefaultSubobject<UArrowComponent>(TEXT("UpLineTrace"));
-	ClimbLineTraceLeft = CreateDefaultSubobject<UArrowComponent>(TEXT("LeftLineTrace"));
-	ClimbLineTraceRight = CreateDefaultSubobject<UArrowComponent>(TEXT("RightLineTrace"));
 
 	// Setup attachments for components
 	SkeletalMeshWater->SetupAttachment(RootComponent);
 	SpringArm->SetupAttachment(RootComponent);
 	Camera->SetupAttachment(SpringArm);
+	ArrowLeftFoot->SetupAttachment(GetMesh(), "Spirit_Rig_LLegAnkle");
+	ArrowRightFoot->SetupAttachment(GetMesh(), "Spirit_Rig_RLegAnkle");
 	NiagaraFootsteps->SetupAttachment(GetMesh());
 	NiagaraRevive->SetupAttachment(ArrowLineTrace);
 	NiagaraJumpDefault->SetupAttachment(GetMesh());
 	NiagaraJumpWater->SetupAttachment(SkeletalMeshWater);
 	ArrowLineTrace->SetupAttachment(RootComponent);
 
-	ClimbLineTraceUp->SetupAttachment(RootComponent);
-	ClimbLineTraceLeft->SetupAttachment(RootComponent);
-	ClimbLineTraceRight->SetupAttachment(RootComponent);
-
 	// Set component position offsets
-	GetMesh()->SetRelativeLocation(FVector(0, 0, -27));
+	GetMesh()->SetRelativeLocationAndRotation(FVector(0, 0, -27), FRotator(0, -90, 0));
 	SkeletalMeshWater->SetRelativeLocation(FVector(-14, 0, -27));
 
 	SpringArm->SetRelativeLocation(FVector(-5, 0, 0));
@@ -81,6 +77,9 @@ ASpirit::ASpirit()
 	// Set component default values
 	SpringArm->TargetArmLength = 300.f;
 	SpringArm->bUsePawnControlRotation = true;
+
+	ArrowLeftFoot->SetRelativeLocationAndRotation(FVector(0, -1, 0), FRotator(0, -97, 0));
+	ArrowRightFoot->SetRelativeLocationAndRotation(FVector(0, -1, 0), FRotator(0, -97, 0));
 
 	NiagaraFootsteps->SetAutoActivate(false);
 	NiagaraRevive->SetAutoActivate(false);
