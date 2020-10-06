@@ -548,27 +548,27 @@ void ASpirit::OnRevive_Implementation(APlant* PlantHit)
 	if (PlantHit)
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("Plant Hit"));
-		if (PlantHit != SelectedPlant)
+		/*if (PlantHit != SelectedPlant)
 		{
 			if (SelectedPlant)
 			{
 				IInteractableInterface* Interface = Cast<IInteractableInterface>(SelectedPlant);
 				if (Interface) Interface->Execute_OnInteractEnd(SelectedPlant, this);
 			}
-		}
+		}*/
 		IInteractableInterface* Interface = Cast<IInteractableInterface>(PlantHit);
 		if (Interface) Interface->Execute_OnInteract(PlantHit, this);
-		SelectedPlant = PlantHit;
+		//SelectedPlant = PlantHit;
 	}
 	else
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("No Plant Hit"));
-		if (SelectedPlant)
+		/*if (SelectedPlant)
 		{
 			IInteractableInterface* Interface = Cast<IInteractableInterface>(SelectedPlant);
 			if (Interface) Interface->Execute_OnInteractEnd(SelectedPlant, this);
-		}
-		SelectedPlant = nullptr;
+		}*/
+		//SelectedPlant = nullptr;
 	}
 }
 
