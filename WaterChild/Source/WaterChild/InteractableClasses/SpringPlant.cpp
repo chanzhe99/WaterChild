@@ -40,7 +40,7 @@ void ASpringPlant::BeginPlay()
 	Super::BeginPlay();
 
 	//TODO remove once the grow feature is done
-	PlantState = EPlantState::Alive;
+	//PlantState = EPlantState::Alive;
 
 }
 
@@ -72,6 +72,8 @@ void ASpringPlant::OnInteract_Implementation(ASpirit* Caller)
 		FlowerCollider->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
 		FlowerCollider->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 		SetActorTickEnabled(false);
+
+		PlayPlantAnimation();
 	}
 	UE_LOG(LogTemp, Warning, TEXT("SpringPlant gaining water"));
 	CurrentWaterValue += GetWorld()->GetDeltaSeconds();
