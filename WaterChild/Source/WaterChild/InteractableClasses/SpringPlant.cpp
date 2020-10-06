@@ -89,19 +89,16 @@ void ASpringPlant::OnInteractEnd_Implementation(ASpirit* Caller)
 		SetPlantState(EPlantState::Dead);
 		PrimaryActorTick.bCanEverTick = false;
 	}
+}
 
+void ASpringPlant::BounceAnimation_Implementation(ASpirit* Caller)
+{
+		UE_LOG(LogTemp, Warning, TEXT("Boost"));
 	// Boost player
 	switch (PlantState)
 	{
 	case EPlantState::Alive:
 		Caller->GetCharacterMovement()->Velocity = FVector::ZeroVector;
-		//UE_LOG(LogTemp, Warning, TEXT("Boost"));
-		BounceAnimation();
 		Caller->LaunchCharacter(FVector(BounceForwardVelocity, BounceSideVelocity, BounceUpVelocity), false, false);
 	}
-}
-
-void ASpringPlant::BounceAnimation_Implementation()
-{
-
 }
