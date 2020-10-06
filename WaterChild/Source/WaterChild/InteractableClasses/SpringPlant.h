@@ -25,8 +25,8 @@ public:
 	virtual void OnInteractEnd_Implementation(ASpirit* Caller) override;
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Spring Plant Features")
-	void BounceAnimation();
-	virtual void BounceAnimation_Implementation();
+	void BounceAnimation(ASpirit* Caller);
+	virtual void BounceAnimation_Implementation(ASpirit* Caller);
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))

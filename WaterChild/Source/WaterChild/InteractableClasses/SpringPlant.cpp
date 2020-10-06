@@ -40,7 +40,7 @@ void ASpringPlant::BeginPlay()
 	Super::BeginPlay();
 
 	//TODO remove once the grow feature is done
-	PlantState = EPlantState::Alive;
+	//PlantState = EPlantState::Alive;
 
 }
 
@@ -72,6 +72,8 @@ void ASpringPlant::OnInteract_Implementation(ASpirit* Caller)
 		FlowerCollider->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
 		FlowerCollider->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 		SetActorTickEnabled(false);
+
+		PlayPlantAnimation();
 	}
 	UE_LOG(LogTemp, Warning, TEXT("SpringPlant gaining water"));
 	CurrentWaterValue += GetWorld()->GetDeltaSeconds();
@@ -87,19 +89,16 @@ void ASpringPlant::OnInteractEnd_Implementation(ASpirit* Caller)
 		SetPlantState(EPlantState::Dead);
 		PrimaryActorTick.bCanEverTick = false;
 	}
+}
 
+void ASpringPlant::BounceAnimation_Implementation(ASpirit* Caller)
+{
+		UE_LOG(LogTemp, Warning, TEXT("Boost"));
 	// Boost player
 	switch (PlantState)
 	{
 	case EPlantState::Alive:
 		Caller->GetCharacterMovement()->Velocity = FVector::ZeroVector;
-		//UE_LOG(LogTemp, Warning, TEXT("Boost"));
-		BounceAnimation();
 		Caller->LaunchCharacter(FVector(BounceForwardVelocity, BounceSideVelocity, BounceUpVelocity), false, false);
 	}
-}
-
-void ASpringPlant::BounceAnimation_Implementation()
-{
-
 }
