@@ -22,7 +22,7 @@ APlatformPlant::APlatformPlant()
 	PetalMesh1->SetupAttachment(StemMesh);
 	PetalMesh2->SetupAttachment(PetalMesh1);
 	PetalMesh3->SetupAttachment(PetalMesh2);
-	PetalCollider->SetupAttachment(PetalMesh3);
+	PetalCollider->SetupAttachment(PetalMesh1);
 	ReviveCollider->SetupAttachment(StemMesh);
 
 	StemMesh->SetRelativeLocation(FVector(0, 0, DefaultPlantHeight));

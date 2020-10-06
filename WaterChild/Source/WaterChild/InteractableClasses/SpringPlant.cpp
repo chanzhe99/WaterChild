@@ -93,7 +93,7 @@ void ASpringPlant::OnInteractEnd_Implementation(ASpirit* Caller)
 
 void ASpringPlant::BounceAnimation_Implementation(ASpirit* Caller)
 {
-		UE_LOG(LogTemp, Warning, TEXT("Boost"));
+	UE_LOG(LogTemp, Warning, TEXT("Boost"));
 	// Boost player
 	switch (PlantState)
 	{
