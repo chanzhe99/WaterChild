@@ -332,7 +332,7 @@ void ASpirit::MoveForward(float Value)
 		}
 		else if (SpiritState == ESpiritState::Climbing)
 		{
-			if (ClimbTraceLine(FVector2D(Value, 0)).GetActor())
+			if (ClimbTraceLine(FVector2D(Value, 0)).GetActor() && ClimbTraceLine(FVector2D(Value, 0)).GetActor()->ActorHasTag("Climbable"))
 			{
 				const FRotator WallUpRotation = TraceLine(ClimbTraceLength).ImpactNormal.Rotation();
 				const FVector ClimbDirection = FRotationMatrix(WallUpRotation - FRotator(0, 180, 0)).GetUnitAxis(EAxis::Z);
@@ -391,7 +391,7 @@ void ASpirit::MoveRight(float Value)
 		}
 		else if (SpiritState == ESpiritState::Climbing)
 		{
-			if (ClimbTraceLine(FVector2D(0, Value)).GetActor())
+			if (ClimbTraceLine(FVector2D(0, Value)).GetActor() && ClimbTraceLine(FVector2D(0, Value)).GetActor()->ActorHasTag("Climbable"))
 			{
 				const FRotator WallUpRotation = TraceLine(ClimbTraceLength).ImpactNormal.Rotation();
 				const FVector ClimbDirection = FRotationMatrix(WallUpRotation - FRotator(0, 180, 0)).GetUnitAxis(EAxis::Y);
