@@ -19,15 +19,15 @@ APlatformPlant::APlatformPlant()
 
 	FloorPlane->SetupAttachment(RootComponent);
 	StemMesh->SetupAttachment(FloorPlane);
-	PetalMesh1->SetupAttachment(StemMesh);
+	PetalMesh1->SetupAttachment(StemMesh, "Bone008");
 	PetalMesh2->SetupAttachment(PetalMesh1);
 	PetalMesh3->SetupAttachment(PetalMesh2);
-	PetalCollider->SetupAttachment(PetalMesh1);
+	PetalCollider->SetupAttachment(StemMesh, "Bone008");
 	ReviveCollider->SetupAttachment(StemMesh);
 
-	StemMesh->SetRelativeLocation(FVector(0, 0, DefaultPlantHeight));
+	StemMesh->SetRelativeLocation(FVector(0, 0, 0));
 	PetalCollider->SetRelativeLocation(FVector(0, 0, 382));
-	ReviveCollider->SetRelativeLocation(FVector(0, 0, 50));
+	ReviveCollider->SetRelativeLocation(FVector(0, 0, 230));
 
 	PetalCollider->SetBoxExtent(FVector(50, 50, 0));
 	ReviveCollider->SetBoxExtent(FVector(50, 50, 50));
@@ -42,8 +42,12 @@ void APlatformPlant::BeginPlay()
 {
 	Super::BeginPlay();
 
-	GrownPlantHeight = StemMesh->GetRelativeLocation().Z;
-	StemMesh->SetRelativeLocation(FVector(0, 0, DefaultPlantHeight));
+	/*GrownPlantHeight = StemMesh->GetRelativeLocation().Z;
+	StemMesh->SetRelativeLocation(FVector(0, 0, DefaultPlantHeight));*/
+
+	GrownPlantHeight = StemMesh->GetRelativeScale3D().Z;
+	StemMesh->SetRelativeScale3D(FVector(1., 1., DefaultPlantHeight));
+
 }
 
 // Called every frame
@@ -53,14 +57,14 @@ void APlatformPlant::Tick(float DeltaTime)
 
 	if (PlantState == EPlantState::Alive && !bGrownUp)
 	{
-		if (StemMesh->GetRelativeLocation().Z < GrownPlantHeight)
+		if (StemMesh->GetRelativeScale3D().Z < GrownPlantHeight)
 		{
-			StemMesh->AddLocalOffset(FVector(0, 0, GrowSpeed * GetWorld()->GetDeltaSeconds()));
+			//StemMesh->AddLocalOffset(FVector(0, 0, GrowSpeed * GetWorld()->GetDeltaSeconds()));
+			StemMesh->SetRelativeScale3D(FVector(1., 1., (StemMesh->GetRelativeScale3D().Z + (GrowSpeed * GetWorld()->GetDeltaSeconds()))));
 		}
 		else
 		{
 			bGrownUp = true;
-			SetActorTickEnabled(false);
 		}
 	}
 }

@@ -108,7 +108,6 @@ void ABridgePlant::OnInteract_Implementation(ASpirit* Caller)
 		BridgeCollider8->SetCollisionProfileName(TEXT("BlockAllDynamic"));
 		BridgeCollider8->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
 		BridgeCollider8->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
-		SetActorTickEnabled(false);
 
 		PlayPlantAnimation();
 	}

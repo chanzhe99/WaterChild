@@ -71,7 +71,6 @@ void ASpringPlant::OnInteract_Implementation(ASpirit* Caller)
 		FlowerCollider->SetCollisionProfileName(TEXT("BlockAllDynamic"));
 		FlowerCollider->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
 		FlowerCollider->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
-		SetActorTickEnabled(false);
 
 		PlayPlantAnimation();
 	}

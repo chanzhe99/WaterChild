@@ -41,8 +41,8 @@ private:
 	class UBoxComponent* ReviveCollider;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Grown Settings", meta = (AllowPrivateAccess = "true"))
-	float GrowSpeed = 200;
-	float DefaultPlantHeight = -372;
+	float GrowSpeed = 2;
+	float DefaultPlantHeight = 0.075; // -372
 	float GrownPlantHeight = 0;
 	bool bGrownUp = false;
 };
