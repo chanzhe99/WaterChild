@@ -453,7 +453,8 @@ void ASpirit::StopAction()
 void ASpirit::Jump()
 {
 	if (SpiritState == ESpiritState::Idle || SpiritState == ESpiritState::Walking)
-		SetState(ESpiritState::ChargingJump);
+		//SetState(ESpiritState::ChargingJump);
+		ACharacter::Jump();
 }
 
 void ASpirit::Climb()

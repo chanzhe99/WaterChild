@@ -42,7 +42,8 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Grown Settings", meta = (AllowPrivateAccess = "true"))
 	float GrowSpeed = 2;
-	float DefaultPlantHeight = 0.075; // -372
-	float GrownPlantHeight = 0;
-	bool bGrownUp = false;
+	FVector DeadPlantSize = FVector::ZeroVector;
+	FVector GrownPlantSize = FVector::ZeroVector;
+	float GrowTime = 0;
+	float GrowDuration = 1.83f;
 };
