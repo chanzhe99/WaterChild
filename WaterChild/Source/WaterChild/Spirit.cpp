@@ -126,7 +126,7 @@ void ASpirit::Tick(float DeltaTime)
 	FVector RightVector = FVector::CrossProduct(FVector::UpVector, WallNormal);
 	FVector LineEnd = LineStart + (RightVector * 100);
 	GetWorld()->LineTraceSingleByObjectType(Hit, LineStart, LineEnd, ECC_WorldStatic, TraceParams);
-	DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Magenta, false, 0, 0, 2);
+	//DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Magenta, false, 0, 0, 2);
 
 	if (bIsCheckingForClimbable)
 	{
@@ -501,11 +501,11 @@ FHitResult ASpirit::TraceLine(float TraceLength)
 	//UKismetSystemLibrary::LineTraceSingleForObjects();
 
 	bool bHit = GetWorld()->LineTraceSingleByObjectType(Hit, LineStart, LineEnd, ECC_WorldStatic, TraceParams);
-	DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Green, false, 0, 0, 2);
+	//DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Green, false, 0, 0, 2);
 
 	if (bHit)
 	{
-		DrawDebugBox(GetWorld(), Hit.ImpactPoint, FVector(5, 5, 5), FColor::Orange, false, 2);
+		//DrawDebugBox(GetWorld(), Hit.ImpactPoint, FVector(5, 5, 5), FColor::Orange, false, 2);
 		
 		//UE_LOG(LogTemp, Warning, TEXT("Crack Location: %f, %f"), Hit.GetComponent()->GetRelativeLocation().X, Hit.GetComponent()->GetRelativeLocation().Y);
 		return Hit;
@@ -534,11 +534,11 @@ FHitResult ASpirit::ClimbTraceLine(FVector2D Direction)
 		LineEnd = LineStart + (WallNormal * -DownTraceLength) + (WallRightVector * -TraceLength);
 
 	bool bHit = GetWorld()->LineTraceSingleByObjectType(Hit, LineStart, LineEnd, ECC_WorldStatic, TraceParams);
-	DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Magenta, false, 0, 0, 2);
+	//DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Magenta, false, 0, 0, 2);
 
 	if (bHit)
 	{
-		DrawDebugBox(GetWorld(), Hit.ImpactPoint, FVector(5, 5, 5), FColor::Orange, false, 2);
+		//DrawDebugBox(GetWorld(), Hit.ImpactPoint, FVector(5, 5, 5), FColor::Orange, false, 2);
 		return Hit;
 	}
 	return FHitResult();
