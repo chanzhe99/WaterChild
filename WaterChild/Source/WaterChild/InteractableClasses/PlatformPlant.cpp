@@ -76,6 +76,7 @@ void APlatformPlant::OnInteract_Implementation(ASpirit* Caller)
 		SetPlantState(EPlantState::Growing);
 		PrimaryActorTick.bCanEverTick = true;
 		break;
+
 	case EPlantState::Growing:
 		// WaterValue incrementer
 		CurrentWaterValue += GetWorld()->GetDeltaSeconds();
