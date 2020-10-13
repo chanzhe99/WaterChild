@@ -41,7 +41,6 @@ void ASpringPlant::BeginPlay()
 
 	//TODO remove once the grow feature is done
 	//PlantState = EPlantState::Alive;
-
 }
 
 // Called every frame
@@ -53,6 +52,7 @@ void ASpringPlant::Tick(float DeltaTime)
 
 void ASpringPlant::OnInteract_Implementation(ASpirit* Caller)
 {
+	// State changer for dead to growing
 	switch (PlantState)
 	{
 	case EPlantState::Dead:
@@ -60,28 +60,30 @@ void ASpringPlant::OnInteract_Implementation(ASpirit* Caller)
 		SetPlantState(EPlantState::Growing);
 		PrimaryActorTick.bCanEverTick = true;
 		break;
-	}
 
-	// Water value ticker
-	if (CurrentWaterValue >= MaxWaterValue)
-	{
-		PlantState = EPlantState::Alive;
+	case EPlantState::Growing:
+		CurrentWaterValue += GetWorld()->GetDeltaSeconds();
+		UE_LOG(LogTemp, Warning, TEXT("SpringPlant gaining water"));
 
-		// Collision changer
-		FlowerCollider->SetCollisionProfileName(TEXT("BlockAllDynamic"));
-		FlowerCollider->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
-		FlowerCollider->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+		// WaterValue incrementer
+		if (CurrentWaterValue >= MaxWaterValue)
+		{
+			PlantState = EPlantState::Alive;
 
-		PlayPlantAnimation();
-	}
-	UE_LOG(LogTemp, Warning, TEXT("SpringPlant gaining water"));
-	CurrentWaterValue += GetWorld()->GetDeltaSeconds();
+			// Collision changer
+			FlowerCollider->SetCollisionProfileName(TEXT("BlockAllDynamic"));
+			FlowerCollider->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+			FlowerCollider->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+
+			PlayPlantAnimation();
+		}
+		break;
+	}	
 }
 
 void ASpringPlant::OnInteractEnd_Implementation(ASpirit* Caller)
 {
 	//UE_LOG(LogTemp, Warning, TEXT("End call"));
-
 	if (PlantState == EPlantState::Growing && CurrentWaterValue <= 0)
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("Plant stopped growing"));
