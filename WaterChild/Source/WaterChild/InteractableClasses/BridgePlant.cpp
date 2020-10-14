@@ -69,50 +69,55 @@ void ABridgePlant::OnInteract_Implementation(ASpirit* Caller)
 		SetPlantState(EPlantState::Growing);
 		PrimaryActorTick.bCanEverTick = true;
 		break;
+
+	case EPlantState::Growing:
+		CurrentWaterValue += GetWorld()->GetDeltaSeconds();
+		UE_LOG(LogTemp, Warning, TEXT("BridgePlant gaining water"));
+
+		// WaterValue incrementer
+		if (CurrentWaterValue >= MaxWaterValue)
+		{
+			PlantState = EPlantState::Alive;
+
+			// Collision changer
+			BridgeCollider1->SetCollisionProfileName(TEXT("BlockAllDynamic"));
+			BridgeCollider1->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+			BridgeCollider1->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+
+			BridgeCollider2->SetCollisionProfileName(TEXT("BlockAllDynamic"));
+			BridgeCollider2->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+			BridgeCollider2->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+
+			BridgeCollider3->SetCollisionProfileName(TEXT("BlockAllDynamic"));
+			BridgeCollider3->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+			BridgeCollider3->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+
+			BridgeCollider4->SetCollisionProfileName(TEXT("BlockAllDynamic"));
+			BridgeCollider4->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+			BridgeCollider4->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+
+			BridgeCollider5->SetCollisionProfileName(TEXT("BlockAllDynamic"));
+			BridgeCollider5->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+			BridgeCollider5->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+
+			BridgeCollider6->SetCollisionProfileName(TEXT("BlockAllDynamic"));
+			BridgeCollider6->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+			BridgeCollider6->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+
+			BridgeCollider7->SetCollisionProfileName(TEXT("BlockAllDynamic"));
+			BridgeCollider7->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+			BridgeCollider7->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+
+			BridgeCollider8->SetCollisionProfileName(TEXT("BlockAllDynamic"));
+			BridgeCollider8->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+			BridgeCollider8->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+
+			PlayPlantAnimation();
+		}
+		break;
 	}
 
-	// WaterValue incrementer
-	if (CurrentWaterValue >= MaxWaterValue)
-	{
-		PlantState = EPlantState::Alive;
-
-		// Collision changer
-		BridgeCollider1->SetCollisionProfileName(TEXT("BlockAllDynamic"));
-		BridgeCollider1->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
-		BridgeCollider1->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
-
-		BridgeCollider2->SetCollisionProfileName(TEXT("BlockAllDynamic"));
-		BridgeCollider2->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
-		BridgeCollider2->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
-
-		BridgeCollider3->SetCollisionProfileName(TEXT("BlockAllDynamic"));
-		BridgeCollider3->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
-		BridgeCollider3->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
-
-		BridgeCollider4->SetCollisionProfileName(TEXT("BlockAllDynamic"));
-		BridgeCollider4->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
-		BridgeCollider4->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
-
-		BridgeCollider5->SetCollisionProfileName(TEXT("BlockAllDynamic"));
-		BridgeCollider5->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
-		BridgeCollider5->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
-
-		BridgeCollider6->SetCollisionProfileName(TEXT("BlockAllDynamic"));
-		BridgeCollider6->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
-		BridgeCollider6->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
-
-		BridgeCollider7->SetCollisionProfileName(TEXT("BlockAllDynamic"));
-		BridgeCollider7->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
-		BridgeCollider7->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
-
-		BridgeCollider8->SetCollisionProfileName(TEXT("BlockAllDynamic"));
-		BridgeCollider8->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
-		BridgeCollider8->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
-
-		PlayPlantAnimation();
-	}
-	UE_LOG(LogTemp, Warning, TEXT("BridgePlant gaining water"));
-	CurrentWaterValue += GetWorld()->GetDeltaSeconds();
+	
 }
 
 void ABridgePlant::OnInteractEnd_Implementation(ASpirit* Caller)
