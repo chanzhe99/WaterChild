@@ -69,7 +69,7 @@ void APlatformPlant::Tick(float DeltaTime)
 void APlatformPlant::OnInteract_Implementation(ASpirit* Caller)
 {
 	// State changer for dead to growing
-	UE_LOG(LogTemp, Warning, TEXT("Plant is now growing"));
+	UE_LOG(LogTemp, Warning, TEXT("PlatformPlant is now growing"));
 	switch (PlantState)
 	{
 	case EPlantState::Dead:

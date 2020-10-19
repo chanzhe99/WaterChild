@@ -606,8 +606,6 @@ void ASpirit::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherA
 		&& Cast<ASpringPlant>(OtherActor)->GetPlantState() == EPlantState::Alive 
 		&& SpiritState == ESpiritState::Falling)
 	{
-		//IInteractableInterface* Interface = Cast<IInteractableInterface>(OtherActor);
-		//if (Interface) Interface->Execute_BounceAnimation(OtherActor, this);
 		UE_LOG(LogTemp, Warning, TEXT("Springing"));
 		Cast<ASpringPlant>(OtherActor)->BounceAnimation(this);
 	}
