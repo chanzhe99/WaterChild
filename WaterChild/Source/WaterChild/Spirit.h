@@ -42,6 +42,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetState(ESpiritState DesiredState) { SpiritState = DesiredState; }
 	ESpiritState GetState() { return SpiritState; }
+	bool GetbIsUsingGamepad() { return bIsUsingGamepad; }
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void TransitionToClimb();
@@ -94,6 +95,9 @@ private:
 
 #pragma region Component variables
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	bool bIsUsingGamepad = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	ESpiritState SpiritState = ESpiritState::Idle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"));
@@ -134,12 +138,17 @@ private:
 
 #pragma endregion
 
+	void CheckInputType(FKey Key)	{ bIsUsingGamepad = (Key.IsMouseButton() || !Key.IsGamepadKey()) ? false : true; }
 	void MoveForward(float Value);
 	void MoveRight(float Value);
-	void TurnAt(float Value)		{ AddControllerYawInput(Value); }
-	void LookUpAt(float Value)		{ AddControllerPitchInput(Value); }
-	void TurnAtRate(float Value)	{ AddControllerYawInput(Value * BaseTurnRate * GetWorld()->GetDeltaSeconds()); }
-	void LookUpAtRate(float Value)	{ AddControllerPitchInput(Value * BaseLookUpAtRate * GetWorld()->GetDeltaSeconds()); }
+	void MoveForwardKeyboard(float Value);
+	void MoveRightKeyboard(float Value);
+	void MoveForwardGamepad(float Value);
+	void MoveRightGamepad(float Value);
+	void TurnAt(float Value);
+	void LookUpAt(float Value);
+	void TurnAtRate(float Value);
+	void LookUpAtRate(float Value);
 	void Action();
 	void StopAction();
 	void Jump();

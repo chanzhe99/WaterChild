@@ -56,7 +56,7 @@ void ASpringPlant::OnInteract_Implementation(ASpirit* Caller)
 	switch (PlantState)
 	{
 	case EPlantState::Dead:
-		UE_LOG(LogTemp, Warning, TEXT("Plant is now growing"));
+		UE_LOG(LogTemp, Warning, TEXT("SpringPlant is now growing"));
 		SetPlantState(EPlantState::Growing);
 		PrimaryActorTick.bCanEverTick = true;
 		break;
