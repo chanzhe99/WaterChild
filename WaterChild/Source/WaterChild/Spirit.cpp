@@ -18,6 +18,8 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/KismetInputLibrary.h"
+#include "GameFramework/PlayerInput.h"
 
 #define OUT
 
@@ -116,6 +118,7 @@ void ASpirit::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	UE_LOG(LogTemp, Warning, TEXT("Using Gamepad: %s"), (bIsUsingGamepad) ? TEXT("TRUE") : TEXT("FALSE"));
 	//UE_LOG(LogTemp, Warning, TEXT("Velocity: X: %f, Y: %f, Z: %f"), GetVelocity().X, GetVelocity().Y, GetVelocity().Z);
 
 	FHitResult Hit;
@@ -231,6 +234,7 @@ void ASpirit::Tick(float DeltaTime)
 
 		break;
 	case ESpiritState::Reviving:
+		Controller->SetControlRotation(UKismetMathLibrary::RInterpTo(Controller->GetControlRotation(), GetActorForwardVector().Rotation(), GetWorld()->GetDeltaSeconds(), 5.f));
 		TraceHit = TraceLine(ReviveTraceLength);
 		OnRevive(Cast<APlant>(TraceLine(ReviveTraceLength).GetActor()));
 		break;
@@ -293,30 +297,32 @@ void ASpirit::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	// Binds the action buttons
+	// Binds the PC buttons
 	PlayerInputComponent->BindAction("ActionButton", IE_Pressed, this, &ASpirit::Action);
 	PlayerInputComponent->BindAction("ActionButton", IE_Released, this, &ASpirit::StopAction);
 	PlayerInputComponent->BindAction("JumpButton", IE_Pressed, this, &ASpirit::Jump);
 	PlayerInputComponent->BindAction("ClimbButton", IE_Pressed, this, &ASpirit::Climb);
 	PlayerInputComponent->BindAction("ClimbButton", IE_Released, this, &ASpirit::StopClimb);
 
-	// Binds the movement axes
-	PlayerInputComponent->BindAxis("MoveForward", this, &ASpirit::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &ASpirit::MoveRight);
-
-	// Binds the camera control axes
+	// Binds the PC axes
+	PlayerInputComponent->BindAxis("MoveForward", this, &ASpirit::MoveForwardKeyboard);
+	PlayerInputComponent->BindAxis("MoveRight", this, &ASpirit::MoveRightKeyboard);
 	PlayerInputComponent->BindAxis("Turn", this, &ASpirit::TurnAt);
 	PlayerInputComponent->BindAxis("LookUp", this, &ASpirit::LookUpAt);
+
+	// Binds the controller axes
+	PlayerInputComponent->BindAxis("MoveForwardGamepad", this, &ASpirit::MoveForwardGamepad);
+	PlayerInputComponent->BindAxis("MoveRightGamepad", this, &ASpirit::MoveRightGamepad);
 	PlayerInputComponent->BindAxis("TurnRate", this, &ASpirit::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &ASpirit::LookUpAtRate);
 
-	// Binds the action axes
-	//PlayerInputComponent->BindAxis("ReviveAxis", this, &ASpirit::Action);
+	// Checks input type
+	PlayerInputComponent->BindAction("AnyKey", IE_Pressed, this, &ASpirit::CheckInputType);
 }
 
 void ASpirit::MoveForward(float Value)
 {
-	if (Controller && Value != 0.f && SpiritState != ESpiritState::Squeezing)
+	if (Controller && SpiritState != ESpiritState::Squeezing)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
 		
@@ -338,30 +344,11 @@ void ASpirit::MoveForward(float Value)
 				const FVector ClimbDirection = FRotationMatrix(WallUpRotation - FRotator(0, 180, 0)).GetUnitAxis(EAxis::Z);
 				AddMovementInput(ClimbDirection, Value);
 			}
-
-
-			/*float ForwardVectorComparison = (UKismetMathLibrary::GetForwardVector(Controller->GetControlRotation()) - ClimbForwardVector).Size() - 0.6;
-			FVector NewForwardVector;
-			if (ForwardVectorComparison > 1.0)
-				NewForwardVector = ClimbForwardVector * ((ForwardVectorComparison - 1) * -1);
-			else
-				NewForwardVector = ClimbForwardVector * (1 - ForwardVectorComparison);
-
-			float RightVectorComparison = (UKismetMathLibrary::GetForwardVector(Controller->GetControlRotation()) - ClimbRightVector).Size() - 0.4;
-			FVector NewRightVector;
-			if (RightVectorComparison > 1.0)
-				NewRightVector = ClimbRightVector * ((RightVectorComparison - 1) * -1);
-			else
-				NewRightVector = ClimbRightVector * (1 - RightVectorComparison);
-
-			AddMovementInput((NewForwardVector + NewRightVector).GetSafeNormal(), Value);*/
 		}
 		else
 		{
 			const FRotator YawRotation(0, Rotation.Yaw, 0);
-
 			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-
 			AddMovementInput(Direction, Value);
 		}
 	}
@@ -369,7 +356,7 @@ void ASpirit::MoveForward(float Value)
 
 void ASpirit::MoveRight(float Value)
 {
-	if (Controller && Value != 0.f && SpiritState != ESpiritState::Squeezing)
+	if (Controller && SpiritState != ESpiritState::Squeezing)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
 
@@ -397,32 +384,100 @@ void ASpirit::MoveRight(float Value)
 				const FVector ClimbDirection = FRotationMatrix(WallUpRotation - FRotator(0, 180, 0)).GetUnitAxis(EAxis::Y);
 				AddMovementInput(ClimbDirection, Value);
 			}
-
-			/*float ForwardVectorComparison = (UKismetMathLibrary::GetRightVector(Controller->GetControlRotation()) - ClimbForwardVector).Size() - 0.4;
-			FVector NewForwardVector;
-			if (ForwardVectorComparison > 1.0)
-				NewForwardVector = ClimbForwardVector * ((ForwardVectorComparison - 1) * -1);
-			else
-				NewForwardVector = ClimbForwardVector * (1 - ForwardVectorComparison);
-
-			float RightVectorComparison = (UKismetMathLibrary::GetRightVector(Controller->GetControlRotation()) - ClimbRightVector).Size() - 0.4;
-			FVector NewRightVector;
-			if (RightVectorComparison > 1.0)
-				NewRightVector = ClimbRightVector * ((RightVectorComparison - 1) * -1);
-			else
-				NewRightVector = ClimbRightVector * (1 - RightVectorComparison);
-
-			AddMovementInput((NewForwardVector + NewRightVector).GetSafeNormal(), Value);*/
-
 		}
 		else
 		{
 			const FRotator YawRotation(0, Rotation.Yaw, 0);
-
 			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 			AddMovementInput(Direction, Value);
 		}
 	}
+}
+
+void ASpirit::MoveForwardKeyboard(float Value)
+{
+	if (Value != 0.f)
+	{
+		bIsUsingGamepad = false;
+		MoveForward(Value);
+	}
+}
+
+void ASpirit::MoveRightKeyboard(float Value)
+{
+	if (Value != 0.f)
+	{
+		bIsUsingGamepad = false;
+		MoveRight(Value);
+	}
+}
+
+void ASpirit::MoveForwardGamepad(float Value)
+{
+	if (Value != 0.f)
+	{
+		bIsUsingGamepad = true;
+		MoveForward(Value);
+	}
+}
+
+void ASpirit::MoveRightGamepad(float Value)
+{
+	if (Value != 0.f)
+	{
+		bIsUsingGamepad = true;
+		MoveRight(Value);
+	}
+}
+
+void ASpirit::TurnAt(float Value)
+{
+	if (Value != 0.f) bIsUsingGamepad = false;
+	if (SpiritState == ESpiritState::Reviving)
+	{
+		const FRotator ReviveYaw(0, Value, 0);
+		ArrowLineTrace->AddRelativeRotation(ReviveYaw);
+
+		if (ArrowLineTrace->GetRelativeRotation().Yaw >= 45)
+		{
+			ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, 45, 0));
+			AddActorWorldRotation(ReviveYaw);
+		}
+		else if (ArrowLineTrace->GetRelativeRotation().Yaw <= -45)
+		{
+			ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, -45, 0));
+			AddActorWorldRotation(ReviveYaw);
+		}
+	}
+	else AddControllerYawInput(Value);
+}
+
+void ASpirit::LookUpAt(float Value)
+{
+	if (Value != 0.f) bIsUsingGamepad = false;
+	if (SpiritState == ESpiritState::Reviving)
+	{
+		const FRotator RevivePitch(-Value, 0, 0);
+		ArrowLineTrace->AddRelativeRotation(RevivePitch);
+
+		if (ArrowLineTrace->GetRelativeRotation().Pitch >= 50)
+			ArrowLineTrace->SetRelativeRotation(FRotator(50, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
+		else if (ArrowLineTrace->GetRelativeRotation().Pitch <= -5)
+			ArrowLineTrace->SetRelativeRotation(FRotator(-5, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
+	}
+	else AddControllerPitchInput(Value);
+}
+
+void ASpirit::TurnAtRate(float Value)
+{
+	if (Value != 0.f) bIsUsingGamepad = true;
+	AddControllerYawInput(Value * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+}
+
+void ASpirit::LookUpAtRate(float Value)
+{
+	if (Value != 0.f) bIsUsingGamepad = true;
+	AddControllerPitchInput(Value * BaseLookUpAtRate * GetWorld()->GetDeltaSeconds());
 }
 
 void ASpirit::Action()
