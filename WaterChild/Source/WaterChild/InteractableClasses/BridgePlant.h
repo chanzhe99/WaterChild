@@ -31,22 +31,5 @@ private:
 	class USkeletalMeshComponent* BridgeMesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collider", meta = (AllowPrivateAccess = "true"))
-	class UBoxComponent* BridgeCollider1;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collider", meta = (AllowPrivateAccess = "true"))
-	class UBoxComponent* BridgeCollider2;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collider", meta = (AllowPrivateAccess = "true"))
-	class UBoxComponent* BridgeCollider3;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collider", meta = (AllowPrivateAccess = "true"))
-	class UBoxComponent* BridgeCollider4;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collider", meta = (AllowPrivateAccess = "true"))
-	class UBoxComponent* BridgeCollider5;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collider", meta = (AllowPrivateAccess = "true"))
-	class UBoxComponent* BridgeCollider6;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collider", meta = (AllowPrivateAccess = "true"))
-	class UBoxComponent* BridgeCollider7;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collider", meta = (AllowPrivateAccess = "true"))
-	class UBoxComponent* BridgeCollider8;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collider", meta = (AllowPrivateAccess = "true"))
 	class UBoxComponent* ReviveCollider;
 };
