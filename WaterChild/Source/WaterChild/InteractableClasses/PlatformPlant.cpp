@@ -10,7 +10,7 @@ APlatformPlant::APlatformPlant()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	FloorPlane = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("FloorPlane"));
+	Root = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Root"));
 	StemMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("StemMesh"));
 	PetalMesh1 = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("PetalMesh1"));
 	PetalMesh2 = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("PetalMesh2"));
@@ -18,13 +18,13 @@ APlatformPlant::APlatformPlant()
 	PetalCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("PetalCollider"));
 	ReviveCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("ReviveCollider"));
 
-	FloorPlane->SetupAttachment(RootComponent);
-	StemMesh->SetupAttachment(FloorPlane);
+	Root->SetupAttachment(RootComponent);
+	StemMesh->SetupAttachment(Root);
 	PetalMesh1->SetupAttachment(StemMesh, "Bone008");
 	PetalMesh2->SetupAttachment(PetalMesh1);
 	PetalMesh3->SetupAttachment(PetalMesh2);
 	PetalCollider->SetupAttachment(PetalMesh1);
-	ReviveCollider->SetupAttachment(FloorPlane);
+	ReviveCollider->SetupAttachment(Root);
 
 	PetalMesh1->SetRelativeRotation(FRotator(0, 270, 0));
 	PetalMesh2->SetRelativeLocation(FVector(0, 0, 2.5f));

@@ -8,13 +8,13 @@ ABridgePlant::ABridgePlant()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	FloorPlane = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("FloorPlane"));
+	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	BridgeMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BridgeMesh"));
 	ReviveCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("ReviveCollider"));
 
-	FloorPlane->SetupAttachment(RootComponent);
-	BridgeMesh->SetupAttachment(FloorPlane);
-	ReviveCollider->SetupAttachment(FloorPlane);
+	Root->SetupAttachment(RootComponent);
+	BridgeMesh->SetupAttachment(Root);
+	ReviveCollider->SetupAttachment(Root);
 
 	BridgeMesh->SetCollisionProfileName(TEXT("NoCollision"));
 
