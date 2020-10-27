@@ -11,16 +11,14 @@ ASpringPlant::ASpringPlant()
 	PrimaryActorTick.bCanEverTick = false;
 
 	// Component creation
-	FloorPlane = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("FloorPlane"));
 	FlowerMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FlowerMesh"));
 	FlowerCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("FlowerCollider"));
 	ReviveCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("ReviveCollider"));
 
 	// Attachment setup
-	FloorPlane->SetupAttachment(RootComponent);
-	FlowerMesh->SetupAttachment(FloorPlane);
+	FlowerMesh->SetupAttachment(RootComponent);
 	FlowerCollider->SetupAttachment(FlowerMesh);
-	ReviveCollider->SetupAttachment(FloorPlane);
+	ReviveCollider->SetupAttachment(FlowerMesh);
 
 	// Location setup
 	FlowerCollider->SetRelativeLocation(FVector(0, 5, 50));
