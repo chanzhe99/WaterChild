@@ -21,11 +21,11 @@ ASpringPlant::ASpringPlant()
 	ReviveCollider->SetupAttachment(FlowerMesh);
 
 	// Location setup
-	FlowerCollider->SetRelativeLocation(FVector(0, 5, 50));
-	ReviveCollider->SetRelativeLocation(FVector(0, 5, 25));
+	FlowerCollider->SetRelativeLocation(FVector(-5, -3, 25));
+	ReviveCollider->SetRelativeLocation(FVector(-5, -3, 25));
 
-	FlowerCollider->SetBoxExtent(FVector(84, 76, 0));
-	ReviveCollider->SetBoxExtent(FVector(84, 76, 25));
+	FlowerCollider->SetBoxExtent(FVector(80, 80, 0));
+	ReviveCollider->SetBoxExtent(FVector(80, 80, 25));
 
 	FlowerCollider->SetCollisionProfileName(TEXT("NoCollision"));
 	ReviveCollider->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
@@ -69,7 +69,7 @@ void ASpringPlant::OnInteract_Implementation(ASpirit* Caller)
 			PlantState = EPlantState::Alive;
 
 			// Collision changer
-			FlowerCollider->SetCollisionProfileName(TEXT("BlockAllDynamic"));
+			FlowerCollider->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
 			FlowerCollider->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
 			FlowerCollider->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 
