@@ -49,6 +49,14 @@ public:
 	void TransitionToClimb_Implementation() {};
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+	void Revive();
+	void Revive_Implementation();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+	void StopRevive();
+	void StopRevive_Implementation();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void OnRevive(class APlant* PlantHit);
 	void OnRevive_Implementation(class APlant* PlantHit);
 
@@ -113,8 +121,13 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Climbing", meta = (AllowPrivateAccess = "true"));
 	AActor* WallBeingClimbed = nullptr;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	bool bCameraFollowRevive = false;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"));
 	float ReviveTraceLength = 300;
+	float ReviveMaxHeight = 50;
+	float ReviveMinHeight = -10;
+	float ReviveMaxYawAngle = 45;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"));
 	float SqueezeTraceLength = 15;
 
