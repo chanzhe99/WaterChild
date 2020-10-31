@@ -92,7 +92,7 @@ ASpirit::ASpirit()
 	GetCapsuleComponent()->SetCapsuleHalfHeight(25.f);
 
 	// Set default variable values
-	SpiritState = ESpiritState::Idle;
+	//SpiritState = ESpiritState::Idle;
 
 	BaseTurnRate = 45.f;
 	BaseLookUpAtRate = 45.f;
@@ -327,7 +327,7 @@ void ASpirit::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 void ASpirit::MoveForward(float Value)
 {
-	if (Controller && SpiritState != ESpiritState::Squeezing)
+	if (Controller && SpiritState != ESpiritState::Squeezing && SpiritState != ESpiritState::Tutorial)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
 		
@@ -361,7 +361,7 @@ void ASpirit::MoveForward(float Value)
 
 void ASpirit::MoveRight(float Value)
 {
-	if (Controller && SpiritState != ESpiritState::Squeezing)
+	if (Controller && SpiritState != ESpiritState::Squeezing && SpiritState != ESpiritState::Tutorial)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
 
