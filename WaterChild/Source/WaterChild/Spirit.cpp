@@ -192,6 +192,11 @@ void ASpirit::Tick(float DeltaTime)
 		}
 	}
 
+	FRotator CameraTargetRotation = (bCameraFollowRevive) ? ArrowLineTrace->GetForwardVector().Rotation() : GetActorForwardVector().Rotation();
+	CameraTargetRotation += FRotator(-20, 0, 0);
+	//FRotator CameraTargetRotation = FRotator(ArrowLineTrace->GetForwardVector().Rotation().Pitch - 10, GetActorForwardVector().Rotation().Yaw, GetActorForwardVector().Rotation().Roll);
+	//FRotator CameraTargetRotation = ArrowLineTrace->GetForwardVector().Rotation() + FRotator(-20, 0, 0);
+
 	switch (SpiritState)
 	{
 	case ESpiritState::Idle:
@@ -234,7 +239,7 @@ void ASpirit::Tick(float DeltaTime)
 
 		break;
 	case ESpiritState::Reviving:
-		Controller->SetControlRotation(UKismetMathLibrary::RInterpTo(Controller->GetControlRotation(), GetActorForwardVector().Rotation(), GetWorld()->GetDeltaSeconds(), 5.f));
+		Controller->SetControlRotation(UKismetMathLibrary::RInterpTo(Controller->GetControlRotation(), CameraTargetRotation, GetWorld()->GetDeltaSeconds(), 5.f));
 		TraceHit = TraceLine(ReviveTraceLength);
 		OnRevive(Cast<APlant>(TraceLine(ReviveTraceLength).GetActor()));
 		break;
@@ -298,8 +303,8 @@ void ASpirit::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	// Binds the PC buttons
-	PlayerInputComponent->BindAction("ActionButton", IE_Pressed, this, &ASpirit::Action);
-	PlayerInputComponent->BindAction("ActionButton", IE_Released, this, &ASpirit::StopAction);
+	PlayerInputComponent->BindAction("ActionButton", IE_Pressed, this, &ASpirit::Revive);
+	PlayerInputComponent->BindAction("ActionButton", IE_Released, this, &ASpirit::StopRevive);
 	PlayerInputComponent->BindAction("JumpButton", IE_Pressed, this, &ASpirit::Jump);
 	PlayerInputComponent->BindAction("ClimbButton", IE_Pressed, this, &ASpirit::Climb);
 	PlayerInputComponent->BindAction("ClimbButton", IE_Released, this, &ASpirit::StopClimb);
@@ -331,10 +336,10 @@ void ASpirit::MoveForward(float Value)
 			const FRotator RevivePitch(Value * BaseTurnRate * 2 * GetWorld()->GetDeltaSeconds(), 0, 0);
 			ArrowLineTrace->AddRelativeRotation(RevivePitch);
 
-			if (ArrowLineTrace->GetRelativeRotation().Pitch >= 50)
-				ArrowLineTrace->SetRelativeRotation(FRotator(50, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
-			else if (ArrowLineTrace->GetRelativeRotation().Pitch <= -5)
-				ArrowLineTrace->SetRelativeRotation(FRotator(-5, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
+			if (ArrowLineTrace->GetRelativeRotation().Pitch >= ReviveMaxHeight)
+				ArrowLineTrace->SetRelativeRotation(FRotator(ReviveMaxHeight, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
+			else if (ArrowLineTrace->GetRelativeRotation().Pitch <= ReviveMinHeight)
+				ArrowLineTrace->SetRelativeRotation(FRotator(ReviveMinHeight, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
 		}
 		else if (SpiritState == ESpiritState::Climbing)
 		{
@@ -365,14 +370,14 @@ void ASpirit::MoveRight(float Value)
 			const FRotator ReviveYaw(0, Value * BaseTurnRate * 2 * GetWorld()->GetDeltaSeconds(), 0);
 			ArrowLineTrace->AddRelativeRotation(ReviveYaw);
 
-			if (ArrowLineTrace->GetRelativeRotation().Yaw >= 45)
+			if (ArrowLineTrace->GetRelativeRotation().Yaw >= ReviveMaxYawAngle)
 			{
-				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, 45, 0));
+				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, ReviveMaxYawAngle, 0));
 				AddActorWorldRotation(ReviveYaw);
 			}
-			else if (ArrowLineTrace->GetRelativeRotation().Yaw <= -45)
+			else if (ArrowLineTrace->GetRelativeRotation().Yaw <= -ReviveMaxYawAngle)
 			{
-				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, -45, 0));
+				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, -ReviveMaxYawAngle, 0));
 				AddActorWorldRotation(ReviveYaw);
 			}
 		}
@@ -438,14 +443,14 @@ void ASpirit::TurnAt(float Value)
 		const FRotator ReviveYaw(0, Value, 0);
 		ArrowLineTrace->AddRelativeRotation(ReviveYaw);
 
-		if (ArrowLineTrace->GetRelativeRotation().Yaw >= 45)
+		if (ArrowLineTrace->GetRelativeRotation().Yaw >= ReviveMaxYawAngle)
 		{
-			ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, 45, 0));
+			ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, ReviveMaxYawAngle, 0));
 			AddActorWorldRotation(ReviveYaw);
 		}
-		else if (ArrowLineTrace->GetRelativeRotation().Yaw <= -45)
+		else if (ArrowLineTrace->GetRelativeRotation().Yaw <= -ReviveMaxYawAngle)
 		{
-			ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, -45, 0));
+			ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, -ReviveMaxYawAngle, 0));
 			AddActorWorldRotation(ReviveYaw);
 		}
 	}
@@ -460,10 +465,10 @@ void ASpirit::LookUpAt(float Value)
 		const FRotator RevivePitch(-Value, 0, 0);
 		ArrowLineTrace->AddRelativeRotation(RevivePitch);
 
-		if (ArrowLineTrace->GetRelativeRotation().Pitch >= 50)
-			ArrowLineTrace->SetRelativeRotation(FRotator(50, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
-		else if (ArrowLineTrace->GetRelativeRotation().Pitch <= -5)
-			ArrowLineTrace->SetRelativeRotation(FRotator(-5, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
+		if (ArrowLineTrace->GetRelativeRotation().Pitch >= ReviveMaxHeight)
+			ArrowLineTrace->SetRelativeRotation(FRotator(ReviveMaxHeight, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
+		else if (ArrowLineTrace->GetRelativeRotation().Pitch <= ReviveMinHeight)
+			ArrowLineTrace->SetRelativeRotation(FRotator(ReviveMinHeight, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
 	}
 	else AddControllerPitchInput(Value);
 }
@@ -597,6 +602,31 @@ FHitResult ASpirit::ClimbTraceLine(FVector2D Direction)
 		return Hit;
 	}
 	return FHitResult();
+}
+
+void ASpirit::Revive_Implementation()
+{
+	if (SpiritState == ESpiritState::Idle || SpiritState == ESpiritState::Walking)
+	{
+		SetState(ESpiritState::Reviving);
+		NiagaraRevive->Activate();
+	}
+}
+
+void ASpirit::StopRevive_Implementation()
+{
+	if (SpiritState == ESpiritState::Reviving)
+	{
+		if (SelectedPlant)
+		{
+			IInteractableInterface* Interface = Cast<IInteractableInterface>(SelectedPlant);
+			if (Interface) Interface->Execute_OnInteractEnd(SelectedPlant, this);
+			SelectedPlant = nullptr;
+		}
+		ArrowLineTrace->SetRelativeRotation(FRotator::ZeroRotator);
+		NiagaraRevive->Deactivate();
+		SetState(ESpiritState::Idle);
+	}
 }
 
 void ASpirit::OnRevive_Implementation(APlant* PlantHit)
