@@ -43,11 +43,22 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetState(ESpiritState DesiredState) { SpiritState = DesiredState; }
 	ESpiritState GetState() { return SpiritState; }
-	bool GetbIsUsingGamepad() { return bIsUsingGamepad; }
+	UFUNCTION(BlueprintCallable)
+	bool GetIsUsingGamepad() { return bIsUsingGamepad; }
+	UFUNCTION(BlueprintCallable)
+	void SetCanTransitionToClimb(bool CanTransition) { bCanTransitionToClimb = CanTransition; }
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void TransitionToClimb();
-	void TransitionToClimb_Implementation() {};
+	void TransitionToClimb_Implementation();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+	void SetClimbOrientation();
+	void SetClimbOrientation_Implementation();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+	void TransitionToFall();
+	void TransitionToFall_Implementation() {}
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void Revive();
@@ -103,7 +114,6 @@ private:
 #pragma endregion
 
 #pragma region Component variables
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bIsUsingGamepad = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -141,7 +151,9 @@ private:
 	class APlant* SelectedPlant;
 	class AInteractableCrack* SelectedCrack;
 
+	bool bIsClimbButtonDown = false;
 	bool bIsCheckingForClimbable = false;
+	bool bCanTransitionToClimb = true;
 	AActor* SelectedClimbable;
 	FRotator BaseRotation = FRotator::ZeroRotator;
 	FVector WallNormal = FVector::ZeroVector;
