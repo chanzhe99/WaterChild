@@ -61,6 +61,14 @@ public:
 	void TransitionToFall_Implementation() {}
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+	void TransitionToSqueeze();
+	void TransitionToSqueeze_Implementation() {};
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+	void TransitionToStopSqueeze();
+	void TransitionToStopSqueeze_Implementation() {};
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void Revive();
 	void Revive_Implementation();
 
