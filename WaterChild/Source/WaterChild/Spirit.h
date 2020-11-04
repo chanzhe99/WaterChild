@@ -46,6 +46,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool GetIsUsingGamepad() { return bIsUsingGamepad; }
 	UFUNCTION(BlueprintCallable)
+	void SetIsUsingGamepad(bool Value) { bIsUsingGamepad = Value; }
+	UFUNCTION(BlueprintCallable)
 	void SetCanTransitionToClimb(bool CanTransition) { bCanTransitionToClimb = CanTransition; }
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
@@ -122,7 +124,7 @@ private:
 #pragma endregion
 
 #pragma region Component variables
-	bool bIsUsingGamepad = false;
+	bool bIsUsingGamepad = true;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	ESpiritState SpiritState = ESpiritState::Idle;
