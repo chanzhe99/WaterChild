@@ -39,5 +39,6 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Plant variables", meta = (AllowPrivateAccess = "true"))
 	float BounceForwardVelocity = 0.;
 	float BounceSideVelocity = 0.;
+	UPROPERTY(EditAnywhere, Category = "Plant variables", meta = (AllowPrivateAccess = "true"))
 	float BounceUpVelocity = 1000.;
 };
