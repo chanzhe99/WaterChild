@@ -10,25 +10,16 @@ AGrass::AGrass()
 
 	// Component creation
 	GrassMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("GrassMesh"));
-	GrassCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("GrassCollider"));
 	MultiCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("MultiCollider"));
 
 	// Attachment setup
 	GrassMesh->SetupAttachment(RootComponent);
-	GrassCollider->SetupAttachment(GrassMesh);
 	MultiCollider->SetupAttachment(GrassMesh);
 
 	// Location setup
-	GrassCollider->SetRelativeLocation(FVector(0, 0, 0));
 	MultiCollider->SetRelativeLocation(FVector(0, 0, 0));
 
-	GrassCollider->SetBoxExtent(FVector(50, 50, 25));
 	MultiCollider->SetBoxExtent(FVector(50, 50, 50));
-
-	// Set dirt patch collider so player can walk on it
-	GrassCollider->SetCollisionProfileName(TEXT("BlockAllDynamic"));
-	GrassCollider->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
-	GrassCollider->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 
 	MultiCollider->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
 	MultiCollider->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
