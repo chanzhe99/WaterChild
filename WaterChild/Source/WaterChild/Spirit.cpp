@@ -476,7 +476,8 @@ void ASpirit::Jump()
 {
 	if (SpiritState == ESpiritState::Idle || SpiritState == ESpiritState::Walking)
 		//SetState(ESpiritState::ChargingJump);
-		ACharacter::Jump();
+		//ACharacter::Jump();
+		OnJump();
 }
 
 void ASpirit::Climb()
@@ -689,13 +690,14 @@ void ASpirit::OnRevive_Implementation(APlant* PlantHit)
 
 void ASpirit::OnJump_Implementation()
 {
-	if (JumpChargeTime < JumpChargeDuration) JumpChargeTime += GetWorld()->GetDeltaSeconds();
+	ACharacter::Jump();
+	/*if (JumpChargeTime < JumpChargeDuration) JumpChargeTime += GetWorld()->GetDeltaSeconds();
 	else
 	{
 		ACharacter::Jump();
 		JumpChargeTime = 0;
 		SetState(ESpiritState::Falling);
-	}
+	}*/
 }
 
 void ASpirit::OnSqueeze_Implementation(AInteractableCrack* CrackHit)
