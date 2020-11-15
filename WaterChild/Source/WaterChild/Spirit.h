@@ -16,7 +16,8 @@ enum class ESpiritState : uint8
 	ChargingJump	UMETA(DisplayName = "ChargingJump"),
 	Squeezing		UMETA(DisplayName = "Squeezing"),
 	Climbing		UMETA(DisplayName = "Climbing"),
-	Tutorial		UMETA(DisplayName = "Tutorial")
+	Tutorial		UMETA(DisplayName = "Tutorial"),
+	WalkingBack		UMETA(DisplayName = "WalkingBack")
 };
 
 UCLASS()
