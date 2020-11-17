@@ -240,7 +240,7 @@ void ASpirit::Tick(float DeltaTime)
 
 		if (!bIsClimbButtonDown || !TraceLine(ClimbTraceLength).GetActor())
 		{
-			SetActorRotation(BaseRotation); UE_LOG(LogTemp, Warning, TEXT("Calling base rotation: %f"), BaseRotation.Pitch)
+			SetActorRotation(BaseRotation); //UE_LOG(LogTemp, Warning, TEXT("Calling base rotation: %f"), BaseRotation.Pitch)
 			ArrowLineTrace->SetWorldRotation(GetActorForwardVector().Rotation());
 
 			GetMesh()->Activate();
@@ -578,7 +578,7 @@ void ASpirit::TransitionToClimb_Implementation()
 	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 	GetCharacterMovement()->Velocity = FVector::ZeroVector;
 	SetActorRotation(TransitionStartRotation);
-	UE_LOG(LogTemp, Warning, TEXT("TransitionToClimb Called"))
+	//UE_LOG(LogTemp, Warning, TEXT("TransitionToClimb Called"))
 }
 
 void ASpirit::SetClimbOrientation_Implementation()
@@ -587,7 +587,7 @@ void ASpirit::SetClimbOrientation_Implementation()
 	//UE_LOG(LogTemp, Warning, TEXT("FwVector: X: %f, Y: %f, Z: %f"), GetActorForwardVector().X, GetActorForwardVector().Y, GetActorForwardVector().Z);
 	AActor* HitActor = TraceLine(ClimbTraceLength).GetActor();
 
-	BaseRotation = GetActorRotation(); UE_LOG(LogTemp, Warning, TEXT("Setting base rotation: %f"), BaseRotation.Pitch)
+	BaseRotation = GetActorRotation(); //UE_LOG(LogTemp, Warning, TEXT("Setting base rotation: %f"), BaseRotation.Pitch)
 
 	// Get wall hit location & rotation
 	FVector WallLocation = TraceLine(ClimbTraceLength).Location;
@@ -612,7 +612,7 @@ void ASpirit::SetClimbOrientation_Implementation()
 	//WallRightVector = WallRightVector.GetSafeNormal();
 	//ClimbRightVector = WallRightVector.GetSafeNormal();
 
-	SetActorLocationAndRotation(TransitionEndLocation, TransitionEndRotation); UE_LOG(LogTemp, Warning, TEXT("Setting climb rotation: %f"), TransitionEndRotation.Pitch)
+	SetActorLocationAndRotation(TransitionEndLocation, TransitionEndRotation); //UE_LOG(LogTemp, Warning, TEXT("Setting climb rotation: %f"), TransitionEndRotation.Pitch)
 	ClimbConstantVelocityDirection = GetActorForwardVector();
 
 	GetMesh()->Deactivate();
