@@ -137,7 +137,7 @@ void ASpirit::Tick(float DeltaTime)
 		{
 			bIsCheckingForClimbable = false;
 			bCanTransitionToClimb = false; UE_LOG(LogTemp, Warning, TEXT("CanClimb False"))
-			SetState(ESpiritState::Tutorial);
+			SetState(ESpiritState::StuckInPlace);
 			TransitionToClimb();
 		}
 	}
@@ -289,7 +289,7 @@ void ASpirit::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 void ASpirit::MoveForward(float Value)
 {
-	if (Controller && SpiritState != ESpiritState::Squeezing && SpiritState != ESpiritState::Tutorial)
+	if (Controller && SpiritState != ESpiritState::Squeezing && SpiritState != ESpiritState::StuckInPlace)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
 		
@@ -323,7 +323,7 @@ void ASpirit::MoveForward(float Value)
 
 void ASpirit::MoveRight(float Value)
 {
-	if (Controller && SpiritState != ESpiritState::Squeezing && SpiritState != ESpiritState::Tutorial)
+	if (Controller && SpiritState != ESpiritState::Squeezing && SpiritState != ESpiritState::StuckInPlace)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
 
