@@ -18,6 +18,8 @@ private:
 	bool bIsUsingGamepad = true;
 
 public:
+	//virtual void SetupInputComponent() override;
+
 	UFUNCTION(BlueprintCallable)
 	bool GetIsUsingGamepad() { return bIsUsingGamepad; }
 };
