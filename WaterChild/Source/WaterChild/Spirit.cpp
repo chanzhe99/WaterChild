@@ -118,9 +118,6 @@ void ASpirit::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	//SUE_LOG(LogTemp, Warning, TEXT("Using Gamepad: %s"), (bIsUsingGamepad) ? TEXT("TRUE") : TEXT("FALSE"));
-	//UE_LOG(LogTemp, Warning, TEXT("Velocity: X: %f, Y: %f, Z: %f"), GetVelocity().X, GetVelocity().Y, GetVelocity().Z);
-
 	FHitResult Hit;
 	FVector LineStart = ArrowLineTrace->GetComponentLocation();
 	FCollisionQueryParams TraceParams;
@@ -191,35 +188,20 @@ void ASpirit::Tick(float DeltaTime)
 	case ESpiritState::Reviving:
 		Controller->SetControlRotation(UKismetMathLibrary::RInterpTo(Controller->GetControlRotation(), CameraTargetRotation, GetWorld()->GetDeltaSeconds(), 5.f));
 		TraceHit = TraceLine(ReviveTraceLength);
-		OnRevive(Cast<APlant>(TraceLine(ReviveTraceLength).GetActor()));
+		OnRevive(Cast<AInteractable>(TraceLine(ReviveTraceLength).GetActor()));
 		break;
 	case ESpiritState::ChargingJump:
 		OnJump();
 		break;
 	case ESpiritState::Squeezing:
-		if(SelectedCrack)
-			OnSqueeze(SelectedCrack);
+		/*if(SelectedCrack)
+			OnSqueeze(SelectedCrack);*/
 		break;
 	case ESpiritState::Climbing:
 		
 		//FVector WallNormal = TraceLine(ClimbTraceLength).ImpactNormal;
 		//WallNormal = UKismetMathLibrary::VInterpTo_Constant(WallNormal, TraceLine(ClimbTraceLength).ImpactNormal, GetWorld()->GetDeltaSeconds(), 10.f);
 		//ClimbConstantVelocityDirection = GetVelocity().GetSafeNormal();
-		
-		// TODO If statement causes player to drop down after stopping and continuing to climb on wall
-		// FIXED swapped current and target vector interp around and fixed falling off wall issue
-		// which was caused by spirit rotating 180 degrees when they reached fully pointing up or down on the wall
-		// This, however, causes the spirit to instantly face the direction they are climbing when they move after stopping for a while.
-
-		// Rotation caused linetrace to not detect the wall, thus causing it to fall off. This issue could be remedied if
-		// the spirit does not fall off when it doesnt detect a wall, ala edge of wall mechanic
-
-		// After implementing the wall edge detection, the issue was still prevalent as the spirit model would rotate 180 degrees
-		// when the player quickly inputs forward & backward
-		// During implementation of the edge detection, I discovered that the formula that was used to produce the "RightVector" instead
-		// creates a LeftVector. With this realisation, I tried inversing the RightVector value and used that to make the ClimbRotation
-		// which finally fixed the issue. The current and target vector interp was swapped back around as the root issue had no relation
-		// to the function. This eliminated the spirit instantly facing the direction they are climbing when they move after stopping for a while.
 
 		if (GetVelocity().GetSafeNormal().Size() > 0.01f)
 			ClimbConstantVelocityDirection = UKismetMathLibrary::VInterpTo_Constant(ClimbConstantVelocityDirection, GetVelocity().GetSafeNormal(), GetWorld()->GetDeltaSeconds(), 5.f);
@@ -259,255 +241,6 @@ void ASpirit::Tick(float DeltaTime)
 	}
 }
 
-// Called to bind functionality to input
-void ASpirit::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	// Binds the PC buttons
-	PlayerInputComponent->BindAction("ActionButton", IE_Pressed, this, &ASpirit::Revive);
-	PlayerInputComponent->BindAction("ActionButton", IE_Released, this, &ASpirit::StopRevive);
-	PlayerInputComponent->BindAction("JumpButton", IE_Pressed, this, &ASpirit::Jump);
-	PlayerInputComponent->BindAction("ClimbButton", IE_Pressed, this, &ASpirit::Climb);
-	PlayerInputComponent->BindAction("ClimbButton", IE_Released, this, &ASpirit::StopClimb);
-
-	// Binds the PC axes
-	PlayerInputComponent->BindAxis("MoveForward", this, &ASpirit::MoveForwardKeyboard);
-	PlayerInputComponent->BindAxis("MoveRight", this, &ASpirit::MoveRightKeyboard);
-	PlayerInputComponent->BindAxis("Turn", this, &ASpirit::TurnAt);
-	PlayerInputComponent->BindAxis("LookUp", this, &ASpirit::LookUpAt);
-
-	// Binds the controller axes
-	PlayerInputComponent->BindAxis("MoveForwardGamepad", this, &ASpirit::MoveForwardGamepad);
-	PlayerInputComponent->BindAxis("MoveRightGamepad", this, &ASpirit::MoveRightGamepad);
-	PlayerInputComponent->BindAxis("TurnRate", this, &ASpirit::TurnAtRate);
-	PlayerInputComponent->BindAxis("LookUpRate", this, &ASpirit::LookUpAtRate);
-
-	// Checks input type
-	PlayerInputComponent->BindAction("AnyKey", IE_Pressed, this, &ASpirit::CheckInputType);
-}
-
-void ASpirit::MoveForward(float Value)
-{
-	if (Controller && SpiritState != ESpiritState::Squeezing && SpiritState != ESpiritState::StuckInPlace)
-	{
-		const FRotator Rotation = Controller->GetControlRotation();
-		
-		if (SpiritState == ESpiritState::Reviving)
-		{
-			const FRotator RevivePitch(Value * BaseTurnRate * 2 * GetWorld()->GetDeltaSeconds(), 0, 0);
-			ArrowLineTrace->AddRelativeRotation(RevivePitch);
-
-			if (ArrowLineTrace->GetRelativeRotation().Pitch >= ReviveMaxHeight)
-				ArrowLineTrace->SetRelativeRotation(FRotator(ReviveMaxHeight, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
-			else if (ArrowLineTrace->GetRelativeRotation().Pitch <= ReviveMinHeight)
-				ArrowLineTrace->SetRelativeRotation(FRotator(ReviveMinHeight, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
-		}
-		else if (SpiritState == ESpiritState::Climbing)
-		{
-			if (ClimbTraceLine(FVector2D(Value, 0)).GetActor() && ClimbTraceLine(FVector2D(Value, 0)).GetActor()->ActorHasTag("Climbable"))
-			{
-				const FRotator WallUpRotation = TraceLine(ClimbTraceLength).ImpactNormal.Rotation();
-				const FVector ClimbDirection = FRotationMatrix(WallUpRotation - FRotator(0, 180, 0)).GetUnitAxis(EAxis::Z);
-				AddMovementInput(ClimbDirection, Value);
-			}
-		}
-		else
-		{
-			const FRotator YawRotation(0, Rotation.Yaw, 0);
-			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-			AddMovementInput(Direction, Value);
-		}
-	}
-}
-
-void ASpirit::MoveRight(float Value)
-{
-	if (Controller && SpiritState != ESpiritState::Squeezing && SpiritState != ESpiritState::StuckInPlace)
-	{
-		const FRotator Rotation = Controller->GetControlRotation();
-
-		if (SpiritState == ESpiritState::Reviving)
-		{
-			const FRotator ReviveYaw(0, Value * BaseTurnRate * 2 * GetWorld()->GetDeltaSeconds(), 0);
-			ArrowLineTrace->AddRelativeRotation(ReviveYaw);
-
-			if (ArrowLineTrace->GetRelativeRotation().Yaw >= ReviveMaxYawAngle)
-			{
-				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, ReviveMaxYawAngle, 0));
-				AddActorWorldRotation(ReviveYaw);
-			}
-			else if (ArrowLineTrace->GetRelativeRotation().Yaw <= -ReviveMaxYawAngle)
-			{
-				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, -ReviveMaxYawAngle, 0));
-				AddActorWorldRotation(ReviveYaw);
-			}
-		}
-		else if (SpiritState == ESpiritState::Climbing)
-		{
-			if (ClimbTraceLine(FVector2D(0, Value)).GetActor() && ClimbTraceLine(FVector2D(0, Value)).GetActor()->ActorHasTag("Climbable"))
-			{
-				const FRotator WallUpRotation = TraceLine(ClimbTraceLength).ImpactNormal.Rotation();
-				const FVector ClimbDirection = FRotationMatrix(WallUpRotation - FRotator(0, 180, 0)).GetUnitAxis(EAxis::Y);
-				AddMovementInput(ClimbDirection, Value);
-			}
-		}
-		else
-		{
-			const FRotator YawRotation(0, Rotation.Yaw, 0);
-			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-			AddMovementInput(Direction, Value);
-		}
-	}
-}
-
-void ASpirit::MoveForwardKeyboard(float Value)
-{
-	if (Value != 0.f)
-	{
-		bIsUsingGamepad = false;
-		MoveForward(Value);
-	}
-}
-
-void ASpirit::MoveRightKeyboard(float Value)
-{
-	if (Value != 0.f)
-	{
-		bIsUsingGamepad = false;
-		MoveRight(Value);
-	}
-}
-
-void ASpirit::MoveForwardGamepad(float Value)
-{
-	if (Value != 0.f)
-	{
-		bIsUsingGamepad = true;
-		MoveForward(Value);
-	}
-}
-
-void ASpirit::MoveRightGamepad(float Value)
-{
-	if (Value != 0.f)
-	{
-		bIsUsingGamepad = true;
-		MoveRight(Value);
-	}
-}
-
-void ASpirit::TurnAt(float Value)
-{
-	if (Value != 0.f) bIsUsingGamepad = false;
-	if (SpiritState == ESpiritState::Reviving)
-	{
-		const FRotator ReviveYaw(0, Value, 0);
-		ArrowLineTrace->AddRelativeRotation(ReviveYaw);
-
-		if (ArrowLineTrace->GetRelativeRotation().Yaw >= ReviveMaxYawAngle)
-		{
-			ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, ReviveMaxYawAngle, 0));
-			AddActorWorldRotation(ReviveYaw);
-		}
-		else if (ArrowLineTrace->GetRelativeRotation().Yaw <= -ReviveMaxYawAngle)
-		{
-			ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, -ReviveMaxYawAngle, 0));
-			AddActorWorldRotation(ReviveYaw);
-		}
-	}
-	else AddControllerYawInput(Value);
-}
-
-void ASpirit::LookUpAt(float Value)
-{
-	if (Value != 0.f) bIsUsingGamepad = false;
-	if (SpiritState == ESpiritState::Reviving)
-	{
-		const FRotator RevivePitch(-Value, 0, 0);
-		ArrowLineTrace->AddRelativeRotation(RevivePitch);
-
-		if (ArrowLineTrace->GetRelativeRotation().Pitch >= ReviveMaxHeight)
-			ArrowLineTrace->SetRelativeRotation(FRotator(ReviveMaxHeight, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
-		else if (ArrowLineTrace->GetRelativeRotation().Pitch <= ReviveMinHeight)
-			ArrowLineTrace->SetRelativeRotation(FRotator(ReviveMinHeight, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
-	}
-	else AddControllerPitchInput(Value);
-}
-
-void ASpirit::TurnAtRate(float Value)
-{
-	if (Value != 0.f) bIsUsingGamepad = true;
-	AddControllerYawInput(Value * BaseTurnRate * GetWorld()->GetDeltaSeconds());
-}
-
-void ASpirit::LookUpAtRate(float Value)
-{
-	if (Value != 0.f) bIsUsingGamepad = true;
-	AddControllerPitchInput(Value * BaseLookUpAtRate * GetWorld()->GetDeltaSeconds());
-}
-
-void ASpirit::Action()
-{
-	if (SpiritState == ESpiritState::Idle || SpiritState == ESpiritState::Walking)
-	{
-		SetState(ESpiritState::Reviving);
-		NiagaraRevive->Activate();
-	}
-}
-
-void ASpirit::StopAction()
-{
-	if (SpiritState == ESpiritState::Reviving)
-	{
-		if (SelectedPlant)
-		{
-			IInteractableInterface* Interface = Cast<IInteractableInterface>(SelectedPlant);
-			if (Interface) Interface->Execute_OnInteractEnd(SelectedPlant, this);
-			SelectedPlant = nullptr;
-		}
-		ArrowLineTrace->SetRelativeRotation(FRotator::ZeroRotator);
-		NiagaraRevive->Deactivate();
-		SetState(ESpiritState::Idle);
-	}
-}
-
-void ASpirit::Jump()
-{
-	if (SpiritState == ESpiritState::Idle || SpiritState == ESpiritState::Walking)
-		//SetState(ESpiritState::ChargingJump);
-		//ACharacter::Jump();
-		OnJump();
-}
-
-void ASpirit::Climb()
-{
-	//UE_LOG(LogTemp, Warning, TEXT("Climb"))
-	bIsClimbButtonDown = true;
-	if (SpiritState != ESpiritState::Climbing)
-		bIsCheckingForClimbable = true;
-}
-
-void ASpirit::StopClimb()
-{
-	//UE_LOG(LogTemp, Warning, TEXT("Stopped Climb"))
-	bIsClimbButtonDown = false;
-	bIsCheckingForClimbable = false;
-	/*if (SpiritState == ESpiritState::Climbing)
-	{
-		SetActorRotation(BaseRotation);
-		ArrowLineTrace->SetWorldRotation(GetActorForwardVector().Rotation());
-		
-		GetMesh()->Activate();
-		GetMesh()->SetVisibility(true);
-		SkeletalMeshWater->Deactivate();
-		SkeletalMeshWater->SetVisibility(false);
-		GetCharacterMovement()->bOrientRotationToMovement = true;
-
-		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-		SetState(ESpiritState::Falling);
-	}*/
-}
 
 FHitResult ASpirit::TraceLine(float TraceLength)
 {
@@ -634,6 +367,9 @@ void ASpirit::SetClimbOrientation_Implementation()
 	//SetState(ESpiritState::Climbing);
 }
 
+
+
+
 void ASpirit::Revive_Implementation()
 {
 	if (SpiritState == ESpiritState::Idle || SpiritState == ESpiritState::Walking)
@@ -659,11 +395,184 @@ void ASpirit::StopRevive_Implementation()
 	}
 }
 
-void ASpirit::OnRevive_Implementation(APlant* PlantHit)
+void ASpirit::Climb_Implementation()
+{
+	bIsClimbButtonDown = true;
+	if (SpiritState != ESpiritState::Climbing)
+		bIsCheckingForClimbable = true;
+}
+
+void ASpirit::StopClimb_Implementation()
+{
+	//UE_LOG(LogTemp, Warning, TEXT("Stopped Climb"))
+	bIsClimbButtonDown = false;
+	bIsCheckingForClimbable = false;
+	/*if (SpiritState == ESpiritState::Climbing)
+	{
+		SetActorRotation(BaseRotation);
+		ArrowLineTrace->SetWorldRotation(GetActorForwardVector().Rotation());
+
+		GetMesh()->Activate();
+		GetMesh()->SetVisibility(true);
+		SkeletalMeshWater->Deactivate();
+		SkeletalMeshWater->SetVisibility(false);
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+
+		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+		SetState(ESpiritState::Falling);
+	}*/
+}
+
+void ASpirit::JumpAction_Implementation()
+{
+	if (SpiritState == ESpiritState::Idle || SpiritState == ESpiritState::Walking)
+		//SetState(ESpiritState::ChargingJump);
+		//ACharacter::Jump();
+		OnJump();
+}
+
+
+void ASpirit::MoveForward_Implementation(float Value)
+{
+	if (Controller && SpiritState != ESpiritState::Squeezing && SpiritState != ESpiritState::StuckInPlace)
+	{
+		const FRotator Rotation = Controller->GetControlRotation();
+
+		if (SpiritState == ESpiritState::Reviving)
+		{
+			const FRotator RevivePitch(Value * BaseTurnRate * 2 * GetWorld()->GetDeltaSeconds(), 0, 0);
+			ArrowLineTrace->AddRelativeRotation(RevivePitch);
+
+			if (ArrowLineTrace->GetRelativeRotation().Pitch >= ReviveMaxHeight)
+				ArrowLineTrace->SetRelativeRotation(FRotator(ReviveMaxHeight, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
+			else if (ArrowLineTrace->GetRelativeRotation().Pitch <= ReviveMinHeight)
+				ArrowLineTrace->SetRelativeRotation(FRotator(ReviveMinHeight, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
+		}
+		else if (SpiritState == ESpiritState::Climbing)
+		{
+			if (ClimbTraceLine(FVector2D(Value, 0)).GetActor() && ClimbTraceLine(FVector2D(Value, 0)).GetActor()->ActorHasTag("Climbable"))
+			{
+				const FRotator WallUpRotation = TraceLine(ClimbTraceLength).ImpactNormal.Rotation();
+				const FVector ClimbDirection = FRotationMatrix(WallUpRotation - FRotator(0, 180, 0)).GetUnitAxis(EAxis::Z);
+				AddMovementInput(ClimbDirection, Value);
+			}
+		}
+		else
+		{
+			const FRotator YawRotation(0, Rotation.Yaw, 0);
+			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+			AddMovementInput(Direction, Value);
+		}
+	}
+}
+
+void ASpirit::MoveRight_Implementation(float Value)
+{
+	if (Controller && SpiritState != ESpiritState::Squeezing && SpiritState != ESpiritState::StuckInPlace)
+	{
+		const FRotator Rotation = Controller->GetControlRotation();
+
+		if (SpiritState == ESpiritState::Reviving)
+		{
+			const FRotator ReviveYaw(0, Value * BaseTurnRate * 2 * GetWorld()->GetDeltaSeconds(), 0);
+			ArrowLineTrace->AddRelativeRotation(ReviveYaw);
+
+			if (ArrowLineTrace->GetRelativeRotation().Yaw >= ReviveMaxYawAngle)
+			{
+				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, ReviveMaxYawAngle, 0));
+				AddActorWorldRotation(ReviveYaw);
+			}
+			else if (ArrowLineTrace->GetRelativeRotation().Yaw <= -ReviveMaxYawAngle)
+			{
+				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, -ReviveMaxYawAngle, 0));
+				AddActorWorldRotation(ReviveYaw);
+			}
+		}
+		else if (SpiritState == ESpiritState::Climbing)
+		{
+			if (ClimbTraceLine(FVector2D(0, Value)).GetActor() && ClimbTraceLine(FVector2D(0, Value)).GetActor()->ActorHasTag("Climbable"))
+			{
+				const FRotator WallUpRotation = TraceLine(ClimbTraceLength).ImpactNormal.Rotation();
+				const FVector ClimbDirection = FRotationMatrix(WallUpRotation - FRotator(0, 180, 0)).GetUnitAxis(EAxis::Y);
+				AddMovementInput(ClimbDirection, Value);
+			}
+		}
+		else
+		{
+			const FRotator YawRotation(0, Rotation.Yaw, 0);
+			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+			AddMovementInput(Direction, Value);
+		}
+	}
+}
+
+void ASpirit::TurnAt_Implementation(float Value)
+{
+	if (Value != 0.f) bIsUsingGamepad = false;
+
+	if (SpiritState != ESpiritState::Squeezing)
+	{
+		if (SpiritState == ESpiritState::Reviving)
+		{
+			const FRotator ReviveYaw(0, Value, 0);
+			ArrowLineTrace->AddRelativeRotation(ReviveYaw);
+
+			if (ArrowLineTrace->GetRelativeRotation().Yaw >= ReviveMaxYawAngle)
+			{
+				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, ReviveMaxYawAngle, 0));
+				AddActorWorldRotation(ReviveYaw);
+			}
+			else if (ArrowLineTrace->GetRelativeRotation().Yaw <= -ReviveMaxYawAngle)
+			{
+				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, -ReviveMaxYawAngle, 0));
+				AddActorWorldRotation(ReviveYaw);
+			}
+		}
+		else AddControllerYawInput(Value);
+	}
+}
+
+void ASpirit::LookUpAt_Implementation(float Value)
+{
+	if (Value != 0.f) bIsUsingGamepad = false;
+
+	if (SpiritState != ESpiritState::Squeezing)
+	{
+		if (SpiritState == ESpiritState::Reviving)
+		{
+			const FRotator RevivePitch(-Value, 0, 0);
+			ArrowLineTrace->AddRelativeRotation(RevivePitch);
+
+			if (ArrowLineTrace->GetRelativeRotation().Pitch >= ReviveMaxHeight)
+				ArrowLineTrace->SetRelativeRotation(FRotator(ReviveMaxHeight, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
+			else if (ArrowLineTrace->GetRelativeRotation().Pitch <= ReviveMinHeight)
+				ArrowLineTrace->SetRelativeRotation(FRotator(ReviveMinHeight, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
+		}
+		else AddControllerPitchInput(Value);
+	}
+}
+
+void ASpirit::TurnAtRate_Implementation(float Value)
+{
+	if (Value != 0.f)
+		bIsUsingGamepad = true;
+	if (SpiritState != ESpiritState::Squeezing)
+		AddControllerYawInput(Value * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+}
+
+void ASpirit::LookUpAtRate_Implementation(float Value)
+{
+	if (Value != 0.f)
+		bIsUsingGamepad = true;
+	if (SpiritState != ESpiritState::Squeezing)
+		AddControllerPitchInput(Value * BaseLookUpAtRate * GetWorld()->GetDeltaSeconds());
+}
+
+
+void ASpirit::OnRevive_Implementation(AInteractable* PlantHit)
 {
 	if (PlantHit)
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("Plant Hit"));
 		if (PlantHit != SelectedPlant)
 		{
 			if (SelectedPlant)
@@ -678,7 +587,6 @@ void ASpirit::OnRevive_Implementation(APlant* PlantHit)
 	}
 	else
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("No Plant Hit"));
 		if (SelectedPlant)
 		{
 			IInteractableInterface* Interface = Cast<IInteractableInterface>(SelectedPlant);
@@ -691,13 +599,6 @@ void ASpirit::OnRevive_Implementation(APlant* PlantHit)
 void ASpirit::OnJump_Implementation()
 {
 	ACharacter::Jump();
-	/*if (JumpChargeTime < JumpChargeDuration) JumpChargeTime += GetWorld()->GetDeltaSeconds();
-	else
-	{
-		ACharacter::Jump();
-		JumpChargeTime = 0;
-		SetState(ESpiritState::Falling);
-	}*/
 }
 
 void ASpirit::OnSqueeze_Implementation(AInteractableCrack* CrackHit)

@@ -37,20 +37,57 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
 	// Changes the Spirit's state and form according to input parameter
 	UFUNCTION(BlueprintCallable)
 	void SetState(ESpiritState DesiredState) { SpiritState = DesiredState; }
 	ESpiritState GetState() { return SpiritState; }
 	UFUNCTION(BlueprintCallable)
-	bool GetIsUsingGamepad() { return bIsUsingGamepad; }
+	bool GetCanTakeInput() { return bCanTakeInput; }
 	UFUNCTION(BlueprintCallable)
-	void SetIsUsingGamepad(bool Value) { bIsUsingGamepad = Value; }
+	void SetCanTakeInput(bool Value) { bCanTakeInput = Value; }
 	UFUNCTION(BlueprintCallable)
 	void SetCanTransitionToClimb(bool CanTransition) { bCanTransitionToClimb = CanTransition; }
 
+#pragma region Input functions
+	// Action Events
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+	void Revive();
+	void Revive_Implementation();
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+	void StopRevive();
+	void StopRevive_Implementation();
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+	void Climb();
+	void Climb_Implementation();
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+	void StopClimb();
+	void StopClimb_Implementation();
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+	void JumpAction();
+	void JumpAction_Implementation();
+
+	// Axis Events
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+	void MoveForward(float Value);
+	void MoveForward_Implementation(float Value);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+	void MoveRight(float Value);
+	void MoveRight_Implementation(float Value);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+	void TurnAt(float Value);
+	void TurnAt_Implementation(float Value);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+	void LookUpAt(float Value);
+	void LookUpAt_Implementation(float Value);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+	void TurnAtRate(float Value);
+	void TurnAtRate_Implementation(float Value);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+	void LookUpAtRate(float Value);
+	void LookUpAtRate_Implementation(float Value);
+#pragma endregion
+
+#pragma region Climb functions
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void TransitionToClimb();
 	void TransitionToClimb_Implementation();
@@ -62,26 +99,21 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void TransitionToFall();
 	void TransitionToFall_Implementation() {}
+#pragma endregion
 
+#pragma region Squeeze functions
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
-	void TransitionToSqueeze();
+		void TransitionToSqueeze();
 	void TransitionToSqueeze_Implementation() {};
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
-	void TransitionToStopSqueeze();
+		void TransitionToStopSqueeze();
 	void TransitionToStopSqueeze_Implementation() {};
+#pragma endregion
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
-	void Revive();
-	void Revive_Implementation();
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
-	void StopRevive();
-	void StopRevive_Implementation();
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
-	void OnRevive(class APlant* PlantHit);
-	void OnRevive_Implementation(class APlant* PlantHit);
+	void OnRevive(class AInteractable* PlantHit);
+	void OnRevive_Implementation(class AInteractable* PlantHit);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void OnJump();
@@ -90,9 +122,6 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void OnSqueeze(class AInteractableCrack* CrackHit);
 	void OnSqueeze_Implementation(class AInteractableCrack* CrackHit);
-
-	bool GetCrackEntrance() { return bIsCrackEntrance; }
-	class USpringArmComponent* GetSpringArm() const { return SpringArm; }
 
 private:
 #pragma region Spirit components
@@ -125,7 +154,8 @@ private:
 #pragma endregion
 
 #pragma region Component variables
-	bool bIsUsingGamepad = true;
+	bool bCanTakeInput = false;
+	bool bIsUsingGamepad = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	ESpiritState SpiritState = ESpiritState::Idle;
@@ -159,7 +189,7 @@ private:
 
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	bool bIsCrackEntrance;
-	class APlant* SelectedPlant;
+	class AInteractable* SelectedPlant;
 	class AInteractableCrack* SelectedCrack;
 
 	bool bIsClimbButtonDown = false;
@@ -176,21 +206,7 @@ private:
 #pragma endregion
 
 	void CheckInputType(FKey Key)	{ bIsUsingGamepad = (Key.IsMouseButton() || !Key.IsGamepadKey()) ? false : true; }
-	void MoveForward(float Value);
-	void MoveRight(float Value);
-	void MoveForwardKeyboard(float Value);
-	void MoveRightKeyboard(float Value);
-	void MoveForwardGamepad(float Value);
-	void MoveRightGamepad(float Value);
-	void TurnAt(float Value);
-	void LookUpAt(float Value);
-	void TurnAtRate(float Value);
-	void LookUpAtRate(float Value);
-	void Action();
-	void StopAction();
-	void Jump();
-	void Climb();
-	void StopClimb();
+	
 	FHitResult TraceLine(float TraceLength);
 	FHitResult ClimbTraceLine(FVector2D Direction);
 

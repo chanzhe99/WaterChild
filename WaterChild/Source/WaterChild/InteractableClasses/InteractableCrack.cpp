@@ -66,42 +66,42 @@ void AInteractableCrack::BeginPlay()
 
 void AInteractableCrack::TraverseCrack(ASpirit* Caller, const FTransform* Entrance, const FTransform* Exit)
 {
-	FVector InitialCallerScale = FVector(1, 1, 1);
-	FVector CurrentCallerScale = Caller->GetActorScale();
-	FVector CorrectedEntranceLocation = FVector(Entrance->GetLocation().X, Entrance->GetLocation().Y, Entrance->GetLocation().Z + Caller->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
-	FVector CorrectedExitLocation = FVector(Exit->GetLocation().X, Exit->GetLocation().Y, Exit->GetLocation().Z + Caller->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+	//FVector InitialCallerScale = FVector(1, 1, 1);
+	//FVector CurrentCallerScale = Caller->GetActorScale();
+	//FVector CorrectedEntranceLocation = FVector(Entrance->GetLocation().X, Entrance->GetLocation().Y, Entrance->GetLocation().Z + Caller->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+	//FVector CorrectedExitLocation = FVector(Exit->GetLocation().X, Exit->GetLocation().Y, Exit->GetLocation().Z + Caller->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
 
-	if (!Caller->GetActorLocation().Equals(CorrectedExitLocation, 1))
-	{
-		if (CurrentCallerScale.X > InitialCallerScale.X / 2)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Entering Crack"));
-			//Caller->SetActorLocationAndRotation(FMath::Lerp(Caller->GetActorLocation(), CorrectedEntranceLocation, 0.05f), FRotator(0, Exit->GetRotation().Rotator().Yaw, 0).Quaternion());
-			Caller->SetActorRotation(FRotator(0, Exit->GetRotation().Rotator().Yaw, 0).Quaternion());
-			Caller->AddActorWorldRotation(FRotator(0, 90, 0));
-			Caller->SetActorScale3D(FMath::Lerp(Caller->GetActorScale(), Caller->GetActorScale() / 2, 0.05f));
-		}
-		else if (CurrentCallerScale.X <= InitialCallerScale.X / 2)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Travelling through Crack"));
-			// Sets position and rotation to the same as exit
-			Caller->GetSpringArm()->bDoCollisionTest = false;
-			if (TraversalPercentage >= 1) TraversalPercentage = 1;
-			else TraversalPercentage += GetWorld()->GetDeltaSeconds();
-			Caller->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-			Caller->SetActorLocation(FMath::Lerp(CorrectedEntranceLocation, CorrectedExitLocation, TraversalPercentage));
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Actor reached exit"));
-		TraversalPercentage = 0;
-		Caller->GetSpringArm()->bDoCollisionTest = true;
-		Caller->SetActorLocation(CorrectedExitLocation);
-		Caller->SetActorScale3D(InitialCallerScale);
-		Caller->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		Caller->SetState(ESpiritState::Walking);
-	}
+	//if (!Caller->GetActorLocation().Equals(CorrectedExitLocation, 1))
+	//{
+	//	if (CurrentCallerScale.X > InitialCallerScale.X / 2)
+	//	{
+	//		UE_LOG(LogTemp, Warning, TEXT("Entering Crack"));
+	//		//Caller->SetActorLocationAndRotation(FMath::Lerp(Caller->GetActorLocation(), CorrectedEntranceLocation, 0.05f), FRotator(0, Exit->GetRotation().Rotator().Yaw, 0).Quaternion());
+	//		Caller->SetActorRotation(FRotator(0, Exit->GetRotation().Rotator().Yaw, 0).Quaternion());
+	//		Caller->AddActorWorldRotation(FRotator(0, 90, 0));
+	//		Caller->SetActorScale3D(FMath::Lerp(Caller->GetActorScale(), Caller->GetActorScale() / 2, 0.05f));
+	//	}
+	//	else if (CurrentCallerScale.X <= InitialCallerScale.X / 2)
+	//	{
+	//		UE_LOG(LogTemp, Warning, TEXT("Travelling through Crack"));
+	//		// Sets position and rotation to the same as exit
+	//		Caller->GetSpringArm()->bDoCollisionTest = false;
+	//		if (TraversalPercentage >= 1) TraversalPercentage = 1;
+	//		else TraversalPercentage += GetWorld()->GetDeltaSeconds();
+	//		Caller->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	//		Caller->SetActorLocation(FMath::Lerp(CorrectedEntranceLocation, CorrectedExitLocation, TraversalPercentage));
+	//	}
+	//}
+	//else
+	//{
+	//	UE_LOG(LogTemp, Warning, TEXT("Actor reached exit"));
+	//	TraversalPercentage = 0;
+	//	Caller->GetSpringArm()->bDoCollisionTest = true;
+	//	Caller->SetActorLocation(CorrectedExitLocation);
+	//	Caller->SetActorScale3D(InitialCallerScale);
+	//	Caller->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	//	Caller->SetState(ESpiritState::Walking);
+	//}
 }
 
 // Called every frame
@@ -114,10 +114,10 @@ void AInteractableCrack::Tick(float DeltaTime)
 
 void AInteractableCrack::OnInteract_Implementation(ASpirit* Caller)
 {
-	UE_LOG(LogTemp, Warning, TEXT("CrackEntrance: %s"), Caller->GetCrackEntrance() ? TEXT("True") : TEXT("False"));
+	/*UE_LOG(LogTemp, Warning, TEXT("CrackEntrance: %s"), Caller->GetCrackEntrance() ? TEXT("True") : TEXT("False"));
 	if (Caller->GetCrackEntrance())
 		TraverseCrack(Caller, Crack1, &CrackExit2->GetComponentTransform());
 	else
-		TraverseCrack(Caller, Crack2, &CrackExit1->GetComponentTransform());
+		TraverseCrack(Caller, Crack2, &CrackExit1->GetComponentTransform());*/
 
 }
