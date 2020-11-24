@@ -250,9 +250,9 @@ FHitResult ASpirit::TraceLine(float TraceLength)
 	FRotator LineRotation = ArrowLineTrace->GetComponentRotation();
 	FVector LineEnd = LineStart + (LineRotation.Vector() * TraceLength);
 
-	FCollisionQueryParams TraceParams = FCollisionQueryParams(TEXT("Trace"), true, this);
-	TraceParams.bTraceComplex = true;
-	Hit = FHitResult(ForceInit);
+	FCollisionQueryParams TraceParams/* = FCollisionQueryParams(TEXT("Trace"), true, this)*/;
+	//TraceParams.bTraceComplex = true;
+	//Hit = FHitResult(ForceInit);
 
 	//UE_LOG(LogTemp, Warning, TEXT("IsTraceComplex: %s"), (TraceParams.bTraceComplex) ? TEXT("True") : TEXT("False"));
 	//TraceParams.bTraceComplex;
@@ -261,11 +261,11 @@ FHitResult ASpirit::TraceLine(float TraceLength)
 	//UKismetSystemLibrary::LineTraceSingleForObjects();
 
 	bool bHit = GetWorld()->LineTraceSingleByObjectType(Hit, LineStart, LineEnd, ECC_WorldStatic, TraceParams);
-	//DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Green, false, 0, 0, 2);
+	DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Green, false, 0, 0, 2);
 
 	if (bHit)
 	{
-		//DrawDebugBox(GetWorld(), Hit.ImpactPoint, FVector(5, 5, 5), FColor::Orange, false, 2);
+		DrawDebugBox(GetWorld(), Hit.ImpactPoint, FVector(5, 5, 5), FColor::Orange, false, 2);
 		
 		//UE_LOG(LogTemp, Warning, TEXT("Crack Location: %f, %f"), Hit.GetComponent()->GetRelativeLocation().X, Hit.GetComponent()->GetRelativeLocation().Y);
 		return Hit;
