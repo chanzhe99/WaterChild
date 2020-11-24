@@ -178,7 +178,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"));
 	float ReviveTraceLength = 300;
 	float ReviveMaxHeight = 50;
-	float ReviveMinHeight = -10;
+	float ReviveMinHeight = -50;
 	float ReviveMaxYawAngle = 45;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"));
 	float SqueezeTraceLength = 15;
