@@ -175,6 +175,7 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool bCameraFollowRevive = false;
+	bool bActorSetToControllerDirection = false;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"));
 	float ReviveTraceLength = 300;
 	float ReviveMaxHeight = 50;

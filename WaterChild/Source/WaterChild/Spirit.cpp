@@ -186,7 +186,18 @@ void ASpirit::Tick(float DeltaTime)
 
 		break;
 	case ESpiritState::Reviving:
-		Controller->SetControlRotation(UKismetMathLibrary::RInterpTo(Controller->GetControlRotation(), CameraTargetRotation, GetWorld()->GetDeltaSeconds(), 5.f));
+		if(bActorSetToControllerDirection)
+			Controller->SetControlRotation(UKismetMathLibrary::RInterpTo(Controller->GetControlRotation(), CameraTargetRotation, GetWorld()->GetDeltaSeconds(), 5.f));
+		else
+		{
+			FRotator ActorYaw = FRotator(0, GetActorRotation().GetDenormalized().Yaw, 0);
+			FRotator ControllerYaw = FRotator(0, Controller->GetControlRotation().GetDenormalized().Yaw, 0);
+			UE_LOG(LogTemp, Warning, TEXT("%f, %f"), ActorYaw.Yaw, ControllerYaw.Yaw);
+			SetActorRotation(UKismetMathLibrary::RInterpTo(ActorYaw, ControllerYaw, GetWorld()->GetDeltaSeconds(), 5.f));
+			if (UKismetMathLibrary::NearlyEqual_FloatFloat(ActorYaw.Yaw, ControllerYaw.Yaw, 15.f))
+				bActorSetToControllerDirection = true;
+		}
+
 		TraceHit = TraceLine(ReviveTraceLength);
 		OnRevive(Cast<AInteractable>(TraceLine(ReviveTraceLength).GetActor()));
 		break;
@@ -376,6 +387,7 @@ void ASpirit::Revive_Implementation()
 	{
 		SetState(ESpiritState::Reviving);
 		NiagaraRevive->Activate();
+		bActorSetToControllerDirection = false;
 	}
 }
 
