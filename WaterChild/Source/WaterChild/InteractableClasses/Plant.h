@@ -33,6 +33,8 @@ protected:
     float CurrentWaterValue = 0.0;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Plant Variables", meta = (AllowPrivateAccess = "true"))
     float MaxWaterValue = 5.0; 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Plant Variables", meta = (AllowPrivateAccess = "true"))
+    float WaterIncreaseRate = 2.0f;
 
 public:
     // Called every frame

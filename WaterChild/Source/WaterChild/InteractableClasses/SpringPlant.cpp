@@ -60,7 +60,7 @@ void ASpringPlant::OnInteract_Implementation(ASpirit* Caller)
 		break;
 
 	case EPlantState::Growing:
-		CurrentWaterValue += GetWorld()->GetDeltaSeconds();
+		CurrentWaterValue += GetWorld()->GetDeltaSeconds() * WaterIncreaseRate;
 		UE_LOG(LogTemp, Warning, TEXT("SpringPlant gaining water"));
 
 		// WaterValue incrementer

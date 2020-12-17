@@ -48,7 +48,7 @@ void ABridgePlant::OnInteract_Implementation(ASpirit* Caller)
 		break;
 
 	case EPlantState::Growing:
-		CurrentWaterValue += GetWorld()->GetDeltaSeconds();
+		CurrentWaterValue += GetWorld()->GetDeltaSeconds() * WaterIncreaseRate;
 		UE_LOG(LogTemp, Warning, TEXT("BridgePlant gaining water"));
 
 		// WaterValue incrementer

@@ -79,7 +79,7 @@ void APlatformPlant::OnInteract_Implementation(ASpirit* Caller)
 
 	case EPlantState::Growing:
 		// WaterValue incrementer
-		CurrentWaterValue += GetWorld()->GetDeltaSeconds();
+		CurrentWaterValue += GetWorld()->GetDeltaSeconds() * WaterIncreaseRate;
 		UE_LOG(LogTemp, Warning, TEXT("PlatformPlant gaining water"));
 
 		if (CurrentWaterValue >= MaxWaterValue)
