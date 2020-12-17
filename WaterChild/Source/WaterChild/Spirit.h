@@ -137,6 +137,8 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"))
 	class UArrowComponent* ArrowLineTrace;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"))
+	class UArrowComponent* ReviveArrow;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Footsteps", meta = (AllowPrivateAccess = "true"))
 	class UArrowComponent* ArrowLeftFoot;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Footsteps", meta = (AllowPrivateAccess = "true"))
@@ -178,7 +180,7 @@ private:
 	bool bActorSetToControllerDirection = false;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"));
 	float ReviveTraceLength = 300;
-	float ReviveMaxHeight = 50;
+	float ReviveMaxHeight = 75;
 	float ReviveMinHeight = -50;
 	float ReviveMaxYawAngle = 45;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"));
@@ -210,6 +212,7 @@ private:
 	
 	FHitResult TraceLine(float TraceLength);
 	FHitResult ClimbTraceLine(FVector2D Direction);
+	FHitResult ReviveTraceLine(float TraceLength);
 
 	UFUNCTION()
 		void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

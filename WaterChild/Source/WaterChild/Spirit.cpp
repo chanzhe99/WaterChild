@@ -44,6 +44,7 @@ ASpirit::ASpirit()
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	ArrowLineTrace = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowLineTrace"));
+	ReviveArrow = CreateDefaultSubobject<UArrowComponent>(TEXT("ReviveArrow"));
 	ArrowLeftFoot = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowLeftFoot"));
 	ArrowRightFoot = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowRightFoot"));
 	NiagaraFootsteps = CreateDefaultSubobject<UNiagaraComponent>(TEXT("NiagaraFootsteps"));
@@ -62,6 +63,7 @@ ASpirit::ASpirit()
 	NiagaraJumpDefault->SetupAttachment(GetMesh());
 	NiagaraJumpWater->SetupAttachment(SkeletalMeshWater);
 	ArrowLineTrace->SetupAttachment(RootComponent);
+	ReviveArrow->SetupAttachment(RootComponent);
 
 	// Set component position offsets
 	GetMesh()->SetRelativeLocationAndRotation(FVector(0, 0, -27), FRotator(0, -90, 0));
@@ -82,6 +84,7 @@ ASpirit::ASpirit()
 
 	ArrowLeftFoot->SetRelativeLocationAndRotation(FVector(0, -1, 0), FRotator(0, -97, 0));
 	ArrowRightFoot->SetRelativeLocationAndRotation(FVector(0, -1, 0), FRotator(0, -97, 0));
+	ReviveArrow->SetRelativeLocation(FVector(23, 0, 0));
 
 	NiagaraFootsteps->SetAutoActivate(false);
 	NiagaraRevive->SetAutoActivate(false);
@@ -272,11 +275,11 @@ FHitResult ASpirit::TraceLine(float TraceLength)
 	//UKismetSystemLibrary::LineTraceSingleForObjects();
 
 	bool bHit = GetWorld()->LineTraceSingleByObjectType(Hit, LineStart, LineEnd, ECC_WorldStatic, TraceParams);
-	DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Green, false, 0, 0, 2);
+	//DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Green, false, 0, 0, 2);
 
 	if (bHit)
 	{
-		DrawDebugBox(GetWorld(), Hit.ImpactPoint, FVector(5, 5, 5), FColor::Orange, false, 2);
+		//DrawDebugBox(GetWorld(), Hit.ImpactPoint, FVector(5, 5, 5), FColor::Orange, false, 2);
 		
 		//UE_LOG(LogTemp, Warning, TEXT("Crack Location: %f, %f"), Hit.GetComponent()->GetRelativeLocation().X, Hit.GetComponent()->GetRelativeLocation().Y);
 		return Hit;
@@ -310,6 +313,25 @@ FHitResult ASpirit::ClimbTraceLine(FVector2D Direction)
 	if (bHit)
 	{
 		//DrawDebugBox(GetWorld(), Hit.ImpactPoint, FVector(5, 5, 5), FColor::Orange, false, 2);
+		return Hit;
+	}
+	return FHitResult();
+}
+
+FHitResult ASpirit::ReviveTraceLine(float TraceLength)
+{
+	FHitResult Hit;
+
+	FVector LineStart = ReviveArrow->GetComponentLocation();
+	FRotator LineRotation = ReviveArrow->GetComponentRotation();
+	FVector LineEnd = LineStart + (LineRotation.Vector() * TraceLength);
+
+	FCollisionQueryParams TraceParams;
+	bool bHit = GetWorld()->LineTraceSingleByObjectType(Hit, LineStart, LineEnd, ECC_WorldStatic, TraceParams);
+	DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Green, false, 0, 0, 2);
+
+	if (bHit)
+	{
 		return Hit;
 	}
 	return FHitResult();
@@ -583,6 +605,8 @@ void ASpirit::LookUpAtRate_Implementation(float Value)
 
 void ASpirit::OnRevive_Implementation(AInteractable* PlantHit)
 {
+	ReviveArrow->SetRelativeRotation(ArrowLineTrace->GetRelativeRotation());
+
 	if (PlantHit)
 	{
 		if (PlantHit != SelectedPlant)
