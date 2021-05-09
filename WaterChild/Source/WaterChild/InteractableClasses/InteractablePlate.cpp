@@ -11,7 +11,7 @@ AInteractablePlate::AInteractablePlate()
 	PrimaryActorTick.bCanEverTick = false;
 
 	FrameMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("FrameMesh"));
-	FrameMesh->SetupAttachment(RootComponent);
+	SetRootComponent(FrameMesh);
 
 	PlateMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PlateMesh"));
 	PlateMesh->SetupAttachment(FrameMesh);

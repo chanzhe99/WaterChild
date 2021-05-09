@@ -14,7 +14,7 @@ AInteractableCrack::AInteractableCrack()
 	PrimaryActorTick.bCanEverTick = false;
 
 	SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
-	SceneComponent->SetupAttachment(RootComponent);
+	SetRootComponent(SceneComponent);
 
 	CrackMesh1 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CrackMesh1"));
 	CrackMesh1->SetupAttachment(SceneComponent);

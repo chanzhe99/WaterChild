@@ -13,7 +13,7 @@ AGrass::AGrass()
 	MultiCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("MultiCollider"));
 
 	// Attachment setup
-	GrassMesh->SetupAttachment(RootComponent);
+	SetRootComponent(GrassMesh);
 	MultiCollider->SetupAttachment(GrassMesh);
 
 	// Location setup

@@ -16,7 +16,7 @@ ASpringPlant::ASpringPlant()
 	ReviveCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("ReviveCollider"));
 
 	// Attachment setup
-	FlowerMesh->SetupAttachment(RootComponent);
+	SetRootComponent(FlowerMesh);
 	FlowerCollider->SetupAttachment(FlowerMesh);
 	ReviveCollider->SetupAttachment(FlowerMesh);
 

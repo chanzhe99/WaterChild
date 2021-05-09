@@ -12,7 +12,7 @@ ABridgePlant::ABridgePlant()
 	BridgeMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BridgeMesh"));
 	ReviveCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("ReviveCollider"));
 
-	Root->SetupAttachment(RootComponent);
+	SetRootComponent(Root);
 	BridgeMesh->SetupAttachment(Root);
 	ReviveCollider->SetupAttachment(Root);
 

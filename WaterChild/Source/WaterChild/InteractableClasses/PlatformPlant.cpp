@@ -18,7 +18,7 @@ APlatformPlant::APlatformPlant()
 	PetalCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("PetalCollider"));
 	ReviveCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("ReviveCollider"));
 
-	RootComp->SetupAttachment(RootComponent);
+	SetRootComponent(RootComp);
 	StemMesh->SetupAttachment(RootComp);
 	PetalMesh1->SetupAttachment(StemMesh, "Bone008");
 	PetalMesh2->SetupAttachment(PetalMesh1);

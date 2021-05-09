@@ -15,7 +15,7 @@ AInteractablePlant::AInteractablePlant()
 	PetalCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("PetalCollider"));
 	ReviveCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("ReviveCollider"));
 
-	FloorPlane->SetupAttachment(RootComponent);
+	SetRootComponent(FloorPlane);
 	StemMesh->SetupAttachment(FloorPlane);
 	PetalMesh->SetupAttachment(StemMesh);
 	PetalCollider->SetupAttachment(PetalMesh);

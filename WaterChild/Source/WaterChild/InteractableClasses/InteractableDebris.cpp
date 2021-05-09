@@ -11,7 +11,7 @@ AInteractableDebris::AInteractableDebris()
 	PrimaryActorTick.bCanEverTick = false;
 
 	DebrisMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DebrisMesh"));
-	DebrisMesh->SetupAttachment(RootComponent);
+	SetRootComponent(DebrisMesh);
 
 	DebrisMesh->SetCollisionObjectType(ECC_Destructible);
 	DebrisMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
