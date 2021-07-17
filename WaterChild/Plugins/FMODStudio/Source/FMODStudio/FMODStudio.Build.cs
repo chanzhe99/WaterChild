@@ -23,6 +23,7 @@ namespace UnrealBuildTool.Rules
         {
             PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
             PrivatePCHHeaderFile = "Private/FMODStudioPrivatePCH.h";
+            bUsePrecompiled = true;
 
             bUseUnity = false;
 

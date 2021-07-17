@@ -341,6 +341,46 @@
 			"Type": "DynamicLibrary"
 		},
 		{
+			"Path": "$(EngineDir)/Plugins/Developer/RiderLink/Binaries/Win64/UE4Editor-RD.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Developer/RiderLink/Binaries/Win64/UE4Editor-RD.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Developer/RiderLink/Binaries/Win64/UE4Editor-RiderLink.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Developer/RiderLink/Binaries/Win64/UE4Editor-RiderLink.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Developer/RiderLink/Binaries/Win64/UE4Editor-RiderLoggingExtension.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Developer/RiderLink/Binaries/Win64/UE4Editor-RiderLoggingExtension.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Developer/RiderLink/Binaries/Win64/UE4Editor-RiderBlueprintExtension.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Developer/RiderLink/Binaries/Win64/UE4Editor-RiderBlueprintExtension.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Developer/RiderLink/Binaries/Win64/UE4Editor-RiderGameControlExtension.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Developer/RiderLink/Binaries/Win64/UE4Editor-RiderGameControlExtension.pdb",
+			"Type": "SymbolFile"
+		},
+		{
 			"Path": "$(EngineDir)/Plugins/Developer/RiderSourceCodeAccess/Binaries/Win64/UE4Editor-RiderSourceCodeAccess.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -2525,6 +2565,10 @@
 			"Type": "RequiredResource"
 		},
 		{
+			"Path": "$(EngineDir)/Plugins/Developer/RiderLink/Binaries/Win64/UE4Editor.modules",
+			"Type": "RequiredResource"
+		},
+		{
 			"Path": "$(EngineDir)/Plugins/Developer/RiderSourceCodeAccess/Binaries/Win64/UE4Editor.modules",
 			"Type": "RequiredResource"
 		},
@@ -2992,6 +3036,10 @@
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/Developer/PlasticSourceControl/PlasticSourceControl.uplugin",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Developer/RiderLink/RiderLink.uplugin",
 			"Type": "UFS"
 		},
 		{
