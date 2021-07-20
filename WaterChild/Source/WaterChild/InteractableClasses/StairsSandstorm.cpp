@@ -169,7 +169,7 @@ void AStairsSandstorm::Tick(float DeltaTime)
 		break;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("PlayerSandstormWalkAnimVar: %f"), PlayerSandstormWalkAnimVar);
+	//UE_LOG(LogTemp, Warning, TEXT("PlayerSandstormWalkAnimVar: %f"), PlayerSandstormWalkAnimVar);
 }
 
 void AStairsSandstorm::CycleSandstormState(float &TickValue, float TargetValue, float IncrementRate,

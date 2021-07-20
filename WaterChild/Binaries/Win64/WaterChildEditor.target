@@ -2991,6 +2991,10 @@
 			"Type": "UFS"
 		},
 		{
+			"Path": "$(EngineDir)/Plugins/FX/NiagaraExtras/NiagaraExtras.uplugin",
+			"Type": "UFS"
+		},
+		{
 			"Path": "$(ProjectDir)/Plugins/KawaiiPhysics/KawaiiPhysics.uplugin",
 			"Type": "UFS"
 		},
