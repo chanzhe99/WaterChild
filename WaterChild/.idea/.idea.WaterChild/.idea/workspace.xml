@@ -19,6 +19,10 @@
       <option value="$PROJECT_DIR$/Plugins/KawaiiPhysics/Source/KawaiiPhysicsEd/KawaiiPhysicsEd.Build.cs" />
       <option value="$PROJECT_DIR$/Source/WaterChild/InteractableClasses/StairsSandstorm.h" />
       <option value="$PROJECT_DIR$/Source/WaterChild/InteractableClasses/StairsSandstorm.cpp" />
+      <option value="$PROJECT_DIR$/Source/WaterChild/InteractableClasses/Plant.cpp" />
+      <option value="$PROJECT_DIR$/Source/WaterChild/InteractableClasses/Plant.h" />
+      <option value="$PROJECT_DIR$/Source/WaterChild/InteractableClasses/BridgePlant.h" />
+      <option value="$PROJECT_DIR$/Source/WaterChild/InteractableClasses/BridgePlant.cpp" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="1upySX74r7zjlwTR8MW2S5gjlcX" />
@@ -29,6 +33,7 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="settings.editor.selected.configurable" value="preferences.keymap" />
   </component>
   <component name="RunManager" selected="C++ Project.WaterChild">
     <configuration name="UE4" type="CppProject" factoryName="C++ Project">

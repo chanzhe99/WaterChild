@@ -27,47 +27,13 @@ void ABridgePlant::BeginPlay()
 {
 	Super::BeginPlay();
 
-}
-
-// Called every frame
-void ABridgePlant::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
-void ABridgePlant::OnInteract_Implementation(ASpirit* Caller)
-{
-	// State changer for dead to growing
-	//UE_LOG(LogTemp, Warning, TEXT("Plant is now growing"));
-	switch (PlantState)
+	if (PreGrowAnim)
 	{
-	case EPlantState::Dead:
-		SetPlantState(EPlantState::Growing);
-		PrimaryActorTick.bCanEverTick = true;
-		break;
-
-	case EPlantState::Growing:
-		CurrentWaterValue += GetWorld()->GetDeltaSeconds() * WaterIncreaseRate;
-		UE_LOG(LogTemp, Warning, TEXT("BridgePlant gaining water"));
-
-		// WaterValue incrementer
-		if (CurrentWaterValue >= MaxWaterValue)
-		{
-			PlantState = EPlantState::Alive;
-
-			PlayPlantAnimation();
-		}
-		break;
+		PreGrowAnimLength = PreGrowAnim->SequenceLength;
 	}
-}
-
-void ABridgePlant::OnInteractEnd_Implementation(ASpirit* Caller)
-{
-	//UE_LOG(LogTemp, Warning, TEXT("Plant stopped growing"));
-	if (PlantState == EPlantState::Growing && CurrentWaterValue <= 0)
+	else
 	{
-		SetPlantState(EPlantState::Dead);
-		PrimaryActorTick.bCanEverTick = false;
+		UE_LOG(LogTemp, Error, TEXT("%s - PreGrowAnim not found!"), *GetNameSafe(this));
 	}
+	
 }
