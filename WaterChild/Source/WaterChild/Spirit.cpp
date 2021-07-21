@@ -275,7 +275,7 @@ FHitResult ASpirit::TraceLine(float TraceLength)
 	//UKismetSystemLibrary::LineTraceSingleForObjects();
 
 	bool bHit = GetWorld()->LineTraceSingleByObjectType(Hit, LineStart, LineEnd, ECC_WorldStatic, TraceParams);
-	//DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Green, false, 0, 0, 2);
+	DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Green, false, 0, 0, 2);
 
 	if (bHit)
 	{
@@ -412,13 +412,14 @@ void ASpirit::Revive_Implementation()
 		bActorSetToControllerDirection = false;
 	}
 }
-
+// #TODO_CZ TO BE REMOVED
 void ASpirit::StopRevive_Implementation()
 {
 	if (SpiritState == ESpiritState::Reviving)
 	{
 		if (SelectedPlant)
 		{
+			//UE_LOG(LogTemp, Warning, TEXT("Spirit StopRevive called on %s"), *GetNameSafe(SelectedPlant));
 			IInteractableInterface* Interface = Cast<IInteractableInterface>(SelectedPlant);
 			if (Interface) Interface->Execute_OnInteractEnd(SelectedPlant, this);
 			SelectedPlant = nullptr;
@@ -606,6 +607,7 @@ void ASpirit::LookUpAtRate_Implementation(float Value)
 void ASpirit::OnRevive_Implementation(AInteractable* PlantHit)
 {
 	ReviveArrow->SetRelativeRotation(ArrowLineTrace->GetRelativeRotation());
+	//UE_LOG(LogTemp, Warning, TEXT("Spirit OnRevive called on %s"), *GetNameSafe(PlantHit));
 
 	if (PlantHit)
 	{

@@ -23,6 +23,7 @@
       <option value="$PROJECT_DIR$/Source/WaterChild/InteractableClasses/Plant.h" />
       <option value="$PROJECT_DIR$/Source/WaterChild/InteractableClasses/BridgePlant.h" />
       <option value="$PROJECT_DIR$/Source/WaterChild/InteractableClasses/BridgePlant.cpp" />
+      <option value="$PROJECT_DIR$/Source/WaterChild/Spirit.cpp" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="1upySX74r7zjlwTR8MW2S5gjlcX" />
