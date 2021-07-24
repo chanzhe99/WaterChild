@@ -15,6 +15,7 @@ enum class ESandstormState : uint8
 };
 
 class UBoxComponent;
+class UArrowComponent;
 class UNiagaraComponent;
 
 UCLASS()
@@ -36,27 +37,27 @@ public:
 	// Main sandstorm components
 	UPROPERTY(BlueprintReadWrite, Category = "Actor Components")
 	UBillboardComponent* Root;
-	UPROPERTY(BlueprintReadWrite, Category = "Actor Components")
-	class UArrowComponent* PushBackDirection;
-	UPROPERTY(BlueprintReadWrite, Category = "Actor Components")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
 	UBoxComponent* SandstormSizeVisualiser;
-	UPROPERTY(BlueprintReadWrite, Category = "Actor Components")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
+	UArrowComponent* PushBackDirection;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
 	UNiagaraComponent* SandstormStartingParticleSystem;
-	UPROPERTY(BlueprintReadWrite, Category = "Actor Components")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
 	UNiagaraComponent* SandstormActiveParticleSystem;
 
 	// Sandstorm safe spots components
-	UPROPERTY(BlueprintReadWrite, Category = "Actor Components")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
 	UBoxComponent* SafeSpot1;
-	UPROPERTY(BlueprintReadWrite, Category = "Actor Components")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
 	UBoxComponent* SafeSpot2;
-	UPROPERTY(BlueprintReadWrite, Category = "Actor Components")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
 	UBoxComponent* SafeSpot3;
-	UPROPERTY(BlueprintReadWrite, Category = "Actor Components")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
 	UBoxComponent* SafeSpot4;
-	UPROPERTY(BlueprintReadWrite, Category = "Actor Components")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
 	UBoxComponent* SafeSpot5;
-	UPROPERTY(BlueprintReadWrite, Category = "Actor Components")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
 	UBoxComponent* SafeSpot6;
 	
 	// BoxTrace variables
