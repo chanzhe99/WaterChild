@@ -85,7 +85,8 @@ void APlatformPlant::OnInteract_Implementation(ASpirit* Caller)
 		if (CurrentWaterValue >= MaxWaterValue)
 		{
 			PlantState = EPlantState::Alive;
-
+			//IsPlantAlive = true;
+			
 			// Collision changer
 			PetalCollider->SetCollisionProfileName(TEXT("BlockAllDynamic"));
 			PetalCollider->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
