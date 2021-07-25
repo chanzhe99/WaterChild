@@ -32,17 +32,20 @@
       <option value="$PROJECT_DIR$/Plugins/FMODStudio/Source/FMODStudio/FMODStudio.Build.cs" />
       <option value="$PROJECT_DIR$/Plugins/KawaiiPhysics/Source/KawaiiPhysics/KawaiiPhysics.Build.cs" />
       <option value="$PROJECT_DIR$/Plugins/KawaiiPhysics/Source/KawaiiPhysicsEd/KawaiiPhysicsEd.Build.cs" />
-      <option value="$PROJECT_DIR$/Source/WaterChild/InteractableClasses/StairsSandstorm.h" />
-      <option value="$PROJECT_DIR$/Source/WaterChild/InteractableClasses/StairsSandstorm.cpp" />
       <option value="$PROJECT_DIR$/Source/WaterChild/InteractableClasses/Plant.cpp" />
       <option value="$PROJECT_DIR$/Source/WaterChild/InteractableClasses/BridgePlant.h" />
       <option value="$PROJECT_DIR$/Source/WaterChild/Spirit.cpp" />
+<<<<<<< HEAD
       <option value="$PROJECT_DIR$/Source/WaterChild/InteractableClasses/SpringPlant.h" />
       <option value="$PROJECT_DIR$/Source/WaterChild/InteractableClasses/SpringPlant.cpp" />
       <option value="$PROJECT_DIR$/Source/WaterChild/InteractableClasses/Plant.h" />
       <option value="$PROJECT_DIR$/Source/WaterChild/InteractableClasses/Grass.h" />
       <option value="$PROJECT_DIR$/Source/WaterChild/InteractableClasses/Grass.cpp" />
       <option value="$PROJECT_DIR$/Source/WaterChild/InteractableClasses/BridgePlant.cpp" />
+=======
+      <option value="$PROJECT_DIR$/Source/WaterChild/InteractableClasses/StairsSandstorm.h" />
+      <option value="$PROJECT_DIR$/Source/WaterChild/InteractableClasses/StairsSandstorm.cpp" />
+>>>>>>> 6c6a11ca0950b283e32d0262cc95631c7027becc
     </changedPaths>
   </component>
   <component name="ProjectId" id="1upySX74r7zjlwTR8MW2S5gjlcX" />
