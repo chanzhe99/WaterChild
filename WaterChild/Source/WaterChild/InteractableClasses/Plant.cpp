@@ -19,7 +19,9 @@ void APlant::BeginPlay()
 void APlant::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	LastWaterValue = CurrentWaterValue;
+
+	if(LastWaterValue != CurrentWaterValue)
+		LastWaterValue = CurrentWaterValue;
 
 	if(LastWaterValue == CurrentWaterValue && IsReviveEffectsActive)
 	{
