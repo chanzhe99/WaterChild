@@ -19,9 +19,6 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	/*virtual void OnInteract_Implementation(ASpirit* Caller) override;
-	virtual void OnInteractEnd_Implementation(ASpirit* Caller) override;*/
-
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Spring Plant Features")
 	void BounceAnimation(ASpirit* Caller);
 	virtual void BounceAnimation_Implementation(ASpirit* Caller);

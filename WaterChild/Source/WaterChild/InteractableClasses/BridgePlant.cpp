@@ -6,8 +6,6 @@
 
 ABridgePlant::ABridgePlant()
 {
-	PrimaryActorTick.bCanEverTick = false;
-
 	// Component creation
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	BridgeMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BridgeMesh"));

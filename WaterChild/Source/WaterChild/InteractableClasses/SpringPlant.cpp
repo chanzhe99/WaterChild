@@ -8,8 +8,6 @@
 // Sets default values
 ASpringPlant::ASpringPlant()
 {
-	PrimaryActorTick.bCanEverTick = false;
-
 	// Component creation
 	FlowerMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FlowerMesh"));
 	FlowerCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("FlowerCollider"));
@@ -46,48 +44,6 @@ void ASpringPlant::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("%s - PreGrowAnim not found!"), *GetNameSafe(this));
 	}
 }
-
-/*void ASpringPlant::OnInteract_Implementation(ASpirit* Caller)
-{
-	// State changer for dead to growing
-	switch (PlantState)
-	{
-	case EPlantState::Dead:
-		UE_LOG(LogTemp, Warning, TEXT("SpringPlant is now growing"));
-		SetPlantState(EPlantState::Growing);
-		PrimaryActorTick.bCanEverTick = true;
-		break;
-
-	case EPlantState::Growing:
-		CurrentWaterValue += GetWorld()->GetDeltaSeconds() * WaterIncreaseRate;
-		UE_LOG(LogTemp, Warning, TEXT("SpringPlant gaining water"));
-
-		// WaterValue incrementer
-		if (CurrentWaterValue >= MaxWaterValue)
-		{
-			PlantState = EPlantState::Alive;
-
-			// Collision changer
-			FlowerCollider->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
-			FlowerCollider->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
-			FlowerCollider->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
-
-			PlayPlantAnimation();
-		}
-		break;
-	}	
-}
-
-void ASpringPlant::OnInteractEnd_Implementation(ASpirit* Caller)
-{
-	//UE_LOG(LogTemp, Warning, TEXT("End call"));
-	if (PlantState == EPlantState::Growing && CurrentWaterValue <= 0)
-	{
-		//UE_LOG(LogTemp, Warning, TEXT("Plant stopped growing"));
-		SetPlantState(EPlantState::Dead);
-		PrimaryActorTick.bCanEverTick = false;
-	}
-}*/
 
 void ASpringPlant::BounceAnimation_Implementation(ASpirit* Caller)
 {
