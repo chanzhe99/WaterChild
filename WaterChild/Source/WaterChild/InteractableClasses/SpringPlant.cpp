@@ -37,18 +37,17 @@ void ASpringPlant::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//TODO remove once the grow feature is done
-	//PlantState = EPlantState::Alive;
+	if (PreGrowAnim)
+	{
+		PreGrowAnimLength = PreGrowAnim->SequenceLength;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s - PreGrowAnim not found!"), *GetNameSafe(this));
+	}
 }
 
-// Called every frame
-void ASpringPlant::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
-void ASpringPlant::OnInteract_Implementation(ASpirit* Caller)
+/*void ASpringPlant::OnInteract_Implementation(ASpirit* Caller)
 {
 	// State changer for dead to growing
 	switch (PlantState)
@@ -88,16 +87,12 @@ void ASpringPlant::OnInteractEnd_Implementation(ASpirit* Caller)
 		SetPlantState(EPlantState::Dead);
 		PrimaryActorTick.bCanEverTick = false;
 	}
-}
+}*/
 
 void ASpringPlant::BounceAnimation_Implementation(ASpirit* Caller)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Boost"));
 	// Boost player
-	switch (PlantState)
-	{
-	case EPlantState::Alive:
-		Caller->GetCharacterMovement()->Velocity = FVector::ZeroVector;
-		Caller->LaunchCharacter(FVector(BounceForwardVelocity, BounceSideVelocity, BounceUpVelocity), false, false);
-	}
+	Caller->GetCharacterMovement()->Velocity = FVector::ZeroVector;
+	Caller->LaunchCharacter(FVector(BounceForwardVelocity, BounceSideVelocity, BounceUpVelocity), false, false);
 }

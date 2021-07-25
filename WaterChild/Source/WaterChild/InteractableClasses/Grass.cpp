@@ -29,15 +29,17 @@ void AGrass::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (PreGrowAnim)
+	{
+		PreGrowAnimLength = PreGrowAnim->SequenceLength;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s - PreGrowAnim not found!"), *GetNameSafe(this));
+	}
 }
 
-// Called every frame
-void AGrass::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
+/*
 void AGrass::OnInteract_Implementation(ASpirit* Caller)
 {
 	// State changer for dead to growing
@@ -59,11 +61,10 @@ void AGrass::OnInteract_Implementation(ASpirit* Caller)
 			PlantState = EPlantState::Alive;
 
 			// Collision changer (Maybe not needed?)
-			// Just need to change a boolean so that it can tell the grass when to react
-			// with player's movements
-			/*GrassCollider->SetCollisionProfileName(TEXT("BlockAllDynamic"));
-			GrassCollider->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
-			GrassCollider->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);*/
+			// Just need to change a boolean so that it can tell the grass when to react with player's movements
+			//GrassCollider->SetCollisionProfileName(TEXT("BlockAllDynamic"));
+			//GrassCollider->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+			//GrassCollider->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 
 			PlayPlantAnimation();
 		}
@@ -81,3 +82,4 @@ void AGrass::OnInteractEnd_Implementation(ASpirit* Caller)
 		PrimaryActorTick.bCanEverTick = false;
 	}
 }
+*/

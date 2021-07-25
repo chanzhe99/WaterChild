@@ -19,10 +19,8 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-	virtual void OnInteract_Implementation(ASpirit* Caller) override;
-	virtual void OnInteractEnd_Implementation(ASpirit* Caller) override;
+	/*virtual void OnInteract_Implementation(ASpirit* Caller) override;
+	virtual void OnInteractEnd_Implementation(ASpirit* Caller) override;*/
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Spring Plant Features")
 	void BounceAnimation(ASpirit* Caller);
