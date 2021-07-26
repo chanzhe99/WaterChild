@@ -6,12 +6,12 @@
 
 ABridgePlant::ABridgePlant()
 {
-	PrimaryActorTick.bCanEverTick = false;
-
+	// Component creation
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	BridgeMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BridgeMesh"));
 	ReviveCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("ReviveCollider"));
 
+	// Attachment setup
 	SetRootComponent(Root);
 	BridgeMesh->SetupAttachment(Root);
 	ReviveCollider->SetupAttachment(Root);

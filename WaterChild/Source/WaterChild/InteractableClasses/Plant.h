@@ -74,4 +74,7 @@ public:
 
     EPlantState GetPlantState() { return PlantState; }
     void SetPlantState(EPlantState DesiredState) { PlantState = DesiredState; }
+
+    bool GetIsPlantAlive() { return IsPlantAlive; }
+    void SetIsPlantAlive(bool DesiredStatus) { IsPlantAlive = DesiredStatus; }
 };

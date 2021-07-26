@@ -19,14 +19,14 @@ AStairsSandstorm::AStairsSandstorm()
 
 	Root = CreateDefaultSubobject<UBillboardComponent>(TEXT("RootComponent"));
 	Root->SetupAttachment(RootComponent);
-	PushBackDirection = CreateDefaultSubobject<UArrowComponent>(TEXT("PushBackDirection"));
-	PushBackDirection->SetupAttachment(Root);
 	SandstormSizeVisualiser = CreateDefaultSubobject<UBoxComponent>(TEXT("SandstormSizeVisualiser"));
 	SandstormSizeVisualiser->SetupAttachment(Root);
+	PushBackDirection = CreateDefaultSubobject<UArrowComponent>(TEXT("PushBackDirection"));
+	PushBackDirection->SetupAttachment(SandstormSizeVisualiser);
 	SandstormStartingParticleSystem = CreateDefaultSubobject<UNiagaraComponent>(TEXT("SandstormStartingParticleSystem"));
-	SandstormStartingParticleSystem->SetupAttachment(Root);
+	SandstormStartingParticleSystem->SetupAttachment(PushBackDirection);
 	SandstormActiveParticleSystem = CreateDefaultSubobject<UNiagaraComponent>(TEXT("SandstormActiveParticleSystem"));
-	SandstormActiveParticleSystem->SetupAttachment(Root);
+	SandstormActiveParticleSystem->SetupAttachment(PushBackDirection);
 
 	SafeSpot1 = CreateDefaultSubobject<UBoxComponent>(TEXT("SafeSpot1"));
 	SafeSpot1->SetupAttachment(Root);

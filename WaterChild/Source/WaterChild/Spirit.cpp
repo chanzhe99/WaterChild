@@ -658,13 +658,13 @@ void ASpirit::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherA
 	}
 
 	if (OtherActor->IsA(ASpringPlant::StaticClass()) 
-		&& Cast<ASpringPlant>(OtherActor)->GetPlantState() == EPlantState::Alive 
+		&& Cast<ASpringPlant>(OtherActor)->GetIsPlantAlive() == true
 		&& SpiritState == ESpiritState::Falling)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Springing"));
 		Cast<ASpringPlant>(OtherActor)->BounceAnimation(this);
 	}
-
+	
 	/*if (OtherActor->ActorHasTag("Climbable"))
 	{
 		GetCharacterMovement()->SetMovementMode(MOVE_Flying);
