@@ -16,6 +16,8 @@ class WATERCHILD_API ASpiritController : public APlayerController
 	
 private:
 	bool bIsUsingGamepad = false;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	float AxisInputDeadzone = 0.05f;
 
 public:
 	virtual void SetupInputComponent() override;
@@ -55,6 +57,12 @@ public:
 	void AnyKeyAction_Implementation(FKey Key) { bIsUsingGamepad = (Key.IsGamepadKey()) ? true : false; }
 #pragma endregion
 
+#pragma region Revive Axis Events
+	
+#pragma endregion
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+	void ReviveAxis(float Value);
+	void ReviveAxis_Implementation(float Value) { if (Value <= -AxisInputDeadzone || Value >= AxisInputDeadzone) bIsUsingGamepad = false;}
 #pragma region Movement Axis Events
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void KeyboardForwardAxis(float Value);
@@ -84,11 +92,11 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void GamepadLookUpAxis(float Value);
-	void GamepadLookUpAxis_Implementation(float Value) { if (Value != 0.f) bIsUsingGamepad = true; }
+	void GamepadLookUpAxis_Implementation(float Value) { if (Value <= -AxisInputDeadzone || Value >= AxisInputDeadzone) bIsUsingGamepad = true; }
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void GamepadTurnAxis(float Value);
-	void GamepadTurnAxis_Implementation(float Value) { if (Value != 0.f) bIsUsingGamepad = true; }
+	void GamepadTurnAxis_Implementation(float Value) { if (Value <= -AxisInputDeadzone || Value >= AxisInputDeadzone) bIsUsingGamepad = true; }
 #pragma endregion
 
 };

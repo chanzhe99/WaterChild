@@ -16,6 +16,9 @@ void ASpiritController::SetupInputComponent()
 	InputComponent->BindAction("PauseButton", IE_Pressed, this, &ASpiritController::PauseAction).bExecuteWhenPaused = true;
 	InputComponent->BindAction("AnyKey", IE_Pressed, this, &ASpiritController::AnyKeyAction).bExecuteWhenPaused = true;
 
+	// Binds Revive Axis
+	InputComponent->BindAxis("ReviveAxis", this, &ASpiritController::ReviveAxis).bExecuteWhenPaused = true;
+	
 	// Binds the movement axes
 	InputComponent->BindAxis("KeyboardForwardAxis", this, &ASpiritController::KeyboardForwardAxis);
 	InputComponent->BindAxis("KeyboardRightAxis", this, &ASpiritController::KeyboardRightAxis);

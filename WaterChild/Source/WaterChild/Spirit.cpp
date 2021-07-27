@@ -97,7 +97,7 @@ ASpirit::ASpirit()
 	// Set default variable values
 	//SpiritState = ESpiritState::Idle;
 
-	BaseTurnRate = 45.f;
+	BaseTurnRate = 90.f;
 	BaseLookUpAtRate = 45.f;
 
 	JumpChargeDuration = 0.1f;
@@ -147,6 +147,18 @@ void ASpirit::Tick(float DeltaTime)
 	//FRotator CameraTargetRotation = FRotator(ArrowLineTrace->GetForwardVector().Rotation().Pitch - 10, GetActorForwardVector().Rotation().Yaw, GetActorForwardVector().Rotation().Roll);
 	//FRotator CameraTargetRotation = ArrowLineTrace->GetForwardVector().Rotation() + FRotator(-20, 0, 0);
 
+	if(SpringArm->TargetArmLength != TargetSpringArmLength)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("targetArmLength different: %f"), TargetSpringArmLength);
+		SpringArm->TargetArmLength = UKismetMathLibrary::FInterpTo(SpringArm->TargetArmLength, TargetSpringArmLength, DeltaTime, 5.f);
+		//SpringArm->TargetArmLength = UKismetMathLibrary::FInterpEaseInOut()
+	}
+
+	if(SpringArm->SocketOffset != TargetSocketOffset)
+	{
+		SpringArm->SocketOffset = UKismetMathLibrary::VInterpTo(SpringArm->SocketOffset, TargetSocketOffset, DeltaTime, 5.f);
+	}
+	
 	switch (SpiritState)
 	{
 	case ESpiritState::Idle:
@@ -200,6 +212,17 @@ void ASpirit::Tick(float DeltaTime)
 			if (UKismetMathLibrary::NearlyEqual_FloatFloat(ActorYaw.Yaw, ControllerYaw.Yaw, 15.f))
 				bActorSetToControllerDirection = true;
 		}
+
+		/*if(SpringArm->TargetArmLength > 50.f)
+		{
+			SpringArm->TargetArmLength = UKismetMathLibrary::FInterpTo(SpringArm->TargetArmLength, 50.f, DeltaTime, 1.f);
+			//SpringArm->TargetArmLength = UKismetMathLibrary::FInterpEaseInOut()
+		}
+
+		if(SpringArm->SocketOffset != FVector(0, 45, 0))
+		{
+			SpringArm->SocketOffset = UKismetMathLibrary::VInterpTo(SpringArm->SocketOffset, FVector(0, 45, 0), DeltaTime, 1.f);
+		}*/
 
 		TraceHit = TraceLine(ReviveTraceLength);
 		OnRevive(Cast<AInteractable>(TraceLine(ReviveTraceLength).GetActor()));
@@ -275,7 +298,7 @@ FHitResult ASpirit::TraceLine(float TraceLength)
 	//UKismetSystemLibrary::LineTraceSingleForObjects();
 
 	bool bHit = GetWorld()->LineTraceSingleByObjectType(Hit, LineStart, LineEnd, ECC_WorldStatic, TraceParams);
-	DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Green, false, 0, 0, 2);
+	//DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Green, false, 0, 0, 2);
 
 	if (bHit)
 	{
@@ -328,7 +351,7 @@ FHitResult ASpirit::ReviveTraceLine(float TraceLength)
 
 	FCollisionQueryParams TraceParams;
 	bool bHit = GetWorld()->LineTraceSingleByObjectType(Hit, LineStart, LineEnd, ECC_WorldStatic, TraceParams);
-	DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Green, false, 0, 0, 2);
+	//DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Green, false, 0, 0, 2);
 
 	if (bHit)
 	{
@@ -400,9 +423,6 @@ void ASpirit::SetClimbOrientation_Implementation()
 	//SetState(ESpiritState::Climbing);
 }
 
-
-
-
 void ASpirit::Revive_Implementation()
 {
 	if (SpiritState == ESpiritState::Idle || SpiritState == ESpiritState::Walking)
@@ -412,12 +432,12 @@ void ASpirit::Revive_Implementation()
 		bActorSetToControllerDirection = false;
 	}
 }
-// #TODO_CZ TO BE REMOVED
+
 void ASpirit::StopRevive_Implementation()
 {
 	if (SpiritState == ESpiritState::Reviving)
 	{
-		if (SelectedPlant)
+		if (SelectedPlant)// #TODO_CZ TO BE REMOVED
 		{
 			//UE_LOG(LogTemp, Warning, TEXT("Spirit StopRevive called on %s"), *GetNameSafe(SelectedPlant));
 			IInteractableInterface* Interface = Cast<IInteractableInterface>(SelectedPlant);
@@ -466,14 +486,85 @@ void ASpirit::JumpAction_Implementation()
 		OnJump();
 }
 
+void ASpirit::ReviveAxis_Implementation(float Value)
+{
+	if (SpiritState == ESpiritState::Idle || SpiritState == ESpiritState::Walking)
+	{
+		ReviveForceMultiplier = Value;
+		bUseControllerRotationYaw = true;
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+		GetCharacterMovement()->MaxWalkSpeed = 150.f;
+
+		TargetSpringArmLength = RevivingSpringArmLength;
+		TargetSocketOffset = RevivingSocketOffset;
+		
+		SetState(ESpiritState::Reviving);
+		NiagaraRevive->Activate();
+		bActorSetToControllerDirection = false;
+	}
+	UE_LOG(LogTemp, Warning, TEXT("ReviveForceMultiplier: %f"), ReviveForceMultiplier);
+}
+
+void ASpirit::StopReviveAxis_Implementation(float Value)
+{
+	if (SpiritState == ESpiritState::Reviving)
+	{
+		ReviveForceMultiplier = Value;
+		bUseControllerRotationYaw = false;
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+		GetCharacterMovement()->MaxWalkSpeed = 300.f;
+
+		TargetSpringArmLength = DefaultSpringArmLength;
+		TargetSocketOffset = DefaultSocketOffset;
+		
+		if (SelectedPlant)// #TODO_CZ TO BE REMOVED
+			{
+			//UE_LOG(LogTemp, Warning, TEXT("Spirit StopRevive called on %s"), *GetNameSafe(SelectedPlant));
+			IInteractableInterface* Interface = Cast<IInteractableInterface>(SelectedPlant);
+			if (Interface) Interface->Execute_OnInteractEnd(SelectedPlant, this);
+			SelectedPlant = nullptr;
+			}
+		ArrowLineTrace->SetRelativeRotation(FRotator::ZeroRotator);
+		NiagaraRevive->Deactivate();
+		SetState(ESpiritState::Idle);
+	}
+}
 
 void ASpirit::MoveForward_Implementation(float Value)
 {
-	if (Controller && SpiritState != ESpiritState::Squeezing && SpiritState != ESpiritState::StuckInPlace)
+	if (Controller/* && SpiritState != ESpiritState::Squeezing && SpiritState != ESpiritState::StuckInPlace && SpiritState != ESpiritState::Reviving*/)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
 
-		if (SpiritState == ESpiritState::Reviving)
+		switch (SpiritState)
+		{
+		case ESpiritState::Idle:
+		case ESpiritState::Walking:
+		case ESpiritState::Falling:
+		case ESpiritState::Reviving:/* break;*/
+			{
+				const FRotator YawRotation(0, Rotation.Yaw, 0);
+				const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+				AddMovementInput(Direction, Value);
+			}
+			break;
+		case ESpiritState::Climbing:
+			{
+				if (ClimbTraceLine(FVector2D(Value, 0)).GetActor() && ClimbTraceLine(FVector2D(Value, 0)).GetActor()->ActorHasTag("Climbable"))
+				{
+					const FRotator WallUpRotation = TraceLine(ClimbTraceLength).ImpactNormal.Rotation();
+					const FVector ClimbDirection = FRotationMatrix(WallUpRotation - FRotator(0, 180, 0)).GetUnitAxis(EAxis::Z);
+					AddMovementInput(ClimbDirection, Value);
+				}
+			}
+			break;
+		case ESpiritState::ChargingJump: break;
+		case ESpiritState::Squeezing: break;
+		case ESpiritState::StuckInPlace: break;
+		case ESpiritState::WalkingBack: break;
+		}
+		
+		/*if (SpiritState == ESpiritState::Reviving)
 		{
 			const FRotator RevivePitch(Value * BaseTurnRate * 2 * GetWorld()->GetDeltaSeconds(), 0, 0);
 			ArrowLineTrace->AddRelativeRotation(RevivePitch);
@@ -497,17 +588,44 @@ void ASpirit::MoveForward_Implementation(float Value)
 			const FRotator YawRotation(0, Rotation.Yaw, 0);
 			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 			AddMovementInput(Direction, Value);
-		}
+		}*/
 	}
 }
 
 void ASpirit::MoveRight_Implementation(float Value)
 {
-	if (Controller && SpiritState != ESpiritState::Squeezing && SpiritState != ESpiritState::StuckInPlace)
+	if (Controller/* && SpiritState != ESpiritState::Squeezing && SpiritState != ESpiritState::StuckInPlace && SpiritState != ESpiritState::Reviving*/)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
 
-		if (SpiritState == ESpiritState::Reviving)
+		switch (SpiritState)
+		{
+		case ESpiritState::Idle:
+		case ESpiritState::Walking:
+		case ESpiritState::Falling:
+		case ESpiritState::Reviving:
+			{
+				const FRotator YawRotation(0, Rotation.Yaw, 0);
+				const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+				AddMovementInput(Direction, Value);
+			}
+			break;
+		case ESpiritState::Climbing:
+			{
+				if (ClimbTraceLine(FVector2D(0, Value)).GetActor() && ClimbTraceLine(FVector2D(0, Value)).GetActor()->ActorHasTag("Climbable"))
+				{
+					const FRotator WallUpRotation = TraceLine(ClimbTraceLength).ImpactNormal.Rotation();
+					const FVector ClimbDirection = FRotationMatrix(WallUpRotation - FRotator(0, 180, 0)).GetUnitAxis(EAxis::Y);
+					AddMovementInput(ClimbDirection, Value);
+				}
+			}
+			break;
+		case ESpiritState::ChargingJump: break;
+		case ESpiritState::Squeezing: break;
+		case ESpiritState::StuckInPlace: break;
+		case ESpiritState::WalkingBack: break;
+		}
+		/*if (SpiritState == ESpiritState::Reviving)
 		{
 			const FRotator ReviveYaw(0, Value * BaseTurnRate * 2 * GetWorld()->GetDeltaSeconds(), 0);
 			ArrowLineTrace->AddRelativeRotation(ReviveYaw);
@@ -537,15 +655,53 @@ void ASpirit::MoveRight_Implementation(float Value)
 			const FRotator YawRotation(0, Rotation.Yaw, 0);
 			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 			AddMovementInput(Direction, Value);
-		}
+		}*/
 	}
 }
 
 void ASpirit::TurnAt_Implementation(float Value)
 {
-	if (Value != 0.f) bIsUsingGamepad = false;
+	if (Value != 0.f)
+		bIsUsingGamepad = false;
 
-	if (SpiritState != ESpiritState::Squeezing)
+	switch (SpiritState)
+	{
+	case ESpiritState::Idle:
+	case ESpiritState::Walking:
+	case ESpiritState::Falling:
+	case ESpiritState::ChargingJump:
+	case ESpiritState::Climbing:
+	case ESpiritState::StuckInPlace:
+	case ESpiritState::WalkingBack:
+		{
+			AddControllerYawInput(Value);
+		}
+		break;
+	case ESpiritState::Reviving:
+		{
+			AddControllerYawInput(Value);
+			const FRotator ReviveYaw(ArrowLineTrace->GetRelativeRotation().Pitch, Value, 0);
+			ArrowLineTrace->SetRelativeRotation(ReviveYaw);
+
+			/*const FRotator ReviveYaw(0, Value, 0);
+			ArrowLineTrace->AddRelativeRotation(ReviveYaw);
+			
+			if (ArrowLineTrace->GetRelativeRotation().Yaw >= ReviveMaxYawAngle)
+			{
+				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, ReviveMaxYawAngle, 0));
+				AddActorWorldRotation(ReviveYaw);
+			}
+			else if (ArrowLineTrace->GetRelativeRotation().Yaw <= -ReviveMaxYawAngle)
+			{
+				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, -ReviveMaxYawAngle, 0));
+				AddActorWorldRotation(ReviveYaw);
+			}*/
+		}
+		break;
+	case ESpiritState::Squeezing: break;
+	}
+	//UE_LOG(LogTemp, Warning, TEXT("YawInput: %f"), Value * BaseTurnRate * GetWorld()->GetDeltaSeconds())
+	/*if (SpiritState != ESpiritState::Squeezing)
 	{
 		if (SpiritState == ESpiritState::Reviving)
 		{
@@ -564,14 +720,42 @@ void ASpirit::TurnAt_Implementation(float Value)
 			}
 		}
 		else AddControllerYawInput(Value);
-	}
+	}*/
 }
 
 void ASpirit::LookUpAt_Implementation(float Value)
 {
-	if (Value != 0.f) bIsUsingGamepad = false;
+	if (Value != 0.f)
+		bIsUsingGamepad = false;
 
-	if (SpiritState != ESpiritState::Squeezing)
+	switch (SpiritState)
+	{
+	case ESpiritState::Idle:
+	case ESpiritState::Walking:
+	case ESpiritState::Falling:
+	case ESpiritState::ChargingJump:
+	case ESpiritState::Climbing:
+	case ESpiritState::StuckInPlace:
+	case ESpiritState::WalkingBack:
+		{
+			AddControllerPitchInput(Value);
+		}
+		break;
+	case ESpiritState::Reviving:
+		{
+			const FRotator RevivePitch(-Value, 0, 0);
+			ArrowLineTrace->AddRelativeRotation(RevivePitch);
+
+			if (ArrowLineTrace->GetRelativeRotation().Pitch >= ReviveMaxHeight)
+				ArrowLineTrace->SetRelativeRotation(FRotator(ReviveMaxHeight, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
+			else if (ArrowLineTrace->GetRelativeRotation().Pitch <= ReviveMinHeight)
+				ArrowLineTrace->SetRelativeRotation(FRotator(ReviveMinHeight, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
+		}
+		break;
+	case ESpiritState::Squeezing: break;
+	}
+	
+	/*if (SpiritState != ESpiritState::Squeezing)
 	{
 		if (SpiritState == ESpiritState::Reviving)
 		{
@@ -584,23 +768,90 @@ void ASpirit::LookUpAt_Implementation(float Value)
 				ArrowLineTrace->SetRelativeRotation(FRotator(ReviveMinHeight, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
 		}
 		else AddControllerPitchInput(Value);
-	}
+	}*/
 }
 
 void ASpirit::TurnAtRate_Implementation(float Value)
 {
 	if (Value != 0.f)
 		bIsUsingGamepad = true;
-	if (SpiritState != ESpiritState::Squeezing)
+		
+	switch (SpiritState)
+	{
+	case ESpiritState::Idle:
+	case ESpiritState::Walking:
+	case ESpiritState::Falling:
+	case ESpiritState::ChargingJump:
+	case ESpiritState::Climbing:
+	case ESpiritState::StuckInPlace:
+	case ESpiritState::WalkingBack:
+		{
+			AddControllerYawInput(Value * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+		}
+		break;
+	case ESpiritState::Reviving:
+		{
+			AddControllerYawInput(Value * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+			const FRotator ReviveYaw(ArrowLineTrace->GetRelativeRotation().Pitch, Value * BaseTurnRate * GetWorld()->GetDeltaSeconds(), 0);
+			ArrowLineTrace->SetRelativeRotation(ReviveYaw);
+			/*const FRotator ReviveYaw(0, Value * BaseTurnRate * GetWorld()->GetDeltaSeconds(), 0);
+			ArrowLineTrace->AddRelativeRotation(ReviveYaw);
+
+			if (ArrowLineTrace->GetRelativeRotation().Yaw >= ReviveMaxYawAngle)
+			{
+				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, ReviveMaxYawAngle, 0));
+				AddActorWorldRotation(ReviveYaw);
+			}
+			else if (ArrowLineTrace->GetRelativeRotation().Yaw <= -ReviveMaxYawAngle)
+			{
+				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, -ReviveMaxYawAngle, 0));
+				AddActorWorldRotation(ReviveYaw);
+			}*/
+		}
+		break;
+	case ESpiritState::Squeezing: break;
+	}
+	//UE_LOG(LogTemp, Warning, TEXT("YawInput: %f"), Value * BaseTurnRate * GetWorld()->GetDeltaSeconds())
+	/*if (SpiritState != ESpiritState::Squeezing)
+	{
 		AddControllerYawInput(Value * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+	}*/
 }
 
 void ASpirit::LookUpAtRate_Implementation(float Value)
 {
 	if (Value != 0.f)
 		bIsUsingGamepad = true;
-	if (SpiritState != ESpiritState::Squeezing)
-		AddControllerPitchInput(Value * BaseLookUpAtRate * GetWorld()->GetDeltaSeconds());
+
+	switch (SpiritState)
+	{
+	case ESpiritState::Idle:
+	case ESpiritState::Walking:
+	case ESpiritState::Falling:
+	case ESpiritState::ChargingJump:
+	case ESpiritState::Climbing:
+	case ESpiritState::StuckInPlace:
+	case ESpiritState::WalkingBack:
+		{
+			AddControllerPitchInput(Value * BaseLookUpAtRate * GetWorld()->GetDeltaSeconds());
+		}
+		break;
+	case ESpiritState::Reviving:
+		{
+			const FRotator RevivePitch(-Value * BaseLookUpAtRate * GetWorld()->GetDeltaSeconds(), 0, 0);
+			ArrowLineTrace->AddRelativeRotation(RevivePitch);
+
+			if (ArrowLineTrace->GetRelativeRotation().Pitch >= ReviveMaxHeight)
+				ArrowLineTrace->SetRelativeRotation(FRotator(ReviveMaxHeight, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
+			else if (ArrowLineTrace->GetRelativeRotation().Pitch <= ReviveMinHeight)
+				ArrowLineTrace->SetRelativeRotation(FRotator(ReviveMinHeight, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
+		}
+		break;
+	case ESpiritState::Squeezing: break;
+	}
+	//UE_LOG(LogTemp, Warning, TEXT("PitchInput: %f"), -Value * BaseLookUpAtRate * GetWorld()->GetDeltaSeconds())
+	/*if (SpiritState != ESpiritState::Squeezing)
+		AddControllerPitchInput(Value * BaseLookUpAtRate * GetWorld()->GetDeltaSeconds());*/
 }
 
 

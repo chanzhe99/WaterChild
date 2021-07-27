@@ -66,6 +66,14 @@ public:
 	void JumpAction();
 	void JumpAction_Implementation();
 
+	// Revive Axis Events
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+	void ReviveAxis(float Value);
+	void ReviveAxis_Implementation(float Value);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+	void StopReviveAxis(float Value);
+	void StopReviveAxis_Implementation(float Value);
+	
 	// Axis Events
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void MoveForward(float Value);
@@ -175,14 +183,26 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Climbing", meta = (AllowPrivateAccess = "true"));
 	AActor* WallBeingClimbed = nullptr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	bool bCameraFollowRevive = false;
 	bool bActorSetToControllerDirection = false;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	float DefaultSpringArmLength = 300.f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	float RevivingSpringArmLength = 25.f;
+	float TargetSpringArmLength = DefaultSpringArmLength;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	FVector DefaultSocketOffset = FVector(0, 0, 60);
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	FVector RevivingSocketOffset = FVector(0, 25, 0);
+	FVector TargetSocketOffset = DefaultSocketOffset;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"));
 	float ReviveTraceLength = 300;
 	float ReviveMaxHeight = 75;
 	float ReviveMinHeight = -50;
 	float ReviveMaxYawAngle = 45;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Revive", meta = (AllowPrivateAccess = "true"));
+	float ReviveForceMultiplier = 0.f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Line Trace", meta = (AllowPrivateAccess = "true"));
 	float SqueezeTraceLength = 15;
 
