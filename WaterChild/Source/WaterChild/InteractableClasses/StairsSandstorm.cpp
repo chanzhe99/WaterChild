@@ -77,7 +77,13 @@ void AStairsSandstorm::Tick(float DeltaTime)
 	if(IsHitPlayer && !SpiritReference)
 		SpiritReference = Cast<ASpirit>(SandstormHitResult.Actor);
 
-	if(!IsHitPlayer && SpiritReference)
+	if(IsHitPlayer && SpiritReference)
+	{
+		CalculateSandstormStrength();
+	}
+
+	
+	/*if(!IsHitPlayer && SpiritReference)
 	{
 		if (PlayerSandstormWalkAnimVar > 0.f)
 		{
@@ -167,7 +173,7 @@ void AStairsSandstorm::Tick(float DeltaTime)
 		}
 		
 		break;
-	}
+	}*/
 
 	//UE_LOG(LogTemp, Warning, TEXT("PlayerSandstormWalkAnimVar: %f"), PlayerSandstormWalkAnimVar);
 }
@@ -189,7 +195,7 @@ void AStairsSandstorm::CycleSandstormState(float &TickValue, float TargetValue, 
 bool AStairsSandstorm::DoBoxTrace()
 {
 	// Main sandstorm body
-	IsHitPlayer = UKismetSystemLibrary::BoxTraceSingleForObjects(GetWorld(), GetActorLocation(), GetActorLocation(), SandstormSizeVisualiser->GetScaledBoxExtent(), FRotator::ZeroRotator, PlayerObjectList, false, ObjectsToIgnoreList, EDrawDebugTrace::ForOneFrame, SandstormHitResult, true, FLinearColor::Red, FLinearColor::Green, 5.f);
+	IsHitPlayer = UKismetSystemLibrary::BoxTraceSingleForObjects(GetWorld(), GetActorLocation(), GetActorLocation(), SandstormSizeVisualiser->GetScaledBoxExtent(), FRotator::ZeroRotator, PlayerObjectList, false, ObjectsToIgnoreList, EDrawDebugTrace::None, SandstormHitResult, true, FLinearColor::Red, FLinearColor::Green, 5.f);
 
 	return IsHitPlayer;
 }
@@ -216,4 +222,17 @@ bool AStairsSandstorm::CheckSafeSpots()
 		return true;
 
 	return false;
+}
+
+float AStairsSandstorm::CalculateSandstormStrength()
+{
+	float totalLength = SandstormSizeVisualiser->GetScaledBoxExtent().X;
+	float startPoint = GetActorLocation().X - (totalLength / 2);
+	float endPoint = GetActorLocation().X + (totalLength / 2);
+	float playerDistanceFromEndPoint = endPoint - SpiritReference->GetActorLocation().X;
+	float travelledRatio = playerDistanceFromEndPoint / totalLength;
+
+	//UE_LOG(LogTemp, Warning, TEXT("travelled Ratio: %f"), travelledRatio);
+	UE_LOG(LogTemp, Warning, TEXT("playerDistanceFromEndPoint: %f"), playerDistanceFromEndPoint);
+	return travelledRatio;
 }
