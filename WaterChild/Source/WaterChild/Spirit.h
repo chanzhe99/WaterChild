@@ -47,6 +47,7 @@ public:
 	void SetCanTakeInput(bool Value) { bCanTakeInput = Value; }
 	UFUNCTION(BlueprintCallable)
 	void SetCanTransitionToClimb(bool CanTransition) { bCanTransitionToClimb = CanTransition; }
+	class USpringArmComponent* GetSpringArm() {return SpringArm;}
 
 #pragma region Input functions
 	// Action Events

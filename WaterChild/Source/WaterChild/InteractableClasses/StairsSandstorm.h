@@ -6,14 +6,6 @@
 #include "GameFramework/Actor.h"
 #include "StairsSandstorm.generated.h"
 
-UENUM(BlueprintType)
-enum class ESandstormState : uint8
-{
-	Inactive = 0		UMETA(DisplayName = "Sandstorm Inactive"),
-	Starting			UMETA(DisplayName = "Sandstorm Starting"),
-	Active				UMETA(DisplayName = "Sandstorm Active")
-};
-
 class UBoxComponent;
 class UArrowComponent;
 class UNiagaraComponent;
@@ -30,9 +22,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void CycleSandstormState(float &TickValue, float TargetValue, float IncrementRate, ESandstormState TargetSandstormState);
 	bool DoBoxTrace();
-	bool CheckSafeSpots();
 	float CalculateSandstormStrength();
 
 	// Main sandstorm components
@@ -41,14 +31,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
 	UBoxComponent* SandstormSizeVisualiser; 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
-	UArrowComponent* PushBackDirection;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
 	UNiagaraComponent* SandstormStartingParticleSystem;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
 	UNiagaraComponent* SandstormActiveParticleSystem;
 
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
+	UArrowComponent* PushBackDirection;*/
 	// Sandstorm safe spots components
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
 	UBoxComponent* SafeSpot1;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
 	UBoxComponent* SafeSpot2;
@@ -59,7 +49,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
 	UBoxComponent* SafeSpot5;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
-	UBoxComponent* SafeSpot6;
+	UBoxComponent* SafeSpot6;*/
 	
 	// BoxTrace variables
 	UPROPERTY()
@@ -68,38 +58,23 @@ public:
     TArray<AActor*> ObjectsToIgnoreList;
 	UPROPERTY()
 	FHitResult SandstormHitResult;
-	UPROPERTY()
-	FHitResult SafeSpotHitResult;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Reference")
 	bool IsHitPlayer;
+	bool IsSandstormOn = true;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Reference")
 	class ASpirit* SpiritReference;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Reference")
 	float PlayerSandstormWalkAnimVar = 0.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Reference")
-	float PlayerWalkSpeed_Sandstorm = 150.f;
+	float PlayerWalkSpeed_Sandstorm = 50.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Reference")
 	float PlayerWalkSpeed_Default = 300.f;
 	float PlayerWalkSpeed_Difference = PlayerWalkSpeed_Default - PlayerWalkSpeed_Sandstorm;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Sandstorm Values")
-	ESandstormState SandstormState = ESandstormState::Inactive;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sandstorm Values")
-	float PushBackForceMultiplier = 3.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sandstorm Time Values")
-	float SandstormInterval = 3.f;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Sandstorm Time Values")
-	float SandstormInterval_Tick = 0.f;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sandstorm Time Values")
-	float SandstormStartUpTime = 1.f; // Time it takes for Sandstorm Intensity to reach maximum
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Sandstorm Time Values")
-	float SandstormStartUpTime_Tick = 0.f;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sandstorm Time Values")
-	float SandstormDuration = 5.f;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Sandstorm Time Values")
-	float SandstormDuration_Tick = 0.f;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Reference")
+	float PlayerSpringArmLength_Default = 300.f;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Reference")
+	float PlayerSpringArmLength_Sandstorm = 100.f;
+	float PlayerSpringArmLength_Difference = PlayerSpringArmLength_Default - PlayerSpringArmLength_Sandstorm;
 };
