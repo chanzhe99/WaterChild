@@ -98,11 +98,11 @@ void AStairsSandstorm::Tick(float DeltaTime)
 					SpiritReference->GetSpringArm()->TargetArmLength = PlayerSpringArmLength_Default - (PlayerSpringArmLength_Difference * travelledRatio);*/
 				//UE_LOG(LogTemp, Warning, TEXT("SpringArmLength: %f"), SpiritReference->GetSpringArm()->TargetArmLength);
 			}
-			if(travelledRatio > 0.25f)
+			if(travelledRatio > 0.1f)
 			{
 				if(PlayerSandstormWalkAnimVar < 1.f)
 				{
-					PlayerSandstormWalkAnimVar += DeltaTime;
+					PlayerSandstormWalkAnimVar += DeltaTime * 0.5f;
 				}
 			}
 			if(travelledRatio > 0.75f)
