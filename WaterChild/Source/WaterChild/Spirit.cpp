@@ -149,7 +149,7 @@ void ASpirit::Tick(float DeltaTime)
 
 	if(SpringArm->TargetArmLength != TargetSpringArmLength)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("targetArmLength different: %f"), TargetSpringArmLength);
+		//UE_LOG(LogTemp, Warning, TEXT("targetArmLength different: %f"), TargetSpringArmLength);
 		SpringArm->TargetArmLength = UKismetMathLibrary::FInterpTo(SpringArm->TargetArmLength, TargetSpringArmLength, DeltaTime, 5.f);
 		//SpringArm->TargetArmLength = UKismetMathLibrary::FInterpEaseInOut()
 	}
@@ -209,7 +209,7 @@ void ASpirit::Tick(float DeltaTime)
 			FRotator ControllerYaw = FRotator(0, Controller->GetControlRotation().GetDenormalized().Yaw, 0);
 			UE_LOG(LogTemp, Warning, TEXT("%f, %f"), ActorYaw.Yaw, ControllerYaw.Yaw);
 			SetActorRotation(UKismetMathLibrary::RInterpTo(ActorYaw, ControllerYaw, GetWorld()->GetDeltaSeconds(), 5.f));
-			if (UKismetMathLibrary::NearlyEqual_FloatFloat(ActorYaw.Yaw, ControllerYaw.Yaw, 15.f))
+			if (UKismetMathLibrary::NearlyEqual_FloatFloat(ActorYaw.Yaw, ControllerYaw.Yaw, 1.f))
 				bActorSetToControllerDirection = true;
 		}
 

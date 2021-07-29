@@ -33,12 +33,13 @@ public:
 	void CycleSandstormState(float &TickValue, float TargetValue, float IncrementRate, ESandstormState TargetSandstormState);
 	bool DoBoxTrace();
 	bool CheckSafeSpots();
+	float CalculateSandstormStrength();
 
 	// Main sandstorm components
-	UPROPERTY(BlueprintReadWrite, Category = "Actor Components")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
 	UBillboardComponent* Root;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
-	UBoxComponent* SandstormSizeVisualiser;
+	UBoxComponent* SandstormSizeVisualiser; 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
 	UArrowComponent* PushBackDirection;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
