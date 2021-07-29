@@ -8,7 +8,7 @@
 // Sets default values
 APlatformPlant::APlatformPlant()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	RootComp = CreateDefaultSubobject<USceneComponent>(TEXT("RootComp"));
 	StemMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("StemMesh"));
@@ -59,7 +59,8 @@ void APlatformPlant::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (PlantState == EPlantState::Alive)
+	// if (PlantState == EPlantState::Alive)
+	if (IsPlantAlive)
 	{
 		StemMesh->SetRelativeScale3D(FMath::Lerp(DeadPlantSize, GrownPlantSize, GrowTime / GrowDuration));
 		GrowTime += GetWorld()->GetDeltaSeconds();
@@ -68,7 +69,25 @@ void APlatformPlant::Tick(float DeltaTime)
 
 void APlatformPlant::OnInteract_Implementation(ASpirit* Caller)
 {
-	// State changer for dead to growing
+	if (!IsPlantAlive)
+	{
+		// WaterValue incrementer
+		CurrentWaterValue += GetWorld()->GetDeltaSeconds() * WaterIncreaseRate;
+
+		if (CurrentWaterValue >= MaxWaterValue)
+		{
+			IsPlantAlive = true;
+			
+			// Collision changer
+			PetalCollider->SetCollisionProfileName(TEXT("BlockAllDynamic"));
+			PetalCollider->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+			PetalCollider->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+
+			PlayPlantAnimation();
+		}
+	}
+	
+	/*// State changer for dead to growing
 	UE_LOG(LogTemp, Warning, TEXT("PlatformPlant is now growing"));
 	switch (PlantState)
 	{
@@ -95,15 +114,15 @@ void APlatformPlant::OnInteract_Implementation(ASpirit* Caller)
 			PlayPlantAnimation();
 		}
 		break;
-	}
+	}*/
 }
 
 void APlatformPlant::OnInteractEnd_Implementation(ASpirit* Caller)
 {
 	//UE_LOG(LogTemp, Warning, TEXT("Plant stopped growing"));
-	if (PlantState == EPlantState::Growing && CurrentWaterValue <= 0)
+	/*if (PlantState == EPlantState::Growing && CurrentWaterValue <= 0)
 	{
 		SetPlantState(EPlantState::Dead);
 		PrimaryActorTick.bCanEverTick = false;
-	}
+	}*/
 }

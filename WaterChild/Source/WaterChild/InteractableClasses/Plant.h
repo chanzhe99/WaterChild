@@ -67,11 +67,6 @@ public:
     virtual void Tick(float DeltaTime) override;
     virtual void OnInteract_Implementation(ASpirit* Caller) override;
 
-    // To play plants animation
-    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Plant Interaction")
-    void PlayPlantAnimation();
-    virtual void PlayPlantAnimation_Implementation() {};
-
     EPlantState GetPlantState() { return PlantState; }
     void SetPlantState(EPlantState DesiredState) { PlantState = DesiredState; }
 
