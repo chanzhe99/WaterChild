@@ -232,10 +232,10 @@ private:
 	FRotator ClimbRotation = FRotator::ZeroRotator;
 
 	// Look At vars
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, category = "Look At", meta = (AllowPrivateAccess = "true"))
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, category = "Look At", meta = (AllowPrivateAccess = "true"))
 	bool IsInLookAtArea = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, category = "Look At", meta = (AllowPrivateAccess = "true"))
-	FVector LookAtVector = FVector::ZeroVector;
+	FVector LookAtVector = FVector::ZeroVector;*/
 
 #pragma endregion
 
