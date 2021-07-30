@@ -13,6 +13,8 @@ APlant::APlant()
 void APlant::BeginPlay()
 {
 	Super::BeginPlay();
+
+	ReviveColliderSizeDifference = ReviveColliderMaxSize - ReviveColliderMinSize;
 }
 
 // Called every frame
@@ -45,7 +47,9 @@ void APlant::OnInteract_Implementation(ASpirit* Caller)
 		if(CurrentWaterValue < MaxWaterValue)
 		{
 			CurrentWaterValue += GetWorld()->GetDeltaSeconds() * WaterIncreaseRate;
-			CurrentPreGrowAnimTime = (CurrentWaterValue / MaxWaterValue) * PreGrowAnimLength;
+			const float currentWaterRatio = CurrentWaterValue / MaxWaterValue;
+			CurrentPreGrowAnimTime = PreGrowAnimLength * currentWaterRatio;
+			CurrentReviveColliderSize = ReviveColliderMinSize + (ReviveColliderSizeDifference * currentWaterRatio);
 			
 			ReviveEndTime_Tick = 0.f;
 			if(!IsReviveEffectsActive)

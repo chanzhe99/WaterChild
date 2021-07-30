@@ -113,7 +113,8 @@ void AStairsSandstorm::Tick(float DeltaTime)
 		}
 		if(travelledRatio > 0.99f)
 		{
-			IsSandstormOn = false;
+			if(IsSandstormOn)
+				IsSandstormOn = false;
 
 			if(SandstormStartingParticleSystem->IsActive())
 				SandstormStartingParticleSystem->Deactivate();

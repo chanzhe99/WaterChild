@@ -50,6 +50,14 @@ protected:
     float PreGrowAnimLength = 0.f;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Plant Variables", meta = (AllowPrivateAccess = "true"))
     float CurrentPreGrowAnimTime = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Plant Variables", meta = (AllowPrivateAccess = "true"))
+    FVector ReviveColliderMinSize = FVector::ZeroVector;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Plant Variables", meta = (AllowPrivateAccess = "true"))
+    FVector ReviveColliderMaxSize = FVector::ZeroVector;
+    FVector ReviveColliderSizeDifference = FVector::ZeroVector;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Plant Variables", meta = (AllowPrivateAccess = "true"))
+    FVector CurrentReviveColliderSize = FVector::ZeroVector;
     
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;

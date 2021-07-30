@@ -60,6 +60,7 @@ public:
 	FHitResult SandstormHitResult;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Reference")
 	bool IsHitPlayer;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Reference")
 	bool IsSandstormOn = true;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Reference")
 	class ASpirit* SpiritReference;
