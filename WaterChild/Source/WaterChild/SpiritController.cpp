@@ -13,6 +13,7 @@ void ASpiritController::SetupInputComponent()
 	InputComponent->BindAction("ClimbButton", IE_Pressed, this, &ASpiritController::ClimbAction);
 	InputComponent->BindAction("ClimbButton", IE_Released, this, &ASpiritController::StopClimbAction);
 	InputComponent->BindAction("JumpButton", IE_Pressed, this, &ASpiritController::JumpAction);
+	InputComponent->BindAction("LookAtButton", IE_Pressed, this, &ASpiritController::LookAtAction).bExecuteWhenPaused = true;
 	InputComponent->BindAction("PauseButton", IE_Pressed, this, &ASpiritController::PauseAction).bExecuteWhenPaused = true;
 	InputComponent->BindAction("AnyKey", IE_Pressed, this, &ASpiritController::AnyKeyAction).bExecuteWhenPaused = true;
 

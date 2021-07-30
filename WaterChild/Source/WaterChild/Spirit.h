@@ -66,7 +66,10 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void JumpAction();
 	void JumpAction_Implementation();
-
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
+	void LookAtAction();
+	void LookAtAction_Implementation() {};
+	
 	// Revive Axis Events
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void ReviveAxis(float Value);
@@ -227,6 +230,12 @@ private:
 	FVector ClimbForwardVector = FVector::ZeroVector;
 	FVector ClimbRightVector = FVector::ZeroVector;
 	FRotator ClimbRotation = FRotator::ZeroRotator;
+
+	// Look At vars
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, category = "Look At", meta = (AllowPrivateAccess = "true"))
+	bool IsInLookAtArea = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, category = "Look At", meta = (AllowPrivateAccess = "true"))
+	FVector LookAtVector = FVector::ZeroVector;
 
 #pragma endregion
 

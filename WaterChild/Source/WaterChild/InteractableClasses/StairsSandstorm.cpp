@@ -26,6 +26,8 @@ AStairsSandstorm::AStairsSandstorm()
 	SandstormStartingParticleSystem->SetupAttachment(Root);
 	SandstormActiveParticleSystem = CreateDefaultSubobject<UNiagaraComponent>(TEXT("SandstormActiveParticleSystem"));
 	SandstormActiveParticleSystem->SetupAttachment(Root);
+	SandstormLookAtTarget = CreateDefaultSubobject<UBillboardComponent>(TEXT("SandstormLookAtTarget"));
+	SandstormLookAtTarget->SetupAttachment(Root);
 
 	/*PushBackDirection = CreateDefaultSubobject<UArrowComponent>(TEXT("PushBackDirection"));
 	PushBackDirection->SetupAttachment(Root);*/

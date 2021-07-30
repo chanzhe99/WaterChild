@@ -49,6 +49,10 @@ public:
 	void JumpAction_Implementation() {}
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "PlayerAction")
+	void LookAtAction();
+	void LookAtAction_Implementation() {}
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "PlayerAction")
 	void PauseAction();
 	void PauseAction_Implementation() {}
 

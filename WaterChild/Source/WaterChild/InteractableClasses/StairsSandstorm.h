@@ -34,6 +34,8 @@ public:
 	UNiagaraComponent* SandstormStartingParticleSystem;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
 	UNiagaraComponent* SandstormActiveParticleSystem;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
+	UBillboardComponent* SandstormLookAtTarget;
 
 	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
 	UArrowComponent* PushBackDirection;*/
