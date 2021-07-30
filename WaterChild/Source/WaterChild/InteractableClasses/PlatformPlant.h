@@ -24,11 +24,6 @@ public:
 	virtual void OnInteract_Implementation(ASpirit* Caller) override;
 	virtual void OnInteractEnd_Implementation(ASpirit* Caller) override;
 
-	// To play plants animation
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Plant Interaction")
-	void PlayPlantAnimation();
-	virtual void PlayPlantAnimation_Implementation() {};
-	
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
 	class USceneComponent* RootComp;

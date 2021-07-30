@@ -83,38 +83,9 @@ void APlatformPlant::OnInteract_Implementation(ASpirit* Caller)
 			PetalCollider->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
 			PetalCollider->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 
-			PlayPlantAnimation();
+			PlayReviveDoneEffects();
 		}
 	}
-	
-	/*// State changer for dead to growing
-	UE_LOG(LogTemp, Warning, TEXT("PlatformPlant is now growing"));
-	switch (PlantState)
-	{
-	case EPlantState::Dead:
-		SetPlantState(EPlantState::Growing);
-		PrimaryActorTick.bCanEverTick = true;
-		break;
-
-	case EPlantState::Growing:
-		// WaterValue incrementer
-		CurrentWaterValue += GetWorld()->GetDeltaSeconds() * WaterIncreaseRate;
-		UE_LOG(LogTemp, Warning, TEXT("PlatformPlant gaining water"));
-
-		if (CurrentWaterValue >= MaxWaterValue)
-		{
-			PlantState = EPlantState::Alive;
-			//IsPlantAlive = true;
-			
-			// Collision changer
-			PetalCollider->SetCollisionProfileName(TEXT("BlockAllDynamic"));
-			PetalCollider->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
-			PetalCollider->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
-
-			PlayPlantAnimation();
-		}
-		break;
-	}*/
 }
 
 void APlatformPlant::OnInteractEnd_Implementation(ASpirit* Caller)

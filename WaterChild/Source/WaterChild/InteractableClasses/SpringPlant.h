@@ -19,7 +19,7 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Spring Plant Features")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpringPlant Features")
 	void BounceAnimation(ASpirit* Caller);
 	virtual void BounceAnimation_Implementation(ASpirit* Caller);
 
@@ -31,9 +31,9 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collider", meta = (AllowPrivateAccess = "true"))
 	class UBoxComponent* ReviveCollider;
 
-	UPROPERTY(EditAnywhere, Category = "Plant variables", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, Category = "SpringPlant Variables", meta = (AllowPrivateAccess = "true"))
 	float BounceForwardVelocity = 0.;
 	float BounceSideVelocity = 0.;
-	UPROPERTY(EditAnywhere, Category = "Plant variables", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, Category = "SpringPlant Variables", meta = (AllowPrivateAccess = "true"))
 	float BounceUpVelocity = 1000.;
 };
