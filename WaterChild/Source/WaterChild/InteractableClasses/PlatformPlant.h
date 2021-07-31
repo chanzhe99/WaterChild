@@ -21,8 +21,6 @@ protected:
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	virtual void OnInteract_Implementation(ASpirit* Caller) override;
-	virtual void OnInteractEnd_Implementation(ASpirit* Caller) override;
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))

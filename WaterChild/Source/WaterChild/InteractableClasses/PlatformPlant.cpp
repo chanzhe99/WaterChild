@@ -66,34 +66,3 @@ void APlatformPlant::Tick(float DeltaTime)
 		GrowTime += GetWorld()->GetDeltaSeconds();
 	}
 }
-
-void APlatformPlant::OnInteract_Implementation(ASpirit* Caller)
-{
-	if (!IsPlantAlive)
-	{
-		// WaterValue incrementer
-		CurrentWaterValue += GetWorld()->GetDeltaSeconds() * WaterIncreaseRate;
-
-		if (CurrentWaterValue >= MaxWaterValue)
-		{
-			IsPlantAlive = true;
-			
-			// Collision changer
-			PetalCollider->SetCollisionProfileName(TEXT("BlockAllDynamic"));
-			PetalCollider->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
-			PetalCollider->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
-
-			PlayReviveDoneEffects();
-		}
-	}
-}
-
-void APlatformPlant::OnInteractEnd_Implementation(ASpirit* Caller)
-{
-	//UE_LOG(LogTemp, Warning, TEXT("Plant stopped growing"));
-	/*if (PlantState == EPlantState::Growing && CurrentWaterValue <= 0)
-	{
-		SetPlantState(EPlantState::Dead);
-		PrimaryActorTick.bCanEverTick = false;
-	}*/
-}
