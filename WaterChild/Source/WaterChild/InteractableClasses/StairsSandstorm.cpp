@@ -92,6 +92,7 @@ AStairsSandstorm::AStairsSandstorm()
 
 void AStairsSandstorm::BeginPlay()
 {
+	Super::BeginPlay();
 	UNiagaraComponent* tempWindFXList[] = {WindFX_1, WindFX_2, WindFX_3, WindFX_4, WindFX_5, WindFX_6 };
 	WindFXList.Append(tempWindFXList, ARRAY_COUNT(tempWindFXList));
 }

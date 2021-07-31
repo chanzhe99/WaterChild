@@ -451,6 +451,11 @@ void ASpirit::StopRevive_Implementation()
 		ArrowLineTrace->SetRelativeRotation(FRotator::ZeroRotator);
 		NiagaraRevive->Deactivate();
 		SetState(ESpiritState::Idle);
+		
+		bIsTurningBehindWhenReviving = false;
+				
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+		GetCharacterMovement()->bUseControllerDesiredRotation = false;
 	}
 }
 
