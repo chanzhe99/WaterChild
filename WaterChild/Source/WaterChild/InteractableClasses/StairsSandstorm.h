@@ -19,6 +19,7 @@ public:
 	// Sets default values for this actor's properties
 	AStairsSandstorm();
 
+	virtual void BeginPlay() override;
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -37,6 +38,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
 	UBillboardComponent* SandstormLookAtTarget;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
+	UNiagaraComponent* WindFX_1;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
+	UNiagaraComponent* WindFX_2;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
+	UNiagaraComponent* WindFX_3;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
+	UNiagaraComponent* WindFX_4;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
+	UNiagaraComponent* WindFX_5;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
+	UNiagaraComponent* WindFX_6;
 	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
 	UArrowComponent* PushBackDirection;*/
 	// Sandstorm safe spots components
@@ -66,6 +79,9 @@ public:
 	bool IsSandstormOn = true;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Reference")
 	class ASpirit* SpiritReference;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Reference")
+	TArray<UNiagaraComponent*> WindFXList;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Reference")
 	float PlayerSandstormWalkAnimVar = 0.f;

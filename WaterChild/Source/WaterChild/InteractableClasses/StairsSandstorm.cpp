@@ -29,6 +29,18 @@ AStairsSandstorm::AStairsSandstorm()
 	SandstormLookAtTarget = CreateDefaultSubobject<UBillboardComponent>(TEXT("SandstormLookAtTarget"));
 	SandstormLookAtTarget->SetupAttachment(Root);
 
+	WindFX_1 = CreateDefaultSubobject<UNiagaraComponent>(TEXT("WindFX_1"));
+	WindFX_1->SetupAttachment(Root);
+	WindFX_2 = CreateDefaultSubobject<UNiagaraComponent>(TEXT("WindFX_2"));
+	WindFX_2->SetupAttachment(Root);
+	WindFX_3 = CreateDefaultSubobject<UNiagaraComponent>(TEXT("WindFX_3"));
+	WindFX_3->SetupAttachment(Root);
+	WindFX_4 = CreateDefaultSubobject<UNiagaraComponent>(TEXT("WindFX_4"));
+	WindFX_4->SetupAttachment(Root);
+	WindFX_5 = CreateDefaultSubobject<UNiagaraComponent>(TEXT("WindFX_5"));
+	WindFX_5->SetupAttachment(Root);
+	WindFX_6 = CreateDefaultSubobject<UNiagaraComponent>(TEXT("WindFX_6"));
+	WindFX_6->SetupAttachment(Root);
 	/*PushBackDirection = CreateDefaultSubobject<UArrowComponent>(TEXT("PushBackDirection"));
 	PushBackDirection->SetupAttachment(Root);*/
 	/*SafeSpot1 = CreateDefaultSubobject<UBoxComponent>(TEXT("SafeSpot1"));
@@ -50,6 +62,13 @@ AStairsSandstorm::AStairsSandstorm()
 
 	SandstormStartingParticleSystem->SetAutoActivate(false);
 	SandstormActiveParticleSystem->SetAutoActivate(false);
+
+	WindFX_1->SetAutoActivate(false);
+	WindFX_2->SetAutoActivate(false);
+	WindFX_3->SetAutoActivate(false);
+	WindFX_4->SetAutoActivate(false);
+	WindFX_5->SetAutoActivate(false);
+	WindFX_6->SetAutoActivate(false);
 	//SandstormStartingParticleSystem->SetRelativeRotation(PushBackDirection->GetRelativeRotation());
 	//SandstormActiveParticleSystem->SetRelativeRotation(PushBackDirection->GetRelativeRotation());
 
@@ -69,6 +88,12 @@ AStairsSandstorm::AStairsSandstorm()
 	PlayerObjectList.Add(EObjectTypeQuery::ObjectTypeQuery3);
 	ObjectsToIgnoreList.Empty();
 	
+}
+
+void AStairsSandstorm::BeginPlay()
+{
+	UNiagaraComponent* tempWindFXList[] = {WindFX_1, WindFX_2, WindFX_3, WindFX_4, WindFX_5, WindFX_6 };
+	WindFXList.Append(tempWindFXList, ARRAY_COUNT(tempWindFXList));
 }
 
 // Called every frame

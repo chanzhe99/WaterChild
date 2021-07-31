@@ -8,18 +8,17 @@
 #include "Niagara/Public/NiagaraComponent.h"
 #include "Components/ArrowComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "Components/SphereComponent.h"
+//#include "Components/SphereComponent.h"
 #include "InteractableClasses/InteractableInterface.h"
-#include "InteractableClasses/InteractablePlant.h"
+//#include "InteractableClasses/InteractablePlant.h"
 #include "InteractableClasses/InteractableCrack.h"
 #include "InteractableClasses/InteractableDebris.h"
 #include "InteractableClasses/Plant.h"
 #include "InteractableClasses/SpringPlant.h"
-#include "DrawDebugHelpers.h"
+//#include "DrawDebugHelpers.h"
+#include "SpiritController.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "Kismet/KismetInputLibrary.h"
-#include "GameFramework/PlayerInput.h"
 
 #define OUT
 
@@ -112,6 +111,7 @@ ASpirit::ASpirit()
 void ASpirit::BeginPlay()
 {
 	Super::BeginPlay();
+	SpiritController = Cast<ASpiritController>(Controller);
 	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ASpirit::OnOverlapBegin);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Destructible, ECR_Block);
 }
@@ -201,25 +201,10 @@ void ASpirit::Tick(float DeltaTime)
 
 		break;
 	case ESpiritState::Reviving:
-		/*if(bActorSetToControllerDirection)
-			Controller->SetControlRotation(UKismetMathLibrary::RInterpTo(Controller->GetControlRotation(), CameraTargetRotation, GetWorld()->GetDeltaSeconds(), 5.f));
-		else
-		{
-			FRotator ActorYaw = FRotator(0, GetActorRotation().GetDenormalized().Yaw, 0);
-			FRotator ControllerYaw = FRotator(0, Controller->GetControlRotation().GetDenormalized().Yaw, 0);
-			UE_LOG(LogTemp, Warning, TEXT("%f, %f"), ActorYaw.Yaw, ControllerYaw.Yaw);
-			SetActorRotation(UKismetMathLibrary::RInterpTo(ActorYaw, ControllerYaw, GetWorld()->GetDeltaSeconds(), 5.f));
-			if (UKismetMathLibrary::NearlyEqual_FloatFloat(ActorYaw.Yaw, ControllerYaw.Yaw, 1.f))
-				bActorSetToControllerDirection = true;
-		}*/
-		/*{
-			const FRotator ReviveYaw(ArrowLineTrace->GetRelativeRotation().Pitch, Controller->GetControlRotation().Yaw, 0);
-			ArrowLineTrace->SetRelativeRotation(ReviveYaw);
-		}*/
 		{
 			const float TurnDelta = UKismetMathLibrary::NormalizedDeltaRotator(GetControlRotation(), GetActorRotation()).Yaw;
 		
-			if (TurnDelta < -140.f || TurnDelta > 140.f)
+			if (TurnDelta < -165.f || TurnDelta > 165.f)
 			{
 				bIsTurningBehindWhenReviving = true;
 			}
@@ -521,7 +506,7 @@ void ASpirit::ReviveAxis_Implementation(float Value)
 		NiagaraRevive->Activate();
 		bActorSetToControllerDirection = false;
 	}
-	//UE_LOG(LogTemp, Warning, TEXT("ReviveForceMultiplier: %f"), ReviveForceMultiplier);
+	UE_LOG(LogTemp, Warning, TEXT("ReviveForceMultiplier: %f"), ReviveForceMultiplier);
 }
 
 void ASpirit::StopReviveAxis_Implementation(float Value)
@@ -554,7 +539,7 @@ void ASpirit::MoveForward_Implementation(float Value)
 	if (Controller)
 	{
 		const FRotator Rotation = GetControlRotation();
-
+		UE_LOG(LogTemp, Warning, TEXT("MoveForward - Value: %f"), Value);
 		switch (SpiritState)
 		{
 		case ESpiritState::Idle:
@@ -570,15 +555,15 @@ void ASpirit::MoveForward_Implementation(float Value)
 			{
 				if(Value < 0.f)
 				{
-					if(SidewaysInputValue == 0)
+					if(FMath::IsNearlyZero(SpiritController->GetRightAxisInput(), 0.3f))
 					{
-						UE_LOG(LogTemp, Warning, TEXT("RotHasBeen - IsWalkingStraightBack"));
+						UE_LOG(LogTemp, Warning, TEXT("RotHasBeen - IsWalkingStraightBack - RightAxisInput: %f"), SpiritController->GetRightAxisInput());
 						GetCharacterMovement()->bOrientRotationToMovement = false;
 						GetCharacterMovement()->bUseControllerDesiredRotation = true;
 					}
-					else if(SidewaysInputValue != 0 && !bIsTurningBehindWhenReviving)
+					else if(FMath::Abs(SpiritController->GetRightAxisInput()) > 0.01f && !bIsTurningBehindWhenReviving)
 					{
-						UE_LOG(LogTemp, Warning, TEXT("RotHasBeenReset"));
+						UE_LOG(LogTemp, Warning, TEXT("RotHasBeenReset - RightAxisInput: %f"), SpiritController->GetRightAxisInput());
 						GetCharacterMovement()->bOrientRotationToMovement = true;
 						GetCharacterMovement()->bUseControllerDesiredRotation = false;
 					}
@@ -610,7 +595,6 @@ void ASpirit::MoveRight_Implementation(float Value)
 {
 	if (Controller)
 	{
-		SidewaysInputValue = Value;
 		const FRotator Rotation = GetControlRotation();
 
 		switch (SpiritState)
@@ -664,7 +648,6 @@ void ASpirit::TurnAt_Implementation(float Value)
 		break;
 	case ESpiritState::Squeezing: break;
 	}
-	//UE_LOG(LogTemp, Warning, TEXT("YawInput: %f"), Value * BaseTurnRate * GetWorld()->GetDeltaSeconds())
 }
 
 void ASpirit::LookUpAt_Implementation(float Value)
@@ -720,32 +703,8 @@ void ASpirit::TurnAtRate_Implementation(float Value)
 			AddControllerYawInput(Value * BaseTurnRate * GetWorld()->GetDeltaSeconds());
 		}
 		break;
-		/*{
-			AddControllerYawInput(Value * BaseTurnRate * GetWorld()->GetDeltaSeconds());
-			const FRotator ReviveYaw(ArrowLineTrace->GetRelativeRotation().Pitch, Value * BaseTurnRate * GetWorld()->GetDeltaSeconds(), 0);
-			ArrowLineTrace->SetRelativeRotation(ReviveYaw);
-			/*const FRotator ReviveYaw(0, Value * BaseTurnRate * GetWorld()->GetDeltaSeconds(), 0);
-			ArrowLineTrace->AddRelativeRotation(ReviveYaw);
-
-			if (ArrowLineTrace->GetRelativeRotation().Yaw >= ReviveMaxYawAngle)
-			{
-				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, ReviveMaxYawAngle, 0));
-				AddActorWorldRotation(ReviveYaw);
-			}
-			else if (ArrowLineTrace->GetRelativeRotation().Yaw <= -ReviveMaxYawAngle)
-			{
-				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, -ReviveMaxYawAngle, 0));
-				AddActorWorldRotation(ReviveYaw);
-			}#1#
-		}
-		break;*/
 	case ESpiritState::Squeezing: break;
 	}
-	//UE_LOG(LogTemp, Warning, TEXT("YawInput: %f"), Value * BaseTurnRate * GetWorld()->GetDeltaSeconds())
-	/*if (SpiritState != ESpiritState::Squeezing)
-	{
-		AddControllerYawInput(Value * BaseTurnRate * GetWorld()->GetDeltaSeconds());
-	}*/
 }
 
 void ASpirit::LookUpAtRate_Implementation(float Value)
@@ -780,17 +739,11 @@ void ASpirit::LookUpAtRate_Implementation(float Value)
 		break;
 	case ESpiritState::Squeezing: break;
 	}
-	//UE_LOG(LogTemp, Warning, TEXT("PitchInput: %f"), -Value * BaseLookUpAtRate * GetWorld()->GetDeltaSeconds())
-	/*if (SpiritState != ESpiritState::Squeezing)
-		AddControllerPitchInput(Value * BaseLookUpAtRate * GetWorld()->GetDeltaSeconds());*/
 }
-
 
 void ASpirit::OnRevive_Implementation(AInteractable* PlantHit)
 {
 	ReviveArrow->SetRelativeRotation(ArrowLineTrace->GetRelativeRotation());
-	//UE_LOG(LogTemp, Warning, TEXT("Spirit OnRevive called on %s"), *GetNameSafe(PlantHit));
-
 	if (PlantHit)
 	{
 		if (PlantHit != SelectedPlant)

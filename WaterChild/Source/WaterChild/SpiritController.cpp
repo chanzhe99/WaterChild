@@ -31,4 +31,37 @@ void ASpiritController::SetupInputComponent()
 	InputComponent->BindAxis("MouseTurnAxis", this, &ASpiritController::MouseTurnAxis);
 	InputComponent->BindAxis("GamepadLookUpAxis", this, &ASpiritController::GamepadLookUpAxis).bExecuteWhenPaused = true;
 	InputComponent->BindAxis("GamepadTurnAxis", this, &ASpiritController::GamepadTurnAxis).bExecuteWhenPaused = true;
+
 }
+
+void ASpiritController::KeyboardRightAxis_Implementation(float Value)
+{
+	if (Value != 0.f)
+		bIsUsingGamepad = false;
+
+	if(!bIsUsingGamepad)
+	{
+		RightAxisInput = Value;
+		UE_LOG(LogTemp, Warning, TEXT("PlayerController - KeyboardRightAxisInput: %f"), GetRightAxisInput());
+	}
+}
+
+void ASpiritController::GamepadRightAxis_Implementation(float Value)
+{
+	if (Value != 0.f)
+		bIsUsingGamepad = true;
+
+	if(bIsUsingGamepad)
+	{
+		RightAxisInput = Value;
+		UE_LOG(LogTemp, Warning, TEXT("PlayerController - GamepadRightAxisInput: %f"), GetRightAxisInput());
+	}
+}
+
+/*
+void ASpiritController::Tick(float DeltaSeconds)
+{
+	UE_LOG(LogTemp, Warning, TEXT("PlayerController - IsUsingGamepad: %d"), bIsUsingGamepad);
+	UE_LOG(LogTemp, Warning, TEXT("PlayerController - RightAxisInput: %f"), GetRightAxisInput());
+}
+*/

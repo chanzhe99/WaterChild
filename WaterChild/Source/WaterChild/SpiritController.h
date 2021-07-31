@@ -18,6 +18,7 @@ private:
 	bool bIsUsingGamepad = false;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	float AxisInputDeadzone = 0.05f;
+	float RightAxisInput = 0.f;
 
 public:
 	virtual void SetupInputComponent() override;
@@ -26,11 +27,13 @@ public:
 	bool GetIsUsingGamepad() { return bIsUsingGamepad; }
 	UFUNCTION(BlueprintCallable)
 	void SetIsUsingGamepad(bool Value) { bIsUsingGamepad = Value; }
+	UFUNCTION(BlueprintCallable)
+	float GetRightAxisInput() { return RightAxisInput; }
 
 #pragma region Action Events
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
-	void ReviveAction();
-	void ReviveAction_Implementation() {}
+	void ReviveAction(FKey Key);
+	void ReviveAction_Implementation(FKey Key) { bIsUsingGamepad = (Key.IsGamepadKey()) ? true : false; }
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void StopReviveAction();
@@ -66,7 +69,7 @@ public:
 #pragma endregion
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void ReviveAxis(float Value);
-	void ReviveAxis_Implementation(float Value) { if (Value <= -AxisInputDeadzone || Value >= AxisInputDeadzone) bIsUsingGamepad = false;}
+	void ReviveAxis_Implementation(float Value) {}
 #pragma region Movement Axis Events
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void KeyboardForwardAxis(float Value);
@@ -74,7 +77,7 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void KeyboardRightAxis(float Value);
-	void KeyboardRightAxis_Implementation(float Value) { if (Value != 0.f) bIsUsingGamepad = false; }
+	void KeyboardRightAxis_Implementation(float Value);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void GamepadForwardAxis(float Value);
@@ -82,7 +85,7 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void GamepadRightAxis(float Value);
-	void GamepadRightAxis_Implementation(float Value) { if (Value != 0.f) bIsUsingGamepad = true; }
+	void GamepadRightAxis_Implementation(float Value);
 #pragma endregion
 
 #pragma region Look Axis Events
@@ -102,5 +105,7 @@ public:
 	void GamepadTurnAxis(float Value);
 	void GamepadTurnAxis_Implementation(float Value) { if (Value <= -AxisInputDeadzone || Value >= AxisInputDeadzone) bIsUsingGamepad = true; }
 #pragma endregion
-
+	
+	/*
+	virtual void Tick(float DeltaSeconds) override;*/
 };
