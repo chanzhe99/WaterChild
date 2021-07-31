@@ -147,11 +147,11 @@ void ASpirit::Tick(float DeltaTime)
 	//FRotator CameraTargetRotation = FRotator(ArrowLineTrace->GetForwardVector().Rotation().Pitch - 10, GetActorForwardVector().Rotation().Yaw, GetActorForwardVector().Rotation().Roll);
 	//FRotator CameraTargetRotation = ArrowLineTrace->GetForwardVector().Rotation() + FRotator(-20, 0, 0);
 
+	// Revive spring arm
 	if(SpringArm->TargetArmLength != TargetSpringArmLength)
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("targetArmLength different: %f"), TargetSpringArmLength);
 		SpringArm->TargetArmLength = UKismetMathLibrary::FInterpTo(SpringArm->TargetArmLength, TargetSpringArmLength, DeltaTime, 5.f);
-		//SpringArm->TargetArmLength = UKismetMathLibrary::FInterpEaseInOut()
 	}
 
 	if(SpringArm->SocketOffset != TargetSocketOffset)
@@ -201,7 +201,7 @@ void ASpirit::Tick(float DeltaTime)
 
 		break;
 	case ESpiritState::Reviving:
-		if(bActorSetToControllerDirection)
+		/*if(bActorSetToControllerDirection)
 			Controller->SetControlRotation(UKismetMathLibrary::RInterpTo(Controller->GetControlRotation(), CameraTargetRotation, GetWorld()->GetDeltaSeconds(), 5.f));
 		else
 		{
@@ -211,21 +211,40 @@ void ASpirit::Tick(float DeltaTime)
 			SetActorRotation(UKismetMathLibrary::RInterpTo(ActorYaw, ControllerYaw, GetWorld()->GetDeltaSeconds(), 5.f));
 			if (UKismetMathLibrary::NearlyEqual_FloatFloat(ActorYaw.Yaw, ControllerYaw.Yaw, 1.f))
 				bActorSetToControllerDirection = true;
-		}
-
-		/*if(SpringArm->TargetArmLength > 50.f)
-		{
-			SpringArm->TargetArmLength = UKismetMathLibrary::FInterpTo(SpringArm->TargetArmLength, 50.f, DeltaTime, 1.f);
-			//SpringArm->TargetArmLength = UKismetMathLibrary::FInterpEaseInOut()
-		}
-
-		if(SpringArm->SocketOffset != FVector(0, 45, 0))
-		{
-			SpringArm->SocketOffset = UKismetMathLibrary::VInterpTo(SpringArm->SocketOffset, FVector(0, 45, 0), DeltaTime, 1.f);
 		}*/
+		/*{
+			const FRotator ReviveYaw(ArrowLineTrace->GetRelativeRotation().Pitch, Controller->GetControlRotation().Yaw, 0);
+			ArrowLineTrace->SetRelativeRotation(ReviveYaw);
+		}*/
+		{
+			const float TurnDelta = UKismetMathLibrary::NormalizedDeltaRotator(GetControlRotation(), GetActorRotation()).Yaw;
+		
+			if (TurnDelta < -140.f || TurnDelta > 140.f)
+			{
+				bIsTurningBehindWhenReviving = true;
+			}
 
-		TraceHit = TraceLine(ReviveTraceLength);
-		OnRevive(Cast<AInteractable>(TraceLine(ReviveTraceLength).GetActor()));
+			if(bIsTurningBehindWhenReviving)
+			{
+				if(FMath::IsNearlyZero(TurnDelta, 0.1f))
+				{
+					bIsTurningBehindWhenReviving = false;
+				
+					GetCharacterMovement()->bOrientRotationToMovement = true;
+					GetCharacterMovement()->bUseControllerDesiredRotation = false;
+				}
+				else
+				{
+					GetCharacterMovement()->bOrientRotationToMovement = false;
+					GetCharacterMovement()->bUseControllerDesiredRotation = true;
+				}
+			}
+			UE_LOG(LogTemp, Warning, TEXT("TurningBehind: %d - OrientToMove: %d - UseControlRot: %d - TurnDelta: %f"), bIsTurningBehindWhenReviving, GetCharacterMovement()->bOrientRotationToMovement, GetCharacterMovement()->bUseControllerDesiredRotation, TurnDelta);
+			ArrowLineTrace->SetWorldRotation(GetControlRotation());
+
+			TraceHit = TraceLine(ReviveTraceLength);
+			OnRevive(Cast<AInteractable>(TraceLine(ReviveTraceLength).GetActor()));
+		}
 		break;
 	case ESpiritState::ChargingJump:
 		OnJump();
@@ -491,8 +510,8 @@ void ASpirit::ReviveAxis_Implementation(float Value)
 	if (SpiritState == ESpiritState::Idle || SpiritState == ESpiritState::Walking)
 	{
 		ReviveForceMultiplier = Value;
-		bUseControllerRotationYaw = true;
-		GetCharacterMovement()->bOrientRotationToMovement = false;
+		//bUseControllerRotationYaw = true;
+		//GetCharacterMovement()->bOrientRotationToMovement = false;
 		GetCharacterMovement()->MaxWalkSpeed = 150.f;
 
 		TargetSpringArmLength = RevivingSpringArmLength;
@@ -502,7 +521,7 @@ void ASpirit::ReviveAxis_Implementation(float Value)
 		NiagaraRevive->Activate();
 		bActorSetToControllerDirection = false;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("ReviveForceMultiplier: %f"), ReviveForceMultiplier);
+	//UE_LOG(LogTemp, Warning, TEXT("ReviveForceMultiplier: %f"), ReviveForceMultiplier);
 }
 
 void ASpirit::StopReviveAxis_Implementation(float Value)
@@ -510,8 +529,8 @@ void ASpirit::StopReviveAxis_Implementation(float Value)
 	if (SpiritState == ESpiritState::Reviving)
 	{
 		ReviveForceMultiplier = Value;
-		bUseControllerRotationYaw = false;
-		GetCharacterMovement()->bOrientRotationToMovement = true;
+		//bUseControllerRotationYaw = false;
+		//GetCharacterMovement()->bOrientRotationToMovement = true;
 		GetCharacterMovement()->MaxWalkSpeed = 300.f;
 
 		TargetSpringArmLength = DefaultSpringArmLength;
@@ -532,17 +551,38 @@ void ASpirit::StopReviveAxis_Implementation(float Value)
 
 void ASpirit::MoveForward_Implementation(float Value)
 {
-	if (Controller/* && SpiritState != ESpiritState::Squeezing && SpiritState != ESpiritState::StuckInPlace && SpiritState != ESpiritState::Reviving*/)
+	if (Controller)
 	{
-		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator Rotation = GetControlRotation();
 
 		switch (SpiritState)
 		{
 		case ESpiritState::Idle:
 		case ESpiritState::Walking:
 		case ESpiritState::Falling:
-		case ESpiritState::Reviving:/* break;*/
 			{
+				const FRotator YawRotation(0, Rotation.Yaw, 0);
+				const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+				AddMovementInput(Direction, Value);
+			}
+			break;
+		case ESpiritState::Reviving:
+			{
+				if(Value < 0.f)
+				{
+					if(SidewaysInputValue == 0)
+					{
+						UE_LOG(LogTemp, Warning, TEXT("RotHasBeen - IsWalkingStraightBack"));
+						GetCharacterMovement()->bOrientRotationToMovement = false;
+						GetCharacterMovement()->bUseControllerDesiredRotation = true;
+					}
+					else if(SidewaysInputValue != 0 && !bIsTurningBehindWhenReviving)
+					{
+						UE_LOG(LogTemp, Warning, TEXT("RotHasBeenReset"));
+						GetCharacterMovement()->bOrientRotationToMovement = true;
+						GetCharacterMovement()->bUseControllerDesiredRotation = false;
+					}
+				}
 				const FRotator YawRotation(0, Rotation.Yaw, 0);
 				const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 				AddMovementInput(Direction, Value);
@@ -563,40 +603,15 @@ void ASpirit::MoveForward_Implementation(float Value)
 		case ESpiritState::StuckInPlace: break;
 		case ESpiritState::WalkingBack: break;
 		}
-		
-		/*if (SpiritState == ESpiritState::Reviving)
-		{
-			const FRotator RevivePitch(Value * BaseTurnRate * 2 * GetWorld()->GetDeltaSeconds(), 0, 0);
-			ArrowLineTrace->AddRelativeRotation(RevivePitch);
-
-			if (ArrowLineTrace->GetRelativeRotation().Pitch >= ReviveMaxHeight)
-				ArrowLineTrace->SetRelativeRotation(FRotator(ReviveMaxHeight, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
-			else if (ArrowLineTrace->GetRelativeRotation().Pitch <= ReviveMinHeight)
-				ArrowLineTrace->SetRelativeRotation(FRotator(ReviveMinHeight, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
-		}
-		else if (SpiritState == ESpiritState::Climbing)
-		{
-			if (ClimbTraceLine(FVector2D(Value, 0)).GetActor() && ClimbTraceLine(FVector2D(Value, 0)).GetActor()->ActorHasTag("Climbable"))
-			{
-				const FRotator WallUpRotation = TraceLine(ClimbTraceLength).ImpactNormal.Rotation();
-				const FVector ClimbDirection = FRotationMatrix(WallUpRotation - FRotator(0, 180, 0)).GetUnitAxis(EAxis::Z);
-				AddMovementInput(ClimbDirection, Value);
-			}
-		}
-		else
-		{
-			const FRotator YawRotation(0, Rotation.Yaw, 0);
-			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-			AddMovementInput(Direction, Value);
-		}*/
 	}
 }
 
 void ASpirit::MoveRight_Implementation(float Value)
 {
-	if (Controller/* && SpiritState != ESpiritState::Squeezing && SpiritState != ESpiritState::StuckInPlace && SpiritState != ESpiritState::Reviving*/)
+	if (Controller)
 	{
-		const FRotator Rotation = Controller->GetControlRotation();
+		SidewaysInputValue = Value;
+		const FRotator Rotation = GetControlRotation();
 
 		switch (SpiritState)
 		{
@@ -625,37 +640,6 @@ void ASpirit::MoveRight_Implementation(float Value)
 		case ESpiritState::StuckInPlace: break;
 		case ESpiritState::WalkingBack: break;
 		}
-		/*if (SpiritState == ESpiritState::Reviving)
-		{
-			const FRotator ReviveYaw(0, Value * BaseTurnRate * 2 * GetWorld()->GetDeltaSeconds(), 0);
-			ArrowLineTrace->AddRelativeRotation(ReviveYaw);
-
-			if (ArrowLineTrace->GetRelativeRotation().Yaw >= ReviveMaxYawAngle)
-			{
-				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, ReviveMaxYawAngle, 0));
-				AddActorWorldRotation(ReviveYaw);
-			}
-			else if (ArrowLineTrace->GetRelativeRotation().Yaw <= -ReviveMaxYawAngle)
-			{
-				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, -ReviveMaxYawAngle, 0));
-				AddActorWorldRotation(ReviveYaw);
-			}
-		}
-		else if (SpiritState == ESpiritState::Climbing)
-		{
-			if (ClimbTraceLine(FVector2D(0, Value)).GetActor() && ClimbTraceLine(FVector2D(0, Value)).GetActor()->ActorHasTag("Climbable"))
-			{
-				const FRotator WallUpRotation = TraceLine(ClimbTraceLength).ImpactNormal.Rotation();
-				const FVector ClimbDirection = FRotationMatrix(WallUpRotation - FRotator(0, 180, 0)).GetUnitAxis(EAxis::Y);
-				AddMovementInput(ClimbDirection, Value);
-			}
-		}
-		else
-		{
-			const FRotator YawRotation(0, Rotation.Yaw, 0);
-			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-			AddMovementInput(Direction, Value);
-		}*/
 	}
 }
 
@@ -673,54 +657,14 @@ void ASpirit::TurnAt_Implementation(float Value)
 	case ESpiritState::Climbing:
 	case ESpiritState::StuckInPlace:
 	case ESpiritState::WalkingBack:
-		{
-			AddControllerYawInput(Value);
-		}
-		break;
 	case ESpiritState::Reviving:
 		{
 			AddControllerYawInput(Value);
-			const FRotator ReviveYaw(ArrowLineTrace->GetRelativeRotation().Pitch, Value, 0);
-			ArrowLineTrace->SetRelativeRotation(ReviveYaw);
-
-			/*const FRotator ReviveYaw(0, Value, 0);
-			ArrowLineTrace->AddRelativeRotation(ReviveYaw);
-			
-			if (ArrowLineTrace->GetRelativeRotation().Yaw >= ReviveMaxYawAngle)
-			{
-				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, ReviveMaxYawAngle, 0));
-				AddActorWorldRotation(ReviveYaw);
-			}
-			else if (ArrowLineTrace->GetRelativeRotation().Yaw <= -ReviveMaxYawAngle)
-			{
-				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, -ReviveMaxYawAngle, 0));
-				AddActorWorldRotation(ReviveYaw);
-			}*/
 		}
 		break;
 	case ESpiritState::Squeezing: break;
 	}
 	//UE_LOG(LogTemp, Warning, TEXT("YawInput: %f"), Value * BaseTurnRate * GetWorld()->GetDeltaSeconds())
-	/*if (SpiritState != ESpiritState::Squeezing)
-	{
-		if (SpiritState == ESpiritState::Reviving)
-		{
-			const FRotator ReviveYaw(0, Value, 0);
-			ArrowLineTrace->AddRelativeRotation(ReviveYaw);
-
-			if (ArrowLineTrace->GetRelativeRotation().Yaw >= ReviveMaxYawAngle)
-			{
-				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, ReviveMaxYawAngle, 0));
-				AddActorWorldRotation(ReviveYaw);
-			}
-			else if (ArrowLineTrace->GetRelativeRotation().Yaw <= -ReviveMaxYawAngle)
-			{
-				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, -ReviveMaxYawAngle, 0));
-				AddActorWorldRotation(ReviveYaw);
-			}
-		}
-		else AddControllerYawInput(Value);
-	}*/
 }
 
 void ASpirit::LookUpAt_Implementation(float Value)
@@ -745,6 +689,7 @@ void ASpirit::LookUpAt_Implementation(float Value)
 		{
 			const FRotator RevivePitch(-Value, 0, 0);
 			ArrowLineTrace->AddRelativeRotation(RevivePitch);
+			AddControllerPitchInput(Value);
 
 			if (ArrowLineTrace->GetRelativeRotation().Pitch >= ReviveMaxHeight)
 				ArrowLineTrace->SetRelativeRotation(FRotator(ReviveMaxHeight, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
@@ -754,21 +699,6 @@ void ASpirit::LookUpAt_Implementation(float Value)
 		break;
 	case ESpiritState::Squeezing: break;
 	}
-	
-	/*if (SpiritState != ESpiritState::Squeezing)
-	{
-		if (SpiritState == ESpiritState::Reviving)
-		{
-			const FRotator RevivePitch(-Value, 0, 0);
-			ArrowLineTrace->AddRelativeRotation(RevivePitch);
-
-			if (ArrowLineTrace->GetRelativeRotation().Pitch >= ReviveMaxHeight)
-				ArrowLineTrace->SetRelativeRotation(FRotator(ReviveMaxHeight, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
-			else if (ArrowLineTrace->GetRelativeRotation().Pitch <= ReviveMinHeight)
-				ArrowLineTrace->SetRelativeRotation(FRotator(ReviveMinHeight, ArrowLineTrace->GetRelativeRotation().Yaw, 0));
-		}
-		else AddControllerPitchInput(Value);
-	}*/
 }
 
 void ASpirit::TurnAtRate_Implementation(float Value)
@@ -785,12 +715,12 @@ void ASpirit::TurnAtRate_Implementation(float Value)
 	case ESpiritState::Climbing:
 	case ESpiritState::StuckInPlace:
 	case ESpiritState::WalkingBack:
+	case ESpiritState::Reviving:
 		{
 			AddControllerYawInput(Value * BaseTurnRate * GetWorld()->GetDeltaSeconds());
 		}
 		break;
-	case ESpiritState::Reviving:
-		{
+		/*{
 			AddControllerYawInput(Value * BaseTurnRate * GetWorld()->GetDeltaSeconds());
 			const FRotator ReviveYaw(ArrowLineTrace->GetRelativeRotation().Pitch, Value * BaseTurnRate * GetWorld()->GetDeltaSeconds(), 0);
 			ArrowLineTrace->SetRelativeRotation(ReviveYaw);
@@ -806,9 +736,9 @@ void ASpirit::TurnAtRate_Implementation(float Value)
 			{
 				ArrowLineTrace->SetRelativeRotation(FRotator(ArrowLineTrace->GetRelativeRotation().Pitch, -ReviveMaxYawAngle, 0));
 				AddActorWorldRotation(ReviveYaw);
-			}*/
+			}#1#
 		}
-		break;
+		break;*/
 	case ESpiritState::Squeezing: break;
 	}
 	//UE_LOG(LogTemp, Warning, TEXT("YawInput: %f"), Value * BaseTurnRate * GetWorld()->GetDeltaSeconds())
@@ -840,6 +770,7 @@ void ASpirit::LookUpAtRate_Implementation(float Value)
 		{
 			const FRotator RevivePitch(-Value * BaseLookUpAtRate * GetWorld()->GetDeltaSeconds(), 0, 0);
 			ArrowLineTrace->AddRelativeRotation(RevivePitch);
+			AddControllerPitchInput(Value);
 
 			if (ArrowLineTrace->GetRelativeRotation().Pitch >= ReviveMaxHeight)
 				ArrowLineTrace->SetRelativeRotation(FRotator(ReviveMaxHeight, ArrowLineTrace->GetRelativeRotation().Yaw, 0));

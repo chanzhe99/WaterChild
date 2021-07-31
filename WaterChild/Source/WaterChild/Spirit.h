@@ -170,6 +170,10 @@ private:
 #pragma region Component variables
 	bool bCanTakeInput = false;
 	bool bIsUsingGamepad = false;
+	bool bIsTurningBehindWhenReviving = false;
+	float SidewaysInputValue = 0.f;
+	
+
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	ESpiritState SpiritState = ESpiritState::Idle;
