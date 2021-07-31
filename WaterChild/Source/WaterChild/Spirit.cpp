@@ -452,10 +452,11 @@ void ASpirit::StopRevive_Implementation()
 		NiagaraRevive->Deactivate();
 		SetState(ESpiritState::Idle);
 		
+		/*
 		bIsTurningBehindWhenReviving = false;
 				
 		GetCharacterMovement()->bOrientRotationToMovement = true;
-		GetCharacterMovement()->bUseControllerDesiredRotation = false;
+		GetCharacterMovement()->bUseControllerDesiredRotation = false;*/
 	}
 }
 
@@ -519,8 +520,9 @@ void ASpirit::StopReviveAxis_Implementation(float Value)
 	if (SpiritState == ESpiritState::Reviving)
 	{
 		ReviveForceMultiplier = Value;
-		//bUseControllerRotationYaw = false;
-		//GetCharacterMovement()->bOrientRotationToMovement = true;
+		bIsTurningBehindWhenReviving = false;
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+		GetCharacterMovement()->bUseControllerDesiredRotation = false;
 		GetCharacterMovement()->MaxWalkSpeed = 300.f;
 
 		TargetSpringArmLength = DefaultSpringArmLength;
@@ -572,6 +574,11 @@ void ASpirit::MoveForward_Implementation(float Value)
 						GetCharacterMovement()->bOrientRotationToMovement = true;
 						GetCharacterMovement()->bUseControllerDesiredRotation = false;
 					}
+				}
+				else
+				{
+					GetCharacterMovement()->bOrientRotationToMovement = true;
+					GetCharacterMovement()->bUseControllerDesiredRotation = false;
 				}
 				const FRotator YawRotation(0, Rotation.Yaw, 0);
 				const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
