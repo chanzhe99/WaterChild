@@ -124,6 +124,12 @@ void AStairsSandstorm::Tick(float DeltaTime)
 					if(!SandstormStartingParticleSystem->IsActive())
 						SandstormStartingParticleSystem->Activate();
 
+					for (int i = 0; i < WindFXList.Num(); ++i)
+					{
+						if(!WindFXList[i]->IsActive())
+							WindFXList[i]->Activate();
+					}
+                    
 					/*if(SpiritReference->GetState() != ESpiritState::Reviving && SpiritReference->GetSpringArm()->TargetArmLength > PlayerSpringArmLength_Sandstorm)
 						SpiritReference->GetSpringArm()->TargetArmLength = PlayerSpringArmLength_Default - (PlayerSpringArmLength_Difference * travelledRatio);*/
 					//UE_LOG(LogTemp, Warning, TEXT("SpringArmLength: %f"), SpiritReference->GetSpringArm()->TargetArmLength);
@@ -159,6 +165,11 @@ void AStairsSandstorm::Tick(float DeltaTime)
 				SandstormStartingParticleSystem->Deactivate();
 			if(SandstormActiveParticleSystem->IsActive())
 				SandstormActiveParticleSystem->Deactivate();
+			for (int i = 0; i < WindFXList.Num(); ++i)
+			{
+				if(WindFXList[i]->IsActive())
+					WindFXList[i]->Deactivate();
+			}
 			
 			if(SpiritReference->GetCharacterMovement()->MaxWalkSpeed < PlayerWalkSpeed_Default)
 				SpiritReference->GetCharacterMovement()->MaxWalkSpeed += DeltaTime * 100;

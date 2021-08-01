@@ -50,21 +50,13 @@ public:
 	UNiagaraComponent* WindFX_5;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
 	UNiagaraComponent* WindFX_6;
-	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
-	UArrowComponent* PushBackDirection;*/
-	// Sandstorm safe spots components
-	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
-	UBoxComponent* SafeSpot1;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
-	UBoxComponent* SafeSpot2;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
-	UBoxComponent* SafeSpot3;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
-	UBoxComponent* SafeSpot4;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
-	UBoxComponent* SafeSpot5;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
-	UBoxComponent* SafeSpot6;*/
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+	FVector SandstormCameraOffset = FVector(0, 40, 20);
+	float PlayerSpringArmLength_Default = 300.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+	float PlayerSpringArmLength_Sandstorm = 100.f;
+	float PlayerSpringArmLength_Difference = PlayerSpringArmLength_Default - PlayerSpringArmLength_Sandstorm;
 	
 	// BoxTrace variables
 	UPROPERTY()
@@ -90,10 +82,4 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Reference")
 	float PlayerWalkSpeed_Default = 300.f;
 	float PlayerWalkSpeed_Difference = PlayerWalkSpeed_Default - PlayerWalkSpeed_Sandstorm;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Reference")
-	float PlayerSpringArmLength_Default = 300.f;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Reference")
-	float PlayerSpringArmLength_Sandstorm = 100.f;
-	float PlayerSpringArmLength_Difference = PlayerSpringArmLength_Default - PlayerSpringArmLength_Sandstorm;
 };
