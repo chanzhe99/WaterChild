@@ -94,7 +94,7 @@ void AStairsSandstorm::BeginPlay()
 {
 	Super::BeginPlay();
 	UNiagaraComponent* tempWindFXList[] = {WindFX_1, WindFX_2, WindFX_3, WindFX_4, WindFX_5, WindFX_6 };
-	WindFXList.Append(tempWindFXList, ARRAY_COUNT(tempWindFXList));
+	WindFXList.Append(tempWindFXList, UE_ARRAY_COUNT(tempWindFXList));
 }
 
 // Called every frame
@@ -109,34 +109,45 @@ void AStairsSandstorm::Tick(float DeltaTime)
 	if(SpiritReference)
 	{
 		const float travelledRatio = CalculateSandstormStrength();
-		if(IsHitPlayer && IsSandstormOn)
+		if(IsHitPlayer)
 		{
-			SpiritReference->GetCharacterMovement()->MaxWalkSpeed = PlayerWalkSpeed_Default - (PlayerWalkSpeed_Difference * travelledRatio);
+			if(IsSandstormOn)
+			{
+				SpiritReference->GetCharacterMovement()->MaxWalkSpeed = PlayerWalkSpeed_Default - (PlayerWalkSpeed_Difference * travelledRatio);
+				if (travelledRatio < 0.f)
+				{
+					if(PlayerSandstormWalkAnimVar > 0.f)
+						PlayerSandstormWalkAnimVar -= DeltaTime;
+				}
+				if(travelledRatio > 0.f)
+				{
+					if(!SandstormStartingParticleSystem->IsActive())
+						SandstormStartingParticleSystem->Activate();
+
+					/*if(SpiritReference->GetState() != ESpiritState::Reviving && SpiritReference->GetSpringArm()->TargetArmLength > PlayerSpringArmLength_Sandstorm)
+						SpiritReference->GetSpringArm()->TargetArmLength = PlayerSpringArmLength_Default - (PlayerSpringArmLength_Difference * travelledRatio);*/
+					//UE_LOG(LogTemp, Warning, TEXT("SpringArmLength: %f"), SpiritReference->GetSpringArm()->TargetArmLength);
+				}
+				if(travelledRatio > 0.1f)
+				{
+					if(PlayerSandstormWalkAnimVar < 1.f)
+					{
+						PlayerSandstormWalkAnimVar += DeltaTime * 0.5f;
+					}
+				}
+				if(travelledRatio > 0.75f)
+				{
+					if(!SandstormActiveParticleSystem->IsActive())
+						SandstormActiveParticleSystem->Activate();
+				}
+			}
+		}
+		else
+		{
 			if (travelledRatio < 0.f)
 			{
 				if(PlayerSandstormWalkAnimVar > 0.f)
 					PlayerSandstormWalkAnimVar -= DeltaTime;
-			}
-			if(travelledRatio > 0.f)
-			{
-				if(!SandstormStartingParticleSystem->IsActive())
-					SandstormStartingParticleSystem->Activate();
-
-				/*if(SpiritReference->GetState() != ESpiritState::Reviving && SpiritReference->GetSpringArm()->TargetArmLength > PlayerSpringArmLength_Sandstorm)
-					SpiritReference->GetSpringArm()->TargetArmLength = PlayerSpringArmLength_Default - (PlayerSpringArmLength_Difference * travelledRatio);*/
-				//UE_LOG(LogTemp, Warning, TEXT("SpringArmLength: %f"), SpiritReference->GetSpringArm()->TargetArmLength);
-			}
-			if(travelledRatio > 0.1f)
-			{
-				if(PlayerSandstormWalkAnimVar < 1.f)
-				{
-					PlayerSandstormWalkAnimVar += DeltaTime * 0.5f;
-				}
-			}
-			if(travelledRatio > 0.75f)
-			{
-				if(!SandstormActiveParticleSystem->IsActive())
-					SandstormActiveParticleSystem->Activate();
 			}
 		}
 		if(travelledRatio > 0.99f)
