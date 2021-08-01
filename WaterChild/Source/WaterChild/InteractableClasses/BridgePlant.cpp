@@ -10,11 +10,13 @@ ABridgePlant::ABridgePlant()
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	BridgeMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BridgeMesh"));
 	ReviveCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("ReviveCollider"));
+	WeedsComp = CreateDefaultSubobject<USceneComponent>(TEXT("WeedsComp"));
 
 	// Attachment setup
 	SetRootComponent(Root);
 	BridgeMesh->SetupAttachment(Root);
 	ReviveCollider->SetupAttachment(Root);
+	WeedsComp->SetupAttachment(Root);
 
 	BridgeMesh->SetCollisionProfileName(TEXT("NoCollision"));
 

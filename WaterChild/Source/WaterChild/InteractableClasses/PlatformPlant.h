@@ -37,6 +37,8 @@ private:
 	class UBoxComponent* PetalCollider;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collider", meta = (AllowPrivateAccess = "true"))
 	class UBoxComponent* ReviveCollider;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Scene Component", meta = (AllowPrivateAccess = "true"))
+	class USceneComponent* WeedsComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Grown Settings", meta = (AllowPrivateAccess = "true"))
 	float GrowSpeed = 2;

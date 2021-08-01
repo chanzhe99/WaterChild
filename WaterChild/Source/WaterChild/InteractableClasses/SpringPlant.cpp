@@ -12,11 +12,13 @@ ASpringPlant::ASpringPlant()
 	FlowerMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FlowerMesh"));
 	FlowerCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("FlowerCollider"));
 	ReviveCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("ReviveCollider"));
+	WeedsComp = CreateDefaultSubobject<USceneComponent>(TEXT("WeedsComp"));
 
 	// Attachment setup
 	SetRootComponent(FlowerMesh);
 	FlowerCollider->SetupAttachment(FlowerMesh);
 	ReviveCollider->SetupAttachment(FlowerMesh);
+	WeedsComp->SetupAttachment(FlowerMesh);
 
 	// Location setup
 	FlowerCollider->SetRelativeLocation(FVector(-5, -3, 25));

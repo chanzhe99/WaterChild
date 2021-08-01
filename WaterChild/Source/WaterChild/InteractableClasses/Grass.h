@@ -23,4 +23,6 @@ private:
 		class USkeletalMeshComponent* GrassMesh;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collider", meta = (AllowPrivateAccess = "true"))
 		class UBoxComponent* MultiCollider;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Scene Component", meta = (AllowPrivateAccess = "true"))
+		class USceneComponent* WeedsComp;
 };

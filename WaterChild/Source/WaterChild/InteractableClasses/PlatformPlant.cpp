@@ -17,6 +17,7 @@ APlatformPlant::APlatformPlant()
 	PetalMesh3 = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("PetalMesh3"));
 	PetalCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("PetalCollider"));
 	ReviveCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("ReviveCollider"));
+	WeedsComp = CreateDefaultSubobject<USceneComponent>(TEXT("WeedsComp"));
 
 	SetRootComponent(RootComp);
 	StemMesh->SetupAttachment(RootComp);
@@ -25,6 +26,7 @@ APlatformPlant::APlatformPlant()
 	PetalMesh3->SetupAttachment(PetalMesh2);
 	PetalCollider->SetupAttachment(PetalMesh1);
 	ReviveCollider->SetupAttachment(RootComp);
+	WeedsComp->SetupAttachment(RootComp);
 
 	PetalMesh1->SetRelativeRotation(FRotator(0, 270, 0));
 	PetalMesh2->SetRelativeLocation(FVector(0, 0, 2.5f));

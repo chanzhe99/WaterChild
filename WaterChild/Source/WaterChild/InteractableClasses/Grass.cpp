@@ -9,10 +9,12 @@ AGrass::AGrass()
 	// Component creation
 	GrassMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("GrassMesh"));
 	MultiCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("MultiCollider"));
-
+	WeedsComp  = CreateDefaultSubobject<USceneComponent>(TEXT("WeedsComp"));
+	
 	// Attachment setup
 	SetRootComponent(GrassMesh);
 	MultiCollider->SetupAttachment(GrassMesh);
+	WeedsComp->SetupAttachment(GrassMesh);
 
 	// Location setup
 	MultiCollider->SetRelativeLocation(FVector(0, 0, 0));

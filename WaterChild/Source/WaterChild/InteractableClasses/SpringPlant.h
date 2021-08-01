@@ -30,6 +30,8 @@ private:
 	class UBoxComponent* FlowerCollider;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collider", meta = (AllowPrivateAccess = "true"))
 	class UBoxComponent* ReviveCollider;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Scene Component", meta = (AllowPrivateAccess = "true"))
+	class USceneComponent* WeedsComp;
 
 	UPROPERTY(EditAnywhere, Category = "SpringPlant Variables", meta = (AllowPrivateAccess = "true"))
 	float BounceForwardVelocity = 0.;

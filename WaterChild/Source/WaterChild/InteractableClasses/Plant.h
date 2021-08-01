@@ -58,6 +58,11 @@ protected:
     FVector ReviveColliderSizeDifference = FVector::ZeroVector;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Plant Variables", meta = (AllowPrivateAccess = "true"))
     FVector CurrentReviveColliderSize = FVector::ZeroVector;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Plant Variables", meta = (AllowPrivateAccess = "true"))
+    FVector WeedStartPosition = FVector::ZeroVector;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Plant Variables", meta = (AllowPrivateAccess = "true"))
+    FVector WeedEndPosition = FVector::ZeroVector;
     
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;

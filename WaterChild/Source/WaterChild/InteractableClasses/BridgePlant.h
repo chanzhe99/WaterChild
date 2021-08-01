@@ -25,4 +25,6 @@ private:
 	class USkeletalMeshComponent* BridgeMesh;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collider", meta = (AllowPrivateAccess = "true"))
 	class UBoxComponent* ReviveCollider;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Scene Component", meta = (AllowPrivateAccess = "true"))
+	class USceneComponent* WeedsComp;
 };
