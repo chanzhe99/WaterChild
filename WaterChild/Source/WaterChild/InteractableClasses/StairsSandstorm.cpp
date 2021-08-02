@@ -93,6 +93,8 @@ AStairsSandstorm::AStairsSandstorm()
 void AStairsSandstorm::BeginPlay()
 {
 	Super::BeginPlay();
+	PlayerSpringArmLength_Difference = PlayerSpringArmLength_Default - PlayerSpringArmLength_Sandstorm;
+	PlayerWalkSpeed_Difference = PlayerWalkSpeed_Default - PlayerWalkSpeed_Sandstorm;
 	UNiagaraComponent* tempWindFXList[] = {WindFX_1, WindFX_2, WindFX_3, WindFX_4, WindFX_5, WindFX_6 };
 	WindFXList.Append(tempWindFXList, UE_ARRAY_COUNT(tempWindFXList));
 }
@@ -118,8 +120,9 @@ void AStairsSandstorm::Tick(float DeltaTime)
 					SpiritReference->StopReviveAxis(0.f);
 				}
 				
-				
 				SpiritReference->GetCharacterMovement()->MaxWalkSpeed = PlayerWalkSpeed_Default - (PlayerWalkSpeed_Difference * travelledRatio);
+				SpiritReference->GetSpringArm()->TargetArmLength = PlayerSpringArmLength_Default - (PlayerSpringArmLength_Difference * travelledRatio);
+				//UE_LOG(LogTemp, Warning, TEXT("SpringArmLength: %f"), SpiritReference->GetSpringArm()->TargetArmLength);
 				if (travelledRatio < 0.f)
 				{
 					if(PlayerSandstormWalkAnimVar > 0.f)
@@ -134,11 +137,7 @@ void AStairsSandstorm::Tick(float DeltaTime)
 					{
 						if(!WindFXList[i]->IsActive())
 							WindFXList[i]->Activate();
-					}
-                    
-					/*if(SpiritReference->GetState() != ESpiritState::Reviving && SpiritReference->GetSpringArm()->TargetArmLength > PlayerSpringArmLength_Sandstorm)
-						SpiritReference->GetSpringArm()->TargetArmLength = PlayerSpringArmLength_Default - (PlayerSpringArmLength_Difference * travelledRatio);*/
-					//UE_LOG(LogTemp, Warning, TEXT("SpringArmLength: %f"), SpiritReference->GetSpringArm()->TargetArmLength);
+					}	
 				}
 				if(travelledRatio > 0.1f)
 				{
@@ -147,7 +146,7 @@ void AStairsSandstorm::Tick(float DeltaTime)
 						PlayerSandstormWalkAnimVar += DeltaTime * 0.5f;
 					}
 				}
-				if(travelledRatio > 0.75f)
+				if(travelledRatio > 0.7f)
 				{
 					if(!SandstormActiveParticleSystem->IsActive())
 						SandstormActiveParticleSystem->Activate();
