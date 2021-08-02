@@ -113,6 +113,12 @@ void AStairsSandstorm::Tick(float DeltaTime)
 		{
 			if(IsSandstormOn)
 			{
+				if(SpiritReference->GetState() == ESpiritState::Reviving)
+				{
+					SpiritReference->StopReviveAxis(0.f);
+				}
+				
+				
 				SpiritReference->GetCharacterMovement()->MaxWalkSpeed = PlayerWalkSpeed_Default - (PlayerWalkSpeed_Difference * travelledRatio);
 				if (travelledRatio < 0.f)
 				{
