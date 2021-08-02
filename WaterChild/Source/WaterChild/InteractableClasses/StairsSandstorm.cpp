@@ -185,7 +185,12 @@ void AStairsSandstorm::Tick(float DeltaTime)
 				PlayerSandstormWalkAnimVar -= DeltaTime;
 			else
 				PlayerSandstormWalkAnimVar = 0.f;
-		}	
+
+			if(SpiritReference->GetCharacterMovement()->MaxWalkSpeed >= PlayerWalkSpeed_Default && PlayerSandstormWalkAnimVar <= 0)
+			{
+				SpiritReference = nullptr;
+			}
+		}
 	}
 	//UE_LOG(LogTemp, Warning, TEXT("PlayerSandstormWalkAnimVar: %f"), PlayerSandstormWalkAnimVar);
 }

@@ -463,7 +463,7 @@ void ASpirit::StopRevive_Implementation()
 void ASpirit::Climb_Implementation()
 {
 	bIsClimbButtonDown = true;
-	if (SpiritState != ESpiritState::Climbing)
+	if (SpiritState == ESpiritState::Idle || SpiritState == ESpiritState::Walking || SpiritState == ESpiritState::Falling)
 		bIsCheckingForClimbable = true;
 }
 
