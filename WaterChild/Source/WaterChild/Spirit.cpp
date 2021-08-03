@@ -224,6 +224,15 @@ void ASpirit::Tick(float DeltaTime)
 					GetCharacterMovement()->bUseControllerDesiredRotation = true;
 				}
 			}
+
+			if(SpiritController->GetForwardAxisInput() == 0.f)
+			{
+				if(GetCharacterMovement()->bOrientRotationToMovement == false)
+					GetCharacterMovement()->bOrientRotationToMovement = true;
+				if(GetCharacterMovement()->bUseControllerDesiredRotation == true)
+					GetCharacterMovement()->bUseControllerDesiredRotation = false;
+			}
+			
 			UE_LOG(LogTemp, Warning, TEXT("TurningBehind: %d - OrientToMove: %d - UseControlRot: %d - TurnDelta: %f"), bIsTurningBehindWhenReviving, GetCharacterMovement()->bOrientRotationToMovement, GetCharacterMovement()->bUseControllerDesiredRotation, TurnDelta);
 			ArrowLineTrace->SetWorldRotation(GetControlRotation());
 
@@ -564,13 +573,11 @@ void ASpirit::MoveForward_Implementation(float Value)
 				{
 					if(FMath::IsNearlyZero(SpiritController->GetRightAxisInput(), 0.3f))
 					{
-						UE_LOG(LogTemp, Warning, TEXT("RotHasBeen - IsWalkingStraightBack - RightAxisInput: %f"), SpiritController->GetRightAxisInput());
 						GetCharacterMovement()->bOrientRotationToMovement = false;
 						GetCharacterMovement()->bUseControllerDesiredRotation = true;
 					}
 					else if(FMath::Abs(SpiritController->GetRightAxisInput()) > 0.01f && !bIsTurningBehindWhenReviving)
 					{
-						UE_LOG(LogTemp, Warning, TEXT("RotHasBeenReset - RightAxisInput: %f"), SpiritController->GetRightAxisInput());
 						GetCharacterMovement()->bOrientRotationToMovement = true;
 						GetCharacterMovement()->bUseControllerDesiredRotation = false;
 					}

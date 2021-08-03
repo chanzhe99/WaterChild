@@ -18,6 +18,7 @@ private:
 	bool bIsUsingGamepad = false;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	float AxisInputDeadzone = 0.05f;
+	float ForwardAxisInput = 0.f;
 	float RightAxisInput = 0.f;
 
 public:
@@ -27,6 +28,8 @@ public:
 	bool GetIsUsingGamepad() { return bIsUsingGamepad; }
 	UFUNCTION(BlueprintCallable)
 	void SetIsUsingGamepad(bool Value) { bIsUsingGamepad = Value; }
+	UFUNCTION(BlueprintCallable)
+	float GetForwardAxisInput() { return ForwardAxisInput; }
 	UFUNCTION(BlueprintCallable)
 	float GetRightAxisInput() { return RightAxisInput; }
 
@@ -73,7 +76,7 @@ public:
 #pragma region Movement Axis Events
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void KeyboardForwardAxis(float Value);
-	void KeyboardForwardAxis_Implementation(float Value) { if (Value != 0.f) bIsUsingGamepad = false; }
+	void KeyboardForwardAxis_Implementation(float Value);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void KeyboardRightAxis(float Value);
@@ -81,7 +84,7 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void GamepadForwardAxis(float Value);
-	void GamepadForwardAxis_Implementation(float Value) { if (Value != 0.f) bIsUsingGamepad = true; }
+	void GamepadForwardAxis_Implementation(float Value);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SpiritAction")
 	void GamepadRightAxis(float Value);
