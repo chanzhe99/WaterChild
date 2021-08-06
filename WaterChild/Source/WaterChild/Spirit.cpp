@@ -224,8 +224,7 @@ void ASpirit::Tick(float DeltaTime)
 					GetCharacterMovement()->bUseControllerDesiredRotation = true;
 				}
 			}
-
-			if(SpiritController->GetForwardAxisInput() == 0.f)
+			else if(SpiritController->GetForwardAxisInput() == 0.f)
 			{
 				if(GetCharacterMovement()->bOrientRotationToMovement == false)
 					GetCharacterMovement()->bOrientRotationToMovement = true;
