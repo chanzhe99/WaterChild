@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "StairsSandstorm.generated.h"
 
+class UBillboardComponent;
 class UBoxComponent;
 class UArrowComponent;
 class UNiagaraComponent;
