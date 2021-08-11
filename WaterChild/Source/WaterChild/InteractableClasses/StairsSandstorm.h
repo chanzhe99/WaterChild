@@ -10,6 +10,7 @@ class UBillboardComponent;
 class UBoxComponent;
 class UArrowComponent;
 class UNiagaraComponent;
+class APostProcessVolume;
 
 UCLASS()
 class WATERCHILD_API AStairsSandstorm : public AActor
@@ -51,6 +52,9 @@ public:
 	UNiagaraComponent* WindFX_5;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
 	UNiagaraComponent* WindFX_6;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PPV")
+	APostProcessVolume* StairsSandstormPPVRef;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	FVector SandstormCameraOffset = FVector(0, 40, 20);
@@ -66,6 +70,7 @@ public:
     TArray<AActor*> ObjectsToIgnoreList;
 	UPROPERTY()
 	FHitResult SandstormHitResult;
+	bool IsCheckingCollision = true;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Reference")
 	bool IsHitPlayer;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Reference")

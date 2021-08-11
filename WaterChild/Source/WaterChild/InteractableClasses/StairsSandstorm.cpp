@@ -6,6 +6,7 @@
 #include "Components/ArrowComponent.h"
 #include "Components/BoxComponent.h"
 #include "NiagaraComponent.h"
+#include "Engine/PostProcessVolume.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "WaterChild/Spirit.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -104,7 +105,8 @@ void AStairsSandstorm::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	DoBoxTrace();
+	if(IsCheckingCollision)
+		DoBoxTrace();
 	if(IsHitPlayer && !SpiritReference)
 		SpiritReference = Cast<ASpirit>(SandstormHitResult.Actor);
 
@@ -137,7 +139,10 @@ void AStairsSandstorm::Tick(float DeltaTime)
 					{
 						if(!WindFXList[i]->IsActive())
 							WindFXList[i]->Activate();
-					}	
+					}
+
+					if(StairsSandstormPPVRef && !StairsSandstormPPVRef->bEnabled)
+						StairsSandstormPPVRef->bEnabled = true;
 				}
 				if(travelledRatio > 0.1f)
 				{
@@ -163,6 +168,8 @@ void AStairsSandstorm::Tick(float DeltaTime)
 		}
 		if(travelledRatio > 0.99f)
 		{
+			SpiritReference->SetState(ESpiritState::StuckInPlace);
+			
 			if(IsSandstormOn)
 				IsSandstormOn = false;
 
@@ -175,8 +182,16 @@ void AStairsSandstorm::Tick(float DeltaTime)
 				if(WindFXList[i]->IsActive())
 					WindFXList[i]->Deactivate();
 			}
+			if(StairsSandstormPPVRef && StairsSandstormPPVRef->bEnabled)
+				StairsSandstormPPVRef->bEnabled = false;
+
+			SpiritReference->GetCharacterMovement()->MaxWalkSpeed = PlayerWalkSpeed_Default;
+			PlayerSandstormWalkAnimVar = 0.f;
+			IsHitPlayer = false;
+			IsCheckingCollision = false;
+			SpiritReference = nullptr;
 			
-			if(SpiritReference->GetCharacterMovement()->MaxWalkSpeed < PlayerWalkSpeed_Default)
+			/*if(SpiritReference->GetCharacterMovement()->MaxWalkSpeed < PlayerWalkSpeed_Default)
 				SpiritReference->GetCharacterMovement()->MaxWalkSpeed += DeltaTime * 100;
 			else
 				SpiritReference->GetCharacterMovement()->MaxWalkSpeed = PlayerWalkSpeed_Default;
@@ -184,12 +199,13 @@ void AStairsSandstorm::Tick(float DeltaTime)
 			if(PlayerSandstormWalkAnimVar > 0.f)
 				PlayerSandstormWalkAnimVar -= DeltaTime;
 			else
-				PlayerSandstormWalkAnimVar = 0.f;
+				PlayerSandstormWalkAnimVar = 0.f;*/
 
-			if(SpiritReference->GetCharacterMovement()->MaxWalkSpeed >= PlayerWalkSpeed_Default && PlayerSandstormWalkAnimVar <= 0)
+			/*if(SpiritReference->GetCharacterMovement()->MaxWalkSpeed >= PlayerWalkSpeed_Default && PlayerSandstormWalkAnimVar <= 0)
 			{
 				SpiritReference = nullptr;
-			}
+				IsCheckingCollision = false;
+			}*/
 		}
 	}
 	//UE_LOG(LogTemp, Warning, TEXT("PlayerSandstormWalkAnimVar: %f"), PlayerSandstormWalkAnimVar);
