@@ -28,6 +28,9 @@ public:
 	bool DoBoxTrace();
 	float CalculateSandstormStrength();
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void TriggerTempleLookUp();
+
 	// Main sandstorm components
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor Components")
 	UBillboardComponent* Root;

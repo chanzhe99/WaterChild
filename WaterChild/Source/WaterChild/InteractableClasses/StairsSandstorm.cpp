@@ -169,6 +169,7 @@ void AStairsSandstorm::Tick(float DeltaTime)
 		if(travelledRatio > 0.99f)
 		{
 			SpiritReference->SetState(ESpiritState::StuckInPlace);
+			TriggerTempleLookUp();
 			
 			if(IsSandstormOn)
 				IsSandstormOn = false;
