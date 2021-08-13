@@ -216,7 +216,7 @@ bool AStairsSandstorm::DoBoxTrace()
 {
 	// Main sandstorm body
 	const FVector boxOrigin = GetActorLocation() + SandstormSizeVisualiser->GetRelativeLocation(); 
-	IsHitPlayer = UKismetSystemLibrary::BoxTraceSingleForObjects(GetWorld(), boxOrigin, boxOrigin, SandstormSizeVisualiser->GetScaledBoxExtent(), FRotator::ZeroRotator, PlayerObjectList, false, ObjectsToIgnoreList, EDrawDebugTrace::None, SandstormHitResult, true, FLinearColor::Red, FLinearColor::Green, 5.f);
+	IsHitPlayer = UKismetSystemLibrary::BoxTraceSingleForObjects(GetWorld(), boxOrigin, boxOrigin + FVector(0, 0, 0.00001f), SandstormSizeVisualiser->GetScaledBoxExtent(), FRotator::ZeroRotator, PlayerObjectList, false, ObjectsToIgnoreList, EDrawDebugTrace::None, SandstormHitResult, true, FLinearColor::Red, FLinearColor::Green, 5.f);
 
 	return IsHitPlayer;
 }

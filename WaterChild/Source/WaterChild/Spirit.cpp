@@ -516,7 +516,7 @@ void ASpirit::ReviveAxis_Implementation(float Value)
 		TargetSpringArmLength = RevivingSpringArmLength;
 		TargetSocketOffset = RevivingSocketOffset;
 		
-		SetState(ESpiritState::Reviving);
+		SetState(ESpiritState::Reviving);		
 		NiagaraRevive->Activate();
 		bActorSetToControllerDirection = false;
 	}
