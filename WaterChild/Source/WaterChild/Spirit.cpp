@@ -520,6 +520,10 @@ void ASpirit::ReviveAxis_Implementation(float Value)
 		NiagaraRevive->Activate();
 		bActorSetToControllerDirection = false;
 	}
+	else if (SpiritState == ESpiritState::Reviving)
+	{
+		ReviveForceMultiplier = Value;
+	}
 	UE_LOG(LogTemp, Warning, TEXT("ReviveForceMultiplier: %f"), ReviveForceMultiplier);
 }
 
